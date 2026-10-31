@@ -423,6 +423,14 @@ async def ask_assistant(
 ) -> AssistantResponse:
     """Orchestrate assistant query: Groq API when configured, or deterministic fallback."""
     groq_api_key = os.environ.get("GROQ_API_KEY", "").strip()
+    if not groq_api_key:
+        try:
+            from dotenv import load_dotenv
+
+            load_dotenv()
+            groq_api_key = os.environ.get("GROQ_API_KEY", "").strip()
+        except Exception:
+            pass
 
     if not groq_api_key:
         return execute_grounded_intent(
@@ -434,7 +442,7 @@ async def ask_assistant(
             end=end,
         )
 
-    model_name = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile").strip()
+    model_name = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b").strip()
     start_iso, end_iso = _default_window(start, end)
     endpoints_called: list[str] = []
     collected_data: dict[str, Any] = {}
@@ -497,52 +505,56 @@ async def ask_assistant(
                 func_name = tc["function"]["name"]
                 args = json.loads(tc["function"]["arguments"])
                 t_curr = args.get("currency", currency)
-                t_start = args.get("start", start_iso)
-                t_end = args.get("end", end_iso)
+                t_start = start if start else args.get("start", start_iso)
+                t_end = end if end else args.get("end", end_iso)
 
                 q = AnalyticsQuery(tenant_id=tenant_id, currency=t_curr, start=t_start, end=t_end)
 
-                if func_name == "get_summary":
-                    endpoints_called.append("/analytics/summary")
-                    res = reader.summary(q)
-                    tool_output = res.value.model_dump(mode="json")
-                    collected_data["summary"] = tool_output
+                try:
+                    if func_name == "get_summary":
+                        endpoints_called.append("/analytics/summary")
+                        res = reader.summary(q)
+                        tool_output = res.value.model_dump(mode="json")
+                        collected_data["summary"] = tool_output
 
-                elif func_name == "get_trends":
-                    endpoints_called.append("/analytics/trends")
-                    t_interval = args.get("interval", "day")
-                    tq = TrendsQuery(
-                        tenant_id=tenant_id,
-                        currency=t_curr,
-                        start=t_start,
-                        end=t_end,
-                        interval=t_interval,
-                    )
-                    res = reader.trends(tq)
-                    tool_output = [b.model_dump(mode="json") for b in res.value]
-                    collected_data["trends"] = tool_output
+                    elif func_name == "get_trends":
+                        endpoints_called.append("/analytics/trends")
+                        t_interval = args.get("interval", "day")
+                        tq = TrendsQuery(
+                            tenant_id=tenant_id,
+                            currency=t_curr,
+                            start=t_start,
+                            end=t_end,
+                            interval=t_interval,
+                        )
+                        res = reader.trends(tq)
+                        tool_output = [b.model_dump(mode="json") for b in res.value]
+                        collected_data["trends"] = tool_output
 
-                elif func_name == "get_top_products":
-                    endpoints_called.append("/analytics/top-products")
-                    t_limit = args.get("limit", 5)
-                    tpq = TopProductsQuery(
-                        tenant_id=tenant_id,
-                        currency=t_curr,
-                        start=t_start,
-                        end=t_end,
-                        limit=t_limit,
-                    )
-                    res = reader.top_products(tpq)
-                    tool_output = [p.model_dump(mode="json") for p in res.value]
-                    collected_data["top_products"] = tool_output
+                    elif func_name == "get_top_products":
+                        endpoints_called.append("/analytics/top-products")
+                        t_limit = args.get("limit", 5)
+                        tpq = TopProductsQuery(
+                            tenant_id=tenant_id,
+                            currency=t_curr,
+                            start=t_start,
+                            end=t_end,
+                            limit=t_limit,
+                        )
+                        res = reader.top_products(tpq)
+                        tool_output = [p.model_dump(mode="json") for p in res.value]
+                        collected_data["top_products"] = tool_output
 
-                elif func_name == "get_status_breakdown":
-                    endpoints_called.append("/analytics/status-breakdown")
-                    res = reader.status_breakdown(q)
-                    tool_output = [s.model_dump(mode="json") for s in res.value]
-                    collected_data["status_breakdown"] = tool_output
-                else:
-                    tool_output = {"error": f"Unknown tool {func_name}"}
+                    elif func_name == "get_status_breakdown":
+                        endpoints_called.append("/analytics/status-breakdown")
+                        res = reader.status_breakdown(q)
+                        tool_output = [s.model_dump(mode="json") for s in res.value]
+                        collected_data["status_breakdown"] = tool_output
+                    else:
+                        tool_output = {"error": f"Unknown tool {func_name}"}
+                except Exception as tool_err:
+                    log.warning("Tool %s execution failed: %s", func_name, tool_err)
+                    tool_output = {"error": str(tool_err)}
 
                 messages.append(
                     {
