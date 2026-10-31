@@ -1,11 +1,15 @@
 from collections.abc import Callable
 from typing import Annotated
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi.exceptions import RequestValidationError
+from pydantic import ValidationError
 
 from astraroll.analytics.auth import TenantContext, get_authorized_tenant
 from astraroll.analytics.contracts import (
     AnalyticsQuery,
+    Interval,
     StatusBreakdownResponse,
     SummaryResponse,
     TopProductsQuery,
@@ -26,6 +30,7 @@ from astraroll.analytics.service import (
     shape_trends,
     validate_capabilities,
 )
+from astraroll.schemas import Currency
 
 router = APIRouter(
     prefix="/analytics",
@@ -38,6 +43,55 @@ router = APIRouter(
 )
 Reader = Annotated[AnalyticsReader, Depends(get_analytics_reader)]
 Tenant = Annotated[TenantContext, Depends(get_authorized_tenant)]
+
+
+def _parse_query_params[T](request: Request, model_cls: type[T]) -> T:
+    try:
+        return model_cls.model_validate(dict(request.query_params))
+    except ValidationError as exc:
+        raise RequestValidationError(exc.errors()) from exc
+
+
+def get_summary_query(
+    request: Request,
+    tenant_id: UUID = Query(...),
+    currency: Currency = Query(...),
+    start: str = Query(...),
+    end: str = Query(...),
+) -> AnalyticsQuery:
+    return _parse_query_params(request, AnalyticsQuery)
+
+
+def get_trends_query(
+    request: Request,
+    tenant_id: UUID = Query(...),
+    currency: Currency = Query(...),
+    start: str = Query(...),
+    end: str = Query(...),
+    interval: Interval = Query("day"),
+) -> TrendsQuery:
+    return _parse_query_params(request, TrendsQuery)
+
+
+def get_top_products_query(
+    request: Request,
+    tenant_id: UUID = Query(...),
+    currency: Currency = Query(...),
+    start: str = Query(...),
+    end: str = Query(...),
+    limit: int = Query(10, ge=1, le=10),
+) -> TopProductsQuery:
+    return _parse_query_params(request, TopProductsQuery)
+
+
+def get_status_breakdown_query(
+    request: Request,
+    tenant_id: UUID = Query(...),
+    currency: Currency = Query(...),
+    start: str = Query(...),
+    end: str = Query(...),
+) -> AnalyticsQuery:
+    return _parse_query_params(request, AnalyticsQuery)
 
 
 def read[T](
@@ -70,13 +124,13 @@ def response_fields(query: AnalyticsQuery, result: ReadResult):
 
 
 @router.get("/summary", response_model=SummaryResponse)
-def summary(query: Annotated[AnalyticsQuery, Query()], tenant: Tenant, reader: Reader):
+def summary(query: Annotated[AnalyticsQuery, Depends(get_summary_query)], tenant: Tenant, reader: Reader):
     result = read(query, tenant, reader, lambda: reader.summary(query))
     return SummaryResponse(**response_fields(query, result), **result.value.model_dump())
 
 
 @router.get("/trends", response_model=TrendsResponse)
-def trends(query: Annotated[TrendsQuery, Query()], tenant: Tenant, reader: Reader):
+def trends(query: Annotated[TrendsQuery, Depends(get_trends_query)], tenant: Tenant, reader: Reader):
     def operation():
         result = reader.trends(query)
         return ReadResult(shape_trends(query, result.value), result.freshness)
@@ -88,7 +142,7 @@ def trends(query: Annotated[TrendsQuery, Query()], tenant: Tenant, reader: Reade
 
 
 @router.get("/top-products", response_model=TopProductsResponse)
-def top_products(query: Annotated[TopProductsQuery, Query()], tenant: Tenant, reader: Reader):
+def top_products(query: Annotated[TopProductsQuery, Depends(get_top_products_query)], tenant: Tenant, reader: Reader):
     def operation():
         result = reader.top_products(query)
         return ReadResult(shape_products(result.value, query.limit), result.freshness)
@@ -100,7 +154,7 @@ def top_products(query: Annotated[TopProductsQuery, Query()], tenant: Tenant, re
 
 
 @router.get("/status-breakdown", response_model=StatusBreakdownResponse)
-def status_breakdown(query: Annotated[AnalyticsQuery, Query()], tenant: Tenant, reader: Reader):
+def status_breakdown(query: Annotated[AnalyticsQuery, Depends(get_status_breakdown_query)], tenant: Tenant, reader: Reader):
     def operation():
         result = reader.status_breakdown(query)
         return ReadResult(shape_statuses(result.value), result.freshness)

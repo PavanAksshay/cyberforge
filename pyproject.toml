@@ -19,12 +19,15 @@ dev = ["pytest>=8.3,<10", "httpx>=0.28,<1", "ruff>=0.11,<1"]
 [project.scripts]
 astraroll-relay = "astraroll.relay:main"
 astraroll-seed = "astraroll.seed:main"
+astraroll-consumer = "astraroll.aggregation.consumer:main"
+astraroll-replay-outbox = "astraroll.aggregation.replay:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["src", "tests"]
 markers = ["integration: requires migrated PostgreSQL and Redis"]
 
 [tool.ruff]
