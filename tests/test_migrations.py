@@ -89,7 +89,7 @@ def test_fresh_upgrade_0001_then_0002(migration_engine):
     migrate(migration_engine, "0001_producer")
     assert current_revision(migration_engine) == "0001_producer"
     assert "product_id" not in {c["name"] for c in inspect(migration_engine).get_columns("orders")}
-    migrate(migration_engine)
+    migrate(migration_engine, "0002_producer_contract")
     assert current_revision(migration_engine) == "0002_producer_contract"
     product = next(
         c for c in inspect(migration_engine).get_columns("orders") if c["name"] == "product_id"
@@ -144,7 +144,7 @@ def test_authoritative_backfill_preserves_ids_versions_and_history(
     with migration_engine.connect() as connection:
         before = dict(connection.execute(text("SELECT * FROM orders")).mappings().one())
         history = dict(connection.execute(text("SELECT * FROM outbox_events")).mappings().one())
-    migrate(migration_engine)
+    migrate(migration_engine, "0002_producer_contract")
     with migration_engine.connect() as connection:
         after = dict(connection.execute(text("SELECT * FROM orders")).mappings().one())
         assert after == {**before, "status": new_status, "product_id": product}
@@ -201,7 +201,7 @@ def test_preparatory_product_default_is_rejected(migration_engine):
 
 
 def test_downgrade_refuses_data_loss(migration_engine):
-    migrate(migration_engine)
+    migrate(migration_engine, "0002_producer_contract")
     with pytest.raises(RuntimeError, match="forward-only"):
         migrate(migration_engine, "0001_producer", downgrade=True)
     assert current_revision(migration_engine) == "0002_producer_contract"
@@ -235,3 +235,28 @@ def test_mixed_version_history_is_relayed_unchanged(migration_engine, redis_clie
     assert new_event.order_version == 8
     assert new_event.before.product_id == new_event.after.product_id == product
     assert new_event.before.status == new_event.after.status == "placed"
+
+
+def test_upgrade_and_downgrade_0003_aggregation(migration_engine):
+    migrate(migration_engine)
+    assert current_revision(migration_engine) == "0003_aggregation"
+    tables = set(inspect(migration_engine).get_table_names())
+    expected_tables = {
+        "hourly_summary_aggregates",
+        "daily_summary_aggregates",
+        "hourly_status_aggregates",
+        "daily_status_aggregates",
+        "hourly_product_aggregates",
+        "daily_product_aggregates",
+        "order_projections",
+        "processed_events",
+        "event_quarantine",
+        "tenant_processing_state",
+    }
+    assert expected_tables.issubset(tables)
+
+    # Downgrade back to 0002_producer_contract
+    migrate(migration_engine, "0002_producer_contract", downgrade=True)
+    assert current_revision(migration_engine) == "0002_producer_contract"
+    tables_after = set(inspect(migration_engine).get_table_names())
+    assert not expected_tables.intersection(tables_after)

@@ -52,6 +52,13 @@ services:
     depends_on:
       migrate: {condition: service_completed_successfully}
       redis: {condition: service_healthy}
+  consumer:
+    <<: *app
+    command: ["astraroll-consumer"]
+    restart: unless-stopped
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
   test:
     <<: *app
     profiles: ["test"]
