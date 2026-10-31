@@ -1,0 +1,94 @@
+from dataclasses import dataclass
+from typing import Protocol
+
+from astraroll.analytics.contracts import (
+    METRIC_SEMANTICS,
+    AnalyticsQuery,
+    Freshness,
+    Interval,
+    ProductMetrics,
+    StatusMetrics,
+    SummaryMetrics,
+    TopProductsQuery,
+    TrendMetrics,
+    TrendsQuery,
+)
+
+
+class AnalyticsUnavailable(Exception):
+    """Reader not integrated, source not ready, or no trustworthy coverage available."""
+
+
+class UnsupportedAnalyticsWindow(Exception):
+    """The installed aggregate reader cannot answer this exact window/interval."""
+
+
+@dataclass(frozen=True)
+class ReaderCapabilities:
+    base_granularity: Interval
+    metric_semantics: str = METRIC_SEMANTICS
+
+
+@dataclass(frozen=True)
+class ReadResult[T]:
+    value: T
+    freshness: Freshness | None = None
+
+
+class AnalyticsReader(Protocol):
+    """Tenant/currency-scoped aggregate reads, never a raw orders fallback.
+
+    Every result and its optional checkpoint must describe one consistent durable
+    snapshot. Empty results mean ready, covered, genuinely zero data. Raise
+    AnalyticsUnavailable for uninitialized, missing or untrustworthy rollups.
+    See docs/analytics.md for field semantics and B's integration requirements.
+    """
+
+    def capabilities(self) -> ReaderCapabilities: ...
+
+    def summary(self, query: AnalyticsQuery) -> ReadResult[SummaryMetrics]: ...
+
+    def trends(self, query: TrendsQuery) -> ReadResult[list[TrendMetrics]]:
+        """Unique UTC bucket rows; omitted buckets represent known zeros."""
+        ...
+
+    def top_products(self, query: TopProductsQuery) -> ReadResult[list[ProductMetrics]]:
+        """Return the true global top N (or a complete candidate set), including ties.
+
+        Exclude zero sales; apply sales DESC, count DESC, UUID ASC before SQL LIMIT.
+        API reordering cannot
+        repair a candidate set that omitted a winning product at the cutoff.
+        """
+        ...
+
+    def status_breakdown(self, query: AnalyticsQuery) -> ReadResult[list[StatusMetrics]]:
+        """Unique status rows; omitted statuses represent known zeros."""
+        ...
+
+
+class UnavailableAnalyticsReader:
+    def capabilities(self) -> ReaderCapabilities:
+        raise AnalyticsUnavailable("Aggregate reader is not integrated")
+
+    def summary(self, query: AnalyticsQuery) -> ReadResult[SummaryMetrics]:
+        raise AnalyticsUnavailable("Aggregate reader is not integrated")
+
+    def trends(self, query: TrendsQuery) -> ReadResult[list[TrendMetrics]]:
+        raise AnalyticsUnavailable("Aggregate reader is not integrated")
+
+    def top_products(self, query: TopProductsQuery) -> ReadResult[list[ProductMetrics]]:
+        raise AnalyticsUnavailable("Aggregate reader is not integrated")
+
+    def status_breakdown(self, query: AnalyticsQuery) -> ReadResult[list[StatusMetrics]]:
+        raise AnalyticsUnavailable("Aggregate reader is not integrated")
+
+
+def get_analytics_reader() -> AnalyticsReader:
+    from astraroll.config import get_settings
+
+    if get_settings().analytics_backend == "postgres":
+        # Optional integration imports stay off the default application startup path.
+        from astraroll.analytics.postgres import configured_reader
+
+        return configured_reader()
+    return UnavailableAnalyticsReader()
