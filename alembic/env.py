@@ -7,19 +7,32 @@ from astraroll.db import Base, get_engine
 
 target_metadata = Base.metadata
 
+
+def include_object(object, name, type_, reflected, compare_to):
+    if type_ == "table" and name.startswith("control_"):
+        return False
+    return True
+
+
 if context.is_offline_mode():
     context.configure(
         url=get_settings().database_url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        include_object=include_object,
     )
     with context.begin_transaction():
         context.run_migrations()
 else:
 
     def run(connection):
-        context.configure(connection=connection, target_metadata=target_metadata, compare_type=True)
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+            compare_type=True,
+            include_object=include_object,
+        )
         with context.begin_transaction():
             context.run_migrations()
 
