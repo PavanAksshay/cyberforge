@@ -32,7 +32,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 function computeDateRange(preset: DatePreset): { start: string; end: string } {
   const now = new Date();
   // Align to complete UTC days (midnight)
-  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+  let end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
   let start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 
   if (preset === '24h') {
@@ -46,6 +46,7 @@ function computeDateRange(preset: DatePreset): { start: string; end: string } {
   } else if (preset === 'all') {
     // Data window: Oct 2026 (10M benchmark dataset)
     start = new Date(Date.UTC(2026, 9, 1));  // 2026-10-01
+    end = new Date(Date.UTC(2026, 9, 8));    // 2026-10-08
   }
 
   return {
