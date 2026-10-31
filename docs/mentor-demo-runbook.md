@@ -212,3 +212,4 @@ cd web && npm run build
 - Frontend: `npm run build` succeeds in ~2s with **0 errors and 0 warnings**.
 - Unit & Product Tests: **223 passed, 105 skipped (integration markers), 0 failed**.
 - E2E Integration Test: **Passed** with verified transactional CSV ingestion, Redis relay, consumer rollup update, and Assistant verification.
+

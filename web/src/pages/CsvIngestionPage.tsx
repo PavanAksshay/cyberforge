@@ -505,3 +505,4 @@ PROD-ERGONOMIC-CHAIR,349.50,USD,shipped,2026-10-24T10:30:00Z`;
     </div>
   );
 };
+
