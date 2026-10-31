@@ -137,6 +137,11 @@ in the read reply; the shared stream still does not guarantee global tenant fair
 
 ## V2 measured execution
 
+For the integrated release, start with [release verification](docs/v2-release-verification.md)
+and the [frontend contract](docs/v2-frontend-contract.md). The relay now requires an
+explicit reviewed tenant scope; set V2_RELAY_TENANT_ID for Compose. Historical catchup
+is intentionally paused outside bounded/scoped validation.
+
 See [V2 preparation and safety handoff](docs/v2-final-execution.md) for source selection,
 read-only SQL verification, authenticated latency, interference and recovery probes.
 

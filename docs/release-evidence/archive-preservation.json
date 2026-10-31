@@ -1,0 +1,83 @@
+{
+  "source_orders": 10000000,
+  "source_tenants": 100,
+  "minimum_orders": 100000,
+  "maximum_orders": 100000,
+  "source_outbox_events": 17333300,
+  "source_seed_checkpoint_orders": "10000000",
+  "source_database_bytes": 27831177699,
+  "source_schema_bytes": "23896989696",
+  "postgres_started_at": "2026-10-31T15:07:52.841385+00:00",
+  "data_directory": "D:/cyberforge/.runtime/release-pgdata",
+  "resources": {
+    "at": "2026-10-31T19:37:40.783671+00:00",
+    "physical_available_bytes": 2895360000,
+    "system_commit_available_bytes": 15544315904,
+    "host_cpu_percent": 21.0,
+    "drives": {
+      "C:/": {
+        "total": 266231681024,
+        "used": 251407003648,
+        "free": 14824677376,
+        "percent": 94.4
+      },
+      "D:/": {
+        "total": 244107440128,
+        "used": 109346942976,
+        "free": 134760497152,
+        "percent": 44.8
+      }
+    },
+    "connections": [
+      {
+        "datname": null,
+        "state": null,
+        "connections": 5
+      },
+      {
+        "datname": "v2bench_78b1ee4a_0a5f419c450d56d0aea5f6a5b6a11a29",
+        "state": "idle",
+        "connections": 1
+      },
+      {
+        "datname": "postgres",
+        "state": "active",
+        "connections": 1
+      },
+      {
+        "datname": "postgres",
+        "state": "idle",
+        "connections": 3
+      },
+      {
+        "datname": "v2bench_78b1ee4a_0457061cdb4d553e9b3cba32ec9e5f57",
+        "state": "idle",
+        "connections": 2
+      }
+    ],
+    "settings": {
+      "checkpoint_timeout": "900",
+      "fsync": "on",
+      "full_page_writes": "on",
+      "max_connections": "100",
+      "max_wal_size": "4096",
+      "shared_buffers": "16384",
+      "superuser_reserved_connections": "3",
+      "synchronous_commit": "on",
+      "wal_compression": "lz4"
+    },
+    "wal": {
+      "wal_records": 127040776,
+      "wal_fpi": 6302186,
+      "wal_bytes": "55525820856",
+      "wal_buffers_full": 1407048,
+      "wal_write": 1476225,
+      "wal_sync": 0,
+      "wal_write_time": 0.0,
+      "wal_sync_time": 0.0,
+      "stats_reset": "2026-10-31T12:40:14.237405+00:00"
+    },
+    "wal_directory_bytes": "3355443200"
+  },
+  "raw_artifact_sha256": "9353efad79ea4571f74440b3a570684dd8de7ede77621684d8b101bde7cc267f"
+}
