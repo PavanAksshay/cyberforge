@@ -125,11 +125,11 @@ export const AssistantPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] rounded-2xl bg-white dark:bg-[#131B31] border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-140px)] rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
       {/* Header bar */}
-      <div className="flex items-center justify-between px-6 py-3.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-[#16203B]/50">
+      <div className="flex items-center justify-between px-6 py-3.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-[#101C15]/50">
         <div className="flex items-center space-x-3">
-          <div className="p-2 rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-600/20">
+          <div className="p-2 rounded-xl bg-emerald-600 text-white shadow-md shadow-emerald-600/20">
             <Bot className="w-4 h-4" />
           </div>
           <div>
@@ -137,7 +137,7 @@ export const AssistantPage: React.FC = () => {
               <span className="font-bold text-sm text-slate-900 dark:text-white">
                 AstraRoll AI Analytics Assistant
               </span>
-              <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+              <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
                 Grounded Engine
               </span>
             </div>
@@ -167,7 +167,7 @@ export const AssistantPage: React.FC = () => {
                 className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center shadow-sm ${
                   isUser
                     ? 'bg-slate-900 dark:bg-slate-700 text-white'
-                    : 'bg-indigo-600 text-white shadow-indigo-600/20'
+                    : 'bg-emerald-600 text-white shadow-emerald-600/20'
                 }`}
               >
                 {isUser ? <span className="text-xs font-bold">You</span> : <Bot className="w-4 h-4" />}
@@ -177,8 +177,8 @@ export const AssistantPage: React.FC = () => {
               <div
                 className={`max-w-2xl rounded-2xl p-4 space-y-2 text-xs leading-relaxed ${
                   isUser
-                    ? 'bg-indigo-600 text-white rounded-tr-none'
-                    : 'bg-slate-50 dark:bg-[#16203B] text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-800 rounded-tl-none'
+                    ? 'bg-emerald-600 text-white rounded-tr-none'
+                    : 'bg-slate-50 dark:bg-[#101C15] text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-800 rounded-tl-none'
                 }`}
               >
                 {/* Content with basic markdown formatting */}
@@ -243,7 +243,7 @@ export const AssistantPage: React.FC = () => {
                 {!isUser && (
                   <div className="pt-2 mt-2 border-t border-slate-200/60 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-400">
                     <div className="flex items-center space-x-2">
-                      <span className="font-mono text-indigo-600 dark:text-indigo-400 font-medium">
+                      <span className="font-mono text-emerald-600 dark:text-emerald-400 font-medium">
                         {m.model || 'grounded-engine'}
                       </span>
                       <span>•</span>
@@ -265,14 +265,14 @@ export const AssistantPage: React.FC = () => {
 
         {isTyping && (
           <div className="flex items-start space-x-3 animate-in fade-in">
-            <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center">
+            <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center">
               <Bot className="w-4 h-4 animate-pulse" />
             </div>
-            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#16203B] border border-slate-200 dark:border-slate-800 rounded-tl-none">
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#101C15] border border-slate-200 dark:border-slate-800 rounded-tl-none">
               <div className="flex items-center space-x-1.5 text-xs text-slate-500">
-                <span className="w-2 h-2 rounded-full bg-indigo-600 animate-bounce" />
-                <span className="w-2 h-2 rounded-full bg-indigo-600 animate-bounce [animation-delay:0.2s]" />
-                <span className="w-2 h-2 rounded-full bg-indigo-600 animate-bounce [animation-delay:0.4s]" />
+                <span className="w-2 h-2 rounded-full bg-emerald-600 animate-bounce" />
+                <span className="w-2 h-2 rounded-full bg-emerald-600 animate-bounce [animation-delay:0.2s]" />
+                <span className="w-2 h-2 rounded-full bg-emerald-600 animate-bounce [animation-delay:0.4s]" />
                 <span className="ml-2 font-medium">Verifying authorized analytics...</span>
               </div>
             </div>
@@ -283,8 +283,8 @@ export const AssistantPage: React.FC = () => {
       </div>
 
       {/* Suggested Prompt Chips */}
-      <div className="px-6 py-2 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-[#16203B]/30 flex items-center space-x-2 overflow-x-auto">
-        <Sparkles className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
+      <div className="px-6 py-2 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-[#101C15]/30 flex items-center space-x-2 overflow-x-auto">
+        <Sparkles className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 shrink-0">
           Suggested:
         </span>
@@ -293,7 +293,7 @@ export const AssistantPage: React.FC = () => {
             key={i}
             onClick={() => handleSend(chip)}
             disabled={isTyping}
-            className="shrink-0 px-2.5 py-1 text-xs rounded-full bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition"
+            className="shrink-0 px-2.5 py-1 text-xs rounded-full bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition"
           >
             {chip}
           </button>
@@ -301,8 +301,8 @@ export const AssistantPage: React.FC = () => {
       </div>
 
       {/* Input Bar */}
-      <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-[#131B31]">
-        <div className="flex items-center space-x-2 p-1.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus-within:ring-2 focus-within:ring-indigo-500 transition">
+      <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-[#0B140F]">
+        <div className="flex items-center space-x-2 p-1.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus-within:ring-2 focus-within:ring-emerald-500 transition">
           <textarea
             rows={1}
             value={inputQuery}
@@ -314,7 +314,7 @@ export const AssistantPage: React.FC = () => {
           <button
             onClick={() => handleSend()}
             disabled={!inputQuery.trim() || isTyping}
-            className="p-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white shadow-md shadow-indigo-600/20 transition"
+            className="p-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white shadow-md shadow-emerald-600/20 transition"
           >
             <Send className="w-4 h-4" />
           </button>

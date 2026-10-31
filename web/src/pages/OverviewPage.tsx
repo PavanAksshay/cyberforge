@@ -80,7 +80,7 @@ export const OverviewPage: React.FC = () => {
   if (!activeTenant) {
     return (
       <div className="flex flex-col items-center justify-center h-96 text-slate-400">
-        <AlertCircle className="w-8 h-8 mb-2 text-indigo-400" />
+        <AlertCircle className="w-8 h-8 mb-2 text-emerald-400" />
         <p className="text-sm">Please select a tenant database to view analytics.</p>
       </div>
     );
@@ -104,9 +104,9 @@ export const OverviewPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Freshness & Pipeline Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-indigo-50/80 via-white to-slate-50 dark:from-[#131B31] dark:via-[#16203B] dark:to-[#131B31] border border-indigo-100 dark:border-indigo-900/60 shadow-sm gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-emerald-50/80 via-white to-slate-50 dark:from-[#0B140F] dark:via-[#101C15] dark:to-[#0B140F] border border-emerald-100 dark:border-emerald-900/60 shadow-sm gap-3">
         <div className="flex items-center space-x-3">
-          <div className="p-2.5 rounded-xl bg-indigo-600 text-white shadow-md shadow-indigo-600/20">
+          <div className="p-2.5 rounded-xl bg-emerald-600 text-white shadow-md shadow-emerald-600/20">
             <Zap className="w-4 h-4" />
           </div>
           <div>
@@ -120,7 +120,7 @@ export const OverviewPage: React.FC = () => {
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400">
               Aggregated directly from physical database{' '}
-              <code className="text-indigo-600 dark:text-indigo-400 font-mono font-medium">
+              <code className="text-emerald-600 dark:text-emerald-400 font-mono font-medium">
                 astraroll_tenant_{activeTenant.id.slice(0, 8)}
               </code>
             </p>
@@ -190,7 +190,7 @@ export const OverviewPage: React.FC = () => {
           title="Average Order Value"
           value={formatCurrency(aov, currency)}
           subtitle="Shipped revenue / order"
-          icon={<TrendingUp className="w-5 h-5 text-indigo-500" />}
+          icon={<TrendingUp className="w-5 h-5 text-emerald-500" />}
           tooltip="Calculated dynamically: total recognized sales divided by shipped order volume."
         />
       </div>
@@ -198,10 +198,10 @@ export const OverviewPage: React.FC = () => {
       {/* Charts Section: Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Sales & Orders Time Series */}
-        <div className="lg:col-span-2 p-5 rounded-2xl bg-white dark:bg-[#131B31] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="lg:col-span-2 p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <BarChart3 className="w-4 h-4 text-indigo-500" />
+              <BarChart3 className="w-4 h-4 text-emerald-500" />
               <h3 className="font-bold text-sm text-slate-900 dark:text-white">
                 Shipped Sales & Volume Trends
               </h3>
@@ -211,7 +211,7 @@ export const OverviewPage: React.FC = () => {
                 onClick={() => setInterval('day')}
                 className={`px-2.5 py-1 rounded-md font-semibold transition ${
                   interval === 'day'
-                    ? 'bg-white dark:bg-indigo-600 text-slate-900 dark:text-white shadow-sm'
+                    ? 'bg-white dark:bg-emerald-600 text-slate-900 dark:text-white shadow-sm'
                     : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
@@ -221,7 +221,7 @@ export const OverviewPage: React.FC = () => {
                 onClick={() => setInterval('hour')}
                 className={`px-2.5 py-1 rounded-md font-semibold transition ${
                   interval === 'hour'
-                    ? 'bg-white dark:bg-indigo-600 text-slate-900 dark:text-white shadow-sm'
+                    ? 'bg-white dark:bg-emerald-600 text-slate-900 dark:text-white shadow-sm'
                     : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
@@ -238,7 +238,7 @@ export const OverviewPage: React.FC = () => {
         </div>
 
         {/* Order Lifecycle Breakdown */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#131B31] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
           <div className="flex items-center space-x-2">
             <PieChart className="w-4 h-4 text-teal-500" />
             <h3 className="font-bold text-sm text-slate-900 dark:text-white">
@@ -256,7 +256,7 @@ export const OverviewPage: React.FC = () => {
       {/* Charts Section: Row 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top 5 Products */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#131B31] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <TrendingUp className="w-4 h-4 text-amber-500" />
@@ -276,9 +276,9 @@ export const OverviewPage: React.FC = () => {
         </div>
 
         {/* Status Lifecycle Cards */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#131B31] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
           <div className="flex items-center space-x-2">
-            <ShieldCheck className="w-4 h-4 text-indigo-500" />
+            <ShieldCheck className="w-4 h-4 text-emerald-500" />
             <h3 className="font-bold text-sm text-slate-900 dark:text-white">
               Pipeline Stage Diagnostics
             </h3>
@@ -298,8 +298,8 @@ export const OverviewPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-3.5 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-200/60 dark:border-indigo-900/40">
-              <div className="flex items-center space-x-1.5 text-indigo-700 dark:text-indigo-400 font-bold text-xs mb-1">
+            <div className="p-3.5 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40">
+              <div className="flex items-center space-x-1.5 text-emerald-700 dark:text-emerald-400 font-bold text-xs mb-1">
                 <Clock className="w-3.5 h-3.5" />
                 <span>Placed</span>
               </div>

@@ -145,7 +145,7 @@ PROD-ERGONOMIC-CHAIR,349.50,USD,shipped,2026-10-24T10:30:00Z`;
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="p-5 rounded-2xl bg-white dark:bg-[#131B31] border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
             Transactional CSV Ingestion Pipeline
@@ -165,7 +165,7 @@ PROD-ERGONOMIC-CHAIR,349.50,USD,shipped,2026-10-24T10:30:00Z`;
           </button>
           <button
             onClick={handleLoadSample}
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-600 dark:text-indigo-400 border border-indigo-200/80 dark:border-indigo-800 text-xs font-semibold transition"
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900 text-emerald-600 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800 text-xs font-semibold transition"
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>Load Demo Orders</span>
@@ -174,14 +174,14 @@ PROD-ERGONOMIC-CHAIR,349.50,USD,shipped,2026-10-24T10:30:00Z`;
       </div>
 
       {/* Architecture Flow Visualizer */}
-      <div className="p-5 rounded-2xl bg-white dark:bg-[#131B31] border border-slate-200/80 dark:border-slate-800 shadow-sm">
+      <div className="p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm">
         <div className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-4">
           End-to-End Transactional Pipeline Stages
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
           <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700 text-center space-y-1">
-            <div className="w-7 h-7 mx-auto rounded-lg bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">
+            <div className="w-7 h-7 mx-auto rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
               1
             </div>
             <div className="font-bold text-xs text-slate-800 dark:text-slate-200">
@@ -193,7 +193,7 @@ PROD-ERGONOMIC-CHAIR,349.50,USD,shipped,2026-10-24T10:30:00Z`;
           </div>
 
           <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700 text-center space-y-1">
-            <div className="w-7 h-7 mx-auto rounded-lg bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">
+            <div className="w-7 h-7 mx-auto rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
               2
             </div>
             <div className="font-bold text-xs text-slate-800 dark:text-slate-200">
@@ -205,7 +205,7 @@ PROD-ERGONOMIC-CHAIR,349.50,USD,shipped,2026-10-24T10:30:00Z`;
           </div>
 
           <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700 text-center space-y-1">
-            <div className="w-7 h-7 mx-auto rounded-lg bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">
+            <div className="w-7 h-7 mx-auto rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
               3
             </div>
             <div className="font-bold text-xs text-slate-800 dark:text-slate-200">
@@ -217,7 +217,7 @@ PROD-ERGONOMIC-CHAIR,349.50,USD,shipped,2026-10-24T10:30:00Z`;
           </div>
 
           <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700 text-center space-y-1">
-            <div className="w-7 h-7 mx-auto rounded-lg bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">
+            <div className="w-7 h-7 mx-auto rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
               4
             </div>
             <div className="font-bold text-xs text-slate-800 dark:text-slate-200">
@@ -229,7 +229,7 @@ PROD-ERGONOMIC-CHAIR,349.50,USD,shipped,2026-10-24T10:30:00Z`;
           </div>
 
           <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700 text-center space-y-1">
-            <div className="w-7 h-7 mx-auto rounded-lg bg-indigo-100 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">
+            <div className="w-7 h-7 mx-auto rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
               5
             </div>
             <div className="font-bold text-xs text-slate-800 dark:text-slate-200">
@@ -252,11 +252,11 @@ PROD-ERGONOMIC-CHAIR,349.50,USD,shipped,2026-10-24T10:30:00Z`;
           onDrop={handleDrop}
           className={`flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-dashed transition duration-200 ${
             dragActive
-              ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/30'
-              : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-[#131B31]'
+              ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/30'
+              : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-[#0B140F]'
           }`}
         >
-          <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 mb-3">
+          <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 mb-3">
             <UploadCloud className="w-8 h-8" />
           </div>
           <p className="font-bold text-sm text-slate-800 dark:text-slate-200">
@@ -277,10 +277,10 @@ PROD-ERGONOMIC-CHAIR,349.50,USD,shipped,2026-10-24T10:30:00Z`;
         </div>
 
         {/* Raw CSV Text Area */}
-        <div className="flex flex-col p-5 rounded-2xl bg-white dark:bg-[#131B31] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
+        <div className="flex flex-col p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center space-x-1.5">
-              <FileText className="w-3.5 h-3.5 text-indigo-500" />
+              <FileText className="w-3.5 h-3.5 text-emerald-500" />
               <span>CSV Editor / Direct Input</span>
             </label>
             <span className="text-[11px] text-slate-400 font-mono">
@@ -293,7 +293,7 @@ PROD-ERGONOMIC-CHAIR,349.50,USD,shipped,2026-10-24T10:30:00Z`;
             value={csvContent}
             onChange={(e) => setCsvContent(e.target.value)}
             placeholder="product_id,amount,currency,status,created_at&#10;PROD-1,100.00,USD,shipped,2026-10-20T12:00:00Z"
-            className="w-full flex-1 p-3 text-xs font-mono rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full flex-1 p-3 text-xs font-mono rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
 
           {/* Controls & Submit */}
@@ -304,7 +304,7 @@ PROD-ERGONOMIC-CHAIR,349.50,USD,shipped,2026-10-24T10:30:00Z`;
                   type="checkbox"
                   checked={dryRun}
                   onChange={(e) => setDryRun(e.target.checked)}
-                  className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                 />
                 <span className="font-semibold text-slate-700 dark:text-slate-300">
                   Dry Run Preview Only
@@ -316,7 +316,7 @@ PROD-ERGONOMIC-CHAIR,349.50,USD,shipped,2026-10-24T10:30:00Z`;
                   type="checkbox"
                   checked={triggerRelay}
                   onChange={(e) => setTriggerRelay(e.target.checked)}
-                  className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                 />
                 <span className="font-semibold text-slate-700 dark:text-slate-300">
                   Trigger Instant Relay & Consumer
@@ -327,7 +327,7 @@ PROD-ERGONOMIC-CHAIR,349.50,USD,shipped,2026-10-24T10:30:00Z`;
             <button
               onClick={handleIngest}
               disabled={isSubmitting || !csvContent.trim()}
-              className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold text-xs shadow-md shadow-indigo-600/20 transition"
+              className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition"
             >
               {isSubmitting ? (
                 <>
@@ -354,7 +354,7 @@ PROD-ERGONOMIC-CHAIR,349.50,USD,shipped,2026-10-24T10:30:00Z`;
 
       {/* Live Delta Tracker Banner */}
       {!dryRun && (beforeSales !== null || afterSales !== null) && (
-        <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-white dark:from-emerald-950/30 dark:via-teal-950/20 dark:to-[#131B31] border border-emerald-200 dark:border-emerald-800 shadow-sm space-y-3 animate-in fade-in">
+        <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-white dark:from-emerald-950/30 dark:via-teal-950/20 dark:to-[#0B140F] border border-emerald-200 dark:border-emerald-800 shadow-sm space-y-3 animate-in fade-in">
           <div className="flex items-center space-x-2 text-emerald-800 dark:text-emerald-300 font-bold text-xs uppercase tracking-wider">
             <CheckCircle className="w-4 h-4 text-emerald-600" />
             <span>Verified End-to-End Freshness Delta</span>
@@ -383,7 +383,7 @@ PROD-ERGONOMIC-CHAIR,349.50,USD,shipped,2026-10-24T10:30:00Z`;
               <div className="text-[10px] text-slate-500 uppercase font-sans">
                 Orders Volume Delta
               </div>
-              <div className="text-base font-bold text-indigo-600 dark:text-indigo-400 mt-1">
+              <div className="text-base font-bold text-emerald-600 dark:text-emerald-400 mt-1">
                 {beforeOrders !== null && afterOrders !== null
                   ? `+${afterOrders - beforeOrders} orders`
                   : 'Updated'}
@@ -395,7 +395,7 @@ PROD-ERGONOMIC-CHAIR,349.50,USD,shipped,2026-10-24T10:30:00Z`;
 
       {/* Ingestion Results Summary & Preview Table */}
       {result && (
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#131B31] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <CheckCircle className="w-4 h-4 text-emerald-500" />
@@ -432,7 +432,7 @@ PROD-ERGONOMIC-CHAIR,349.50,USD,shipped,2026-10-24T10:30:00Z`;
 
             <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700">
               <span className="text-[10px] text-slate-400 font-sans block">Shipped Sales Added</span>
-              <strong className="text-indigo-600 dark:text-indigo-400 text-sm">
+              <strong className="text-emerald-600 dark:text-emerald-400 text-sm">
                 {formatCurrency(result.total_sales, currency)}
               </strong>
             </div>
@@ -486,7 +486,7 @@ PROD-ERGONOMIC-CHAIR,349.50,USD,shipped,2026-10-24T10:30:00Z`;
                               r.status === 'shipped'
                                 ? 'bg-teal-100 text-teal-700 dark:bg-teal-950/60 dark:text-teal-400'
                                 : r.status === 'placed'
-                                ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-400'
+                                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400'
                                 : 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400'
                             }`}
                           >

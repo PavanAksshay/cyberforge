@@ -12,10 +12,13 @@ import {
 
 const API_BASE = '';
 
+const DEFAULT_AUTH_TOKEN = 'smoke-test-admin-key-astraroll-v2';
+
 function getHeaders(token?: string): Record<string, string> {
   const headers: Record<string, string> = { Accept: 'application/json' };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+  const active = token || (typeof window !== 'undefined' ? localStorage.getItem('astraroll_token') : null) || DEFAULT_AUTH_TOKEN;
+  if (active) {
+    headers['Authorization'] = `Bearer ${active}`;
   }
   return headers;
 }

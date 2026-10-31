@@ -68,9 +68,9 @@ export const TenantOpsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Overview Banner */}
-      <div className="p-5 rounded-2xl bg-white dark:bg-[#131B31] border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center space-x-3">
-          <div className="p-3 rounded-2xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400">
+          <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
             <Server className="w-6 h-6" />
           </div>
           <div>
@@ -86,7 +86,7 @@ export const TenantOpsPage: React.FC = () => {
         <button
           onClick={handleManualSync}
           disabled={syncing}
-          className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md shadow-indigo-600/20 transition"
+          className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
           <span>Synchronize Cluster Status</span>
@@ -95,7 +95,7 @@ export const TenantOpsPage: React.FC = () => {
 
       {/* Cluster Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 font-mono">
-        <div className="p-4 rounded-xl bg-white dark:bg-[#131B31] border border-slate-200/80 dark:border-slate-800">
+        <div className="p-4 rounded-xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800">
           <span className="text-[10px] uppercase font-bold text-slate-400 font-sans block">
             Active Tenant Databases
           </span>
@@ -108,11 +108,11 @@ export const TenantOpsPage: React.FC = () => {
           </span>
         </div>
 
-        <div className="p-4 rounded-xl bg-white dark:bg-[#131B31] border border-slate-200/80 dark:border-slate-800">
+        <div className="p-4 rounded-xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800">
           <span className="text-[10px] uppercase font-bold text-slate-400 font-sans block">
             Schema Head Revision
           </span>
-          <div className="text-base font-bold text-indigo-600 dark:text-indigo-400 mt-2 truncate">
+          <div className="text-base font-bold text-emerald-600 dark:text-emerald-400 mt-2 truncate">
             0004_coverage_precision
           </div>
           <span className="text-[10px] text-slate-400 font-sans mt-1 block">
@@ -120,7 +120,7 @@ export const TenantOpsPage: React.FC = () => {
           </span>
         </div>
 
-        <div className="p-4 rounded-xl bg-white dark:bg-[#131B31] border border-slate-200/80 dark:border-slate-800">
+        <div className="p-4 rounded-xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800">
           <span className="text-[10px] uppercase font-bold text-slate-400 font-sans block">
             Connection Pool Budget
           </span>
@@ -132,7 +132,7 @@ export const TenantOpsPage: React.FC = () => {
           </span>
         </div>
 
-        <div className="p-4 rounded-xl bg-white dark:bg-[#131B31] border border-slate-200/80 dark:border-slate-800">
+        <div className="p-4 rounded-xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800">
           <span className="text-[10px] uppercase font-bold text-slate-400 font-sans block">
             Streaming Outbox Engine
           </span>
@@ -147,7 +147,7 @@ export const TenantOpsPage: React.FC = () => {
       </div>
 
       {/* Tenant Database Table */}
-      <div className="p-5 rounded-2xl bg-white dark:bg-[#131B31] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+      <div className="p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="font-bold text-sm text-slate-900 dark:text-white">
             Physical Tenant Databases Directory
@@ -179,7 +179,7 @@ export const TenantOpsPage: React.FC = () => {
                   <tr
                     key={t.id}
                     className={`hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition ${
-                      isCurrent ? 'bg-indigo-50/30 dark:bg-indigo-950/20' : ''
+                      isCurrent ? 'bg-emerald-50/30 dark:bg-emerald-950/20' : ''
                     }`}
                   >
                     <td className="px-4 py-3.5">
@@ -188,7 +188,7 @@ export const TenantOpsPage: React.FC = () => {
                         {t.id}
                       </div>
                     </td>
-                    <td className="px-4 py-3.5 font-mono text-indigo-600 dark:text-indigo-400 font-semibold">
+                    <td className="px-4 py-3.5 font-mono text-emerald-600 dark:text-emerald-400 font-semibold">
                       {stat?.database_name || `astraroll_tenant_${t.id.slice(0, 8)}`}
                     </td>
                     <td className="px-4 py-3.5 font-mono text-[11px] text-slate-600 dark:text-slate-400">
@@ -218,7 +218,7 @@ export const TenantOpsPage: React.FC = () => {
                     </td>
                     <td className="px-4 py-3.5 text-right">
                       {isCurrent ? (
-                        <span className="px-2 py-1 text-[11px] font-bold text-indigo-600 dark:text-indigo-400">
+                        <span className="px-2 py-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
                           Current
                         </span>
                       ) : (

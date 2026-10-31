@@ -13,7 +13,7 @@ const AppContent: React.FC = () => {
   const [activeTab, setActiveTab] = useState<PageTab>('overview');
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F8FAFC] dark:bg-[#0B1020] text-slate-900 dark:text-slate-100 transition-colors duration-200">
+    <div className="flex flex-col min-h-screen bg-[#F8FAFC] dark:bg-[#060B08] text-slate-900 dark:text-slate-100 transition-colors duration-200">
       <Header />
 
       <div className="flex flex-1 overflow-hidden">

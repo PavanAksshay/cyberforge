@@ -58,8 +58,8 @@ export const TrendLineChart: React.FC<TrendLineChartProps> = ({ data, currency }
       >
         <defs>
           <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#4F46E5" stopOpacity="0.28" />
-            <stop offset="100%" stopColor="#4F46E5" stopOpacity="0.0" />
+            <stop offset="0%" stopColor="#10B981" stopOpacity="0.28" />
+            <stop offset="100%" stopColor="#10B981" stopOpacity="0.0" />
           </linearGradient>
         </defs>
 
@@ -98,7 +98,7 @@ export const TrendLineChart: React.FC<TrendLineChartProps> = ({ data, currency }
         <path
           d={pathD}
           fill="none"
-          stroke="#4F46E5"
+          stroke="#10B981"
           strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -113,8 +113,8 @@ export const TrendLineChart: React.FC<TrendLineChartProps> = ({ data, currency }
               r={hoveredIdx === i ? 5.5 : 3}
               className={`transition-all duration-150 ${
                 hoveredIdx === i
-                  ? 'fill-indigo-600 stroke-white stroke-2 shadow-md'
-                  : 'fill-indigo-500 hover:fill-indigo-600'
+                  ? 'fill-emerald-600 stroke-white stroke-2 shadow-md'
+                  : 'fill-emerald-500 hover:fill-emerald-600'
               }`}
               onMouseEnter={() => setHoveredIdx(i)}
               onMouseLeave={() => setHoveredIdx(null)}
@@ -154,7 +154,7 @@ export const TrendLineChart: React.FC<TrendLineChartProps> = ({ data, currency }
             })}{' '}
             UTC
           </div>
-          <div className="font-bold text-sm text-indigo-400">
+          <div className="font-bold text-sm text-emerald-400">
             {formatCurrency(points[hoveredIdx].bucket.sales_amount, currency)}
           </div>
           <div className="text-[11px] text-slate-300">
@@ -219,7 +219,7 @@ export const TopProductsBarChart: React.FC<TopProductsBarChartProps> = ({ produc
             </div>
             <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-indigo-600 transition-all duration-500 ease-out"
+                className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 transition-all duration-500 ease-out"
                 style={{ width: `${pct}%` }}
               />
             </div>
@@ -246,9 +246,9 @@ export const StatusDonutChart: React.FC<StatusDonutChartProps> = ({ statuses, cu
       text: 'text-teal-700 dark:text-teal-400',
     },
     placed: {
-      stroke: '#4F46E5',
-      bg: 'bg-indigo-50 dark:bg-indigo-950/40',
-      text: 'text-indigo-700 dark:text-indigo-400',
+      stroke: '#10B981',
+      bg: 'bg-emerald-50 dark:bg-emerald-950/40',
+      text: 'text-emerald-700 dark:text-emerald-400',
     },
     cancelled: {
       stroke: '#F43F5E',

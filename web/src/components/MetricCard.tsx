@@ -28,8 +28,8 @@ export const MetricCard: React.FC<MetricCardProps> = ({
     <div
       className={`relative p-5 rounded-2xl border transition duration-200 group ${
         highlight
-          ? 'bg-gradient-to-br from-indigo-50/50 via-white to-white dark:from-indigo-950/20 dark:via-[#131B31] dark:to-[#131B31] border-indigo-200 dark:border-indigo-800/80 shadow-sm'
-          : 'bg-white dark:bg-[#131B31] border-slate-200/80 dark:border-slate-800 shadow-sm hover:border-slate-300 dark:hover:border-slate-700'
+          ? 'bg-gradient-to-br from-emerald-50/50 via-white to-white dark:from-emerald-950/20 dark:via-[#0B140F] dark:to-[#0B140F] border-emerald-200 dark:border-emerald-800/80 shadow-sm'
+          : 'bg-white dark:bg-[#0B140F] border-slate-200/80 dark:border-slate-800 shadow-sm hover:border-slate-300 dark:hover:border-slate-700'
       }`}
     >
       <div className="flex items-center justify-between mb-3">
@@ -46,7 +46,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
             </div>
           )}
         </div>
-        <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 text-indigo-600 dark:text-indigo-400 group-hover:scale-105 transition-transform">
+        <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform">
           {icon}
         </div>
       </div>

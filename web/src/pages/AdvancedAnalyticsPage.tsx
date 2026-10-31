@@ -74,14 +74,14 @@ export const AdvancedAnalyticsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Controls Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-white dark:bg-[#131B31] border border-slate-200/80 dark:border-slate-800 shadow-sm gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm gap-4">
         {/* View Switcher Tabs */}
         <div className="flex items-center rounded-xl bg-slate-100 dark:bg-slate-800 p-1 text-xs">
           <button
             onClick={() => setActiveView('trends')}
             className={`px-3 py-1.5 font-bold rounded-lg transition ${
               activeView === 'trends'
-                ? 'bg-white dark:bg-indigo-600 text-slate-900 dark:text-white shadow-sm'
+                ? 'bg-white dark:bg-emerald-600 text-slate-900 dark:text-white shadow-sm'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
@@ -91,7 +91,7 @@ export const AdvancedAnalyticsPage: React.FC = () => {
             onClick={() => setActiveView('products')}
             className={`px-3 py-1.5 font-bold rounded-lg transition ${
               activeView === 'products'
-                ? 'bg-white dark:bg-indigo-600 text-slate-900 dark:text-white shadow-sm'
+                ? 'bg-white dark:bg-emerald-600 text-slate-900 dark:text-white shadow-sm'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
@@ -101,7 +101,7 @@ export const AdvancedAnalyticsPage: React.FC = () => {
             onClick={() => setActiveView('statuses')}
             className={`px-3 py-1.5 font-bold rounded-lg transition ${
               activeView === 'statuses'
-                ? 'bg-white dark:bg-indigo-600 text-slate-900 dark:text-white shadow-sm'
+                ? 'bg-white dark:bg-emerald-600 text-slate-900 dark:text-white shadow-sm'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
@@ -117,7 +117,7 @@ export const AdvancedAnalyticsPage: React.FC = () => {
                 onClick={() => setInterval('day')}
                 className={`px-2.5 py-1 rounded-md font-semibold transition ${
                   interval === 'day'
-                    ? 'bg-white dark:bg-indigo-600 text-slate-900 dark:text-white shadow-sm'
+                    ? 'bg-white dark:bg-emerald-600 text-slate-900 dark:text-white shadow-sm'
                     : 'text-slate-500'
                 }`}
               >
@@ -127,7 +127,7 @@ export const AdvancedAnalyticsPage: React.FC = () => {
                 onClick={() => setInterval('hour')}
                 className={`px-2.5 py-1 rounded-md font-semibold transition ${
                   interval === 'hour'
-                    ? 'bg-white dark:bg-indigo-600 text-slate-900 dark:text-white shadow-sm'
+                    ? 'bg-white dark:bg-emerald-600 text-slate-900 dark:text-white shadow-sm'
                     : 'text-slate-500'
                 }`}
               >
@@ -149,7 +149,7 @@ export const AdvancedAnalyticsPage: React.FC = () => {
       {/* Main Content Area */}
       {activeView === 'trends' && (
         <div className="space-y-6">
-          <div className="p-5 rounded-2xl bg-white dark:bg-[#131B31] border border-slate-200/80 dark:border-slate-800 shadow-sm">
+          <div className="p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm">
             <h3 className="font-bold text-sm text-slate-900 dark:text-white mb-4">
               Historical Shipped Sales Curve ({interval === 'day' ? 'Daily' : 'Hourly'})
             </h3>
@@ -161,7 +161,7 @@ export const AdvancedAnalyticsPage: React.FC = () => {
           </div>
 
           {/* Table View */}
-          <div className="p-5 rounded-2xl bg-white dark:bg-[#131B31] border border-slate-200/80 dark:border-slate-800 shadow-sm">
+          <div className="p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-sm text-slate-900 dark:text-white">
                 Detailed Granular Buckets
@@ -213,7 +213,7 @@ export const AdvancedAnalyticsPage: React.FC = () => {
       )}
 
       {activeView === 'products' && (
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#131B31] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-bold text-sm text-slate-900 dark:text-white">
               Top 10 Global Products (Deterministically Tied)
@@ -231,7 +231,7 @@ export const AdvancedAnalyticsPage: React.FC = () => {
       )}
 
       {activeView === 'statuses' && (
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#131B31] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
           <h3 className="font-bold text-sm text-slate-900 dark:text-white mb-2">
             Status Volume & Revenue Recognition Matrix
           </h3>

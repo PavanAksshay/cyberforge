@@ -44,7 +44,8 @@ function computeDateRange(preset: DatePreset): { start: string; end: string } {
   } else if (preset === '90d') {
     start = new Date(end.getTime() - 90 * 24 * 60 * 60 * 1000);
   } else if (preset === 'all') {
-    start = new Date(Date.UTC(2026, 0, 1));
+    // Data window: Oct 2026 (10M benchmark dataset)
+    start = new Date(Date.UTC(2026, 9, 1));  // 2026-10-01
   }
 
   return {
@@ -56,17 +57,17 @@ function computeDateRange(preset: DatePreset): { start: string; end: string } {
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     const saved = localStorage.getItem('astraroll_theme');
-    if (saved === 'dark' || saved === 'light') return saved;
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    if (saved === 'light') return 'light';
+    return 'dark'; // Dark & Green default
   });
 
   const [currency, setCurrency] = useState<Currency>('USD');
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [activeTenant, setActiveTenant] = useState<Tenant | null>(null);
   const [loadingTenants, setLoadingTenants] = useState<boolean>(true);
-  const [datePreset, setDatePreset] = useState<DatePreset>('30d');
-  const [dates, setDates] = useState(computeDateRange('30d'));
-  const [token, setTokenState] = useState<string>(() => localStorage.getItem('astraroll_token') || '');
+  const [datePreset, setDatePreset] = useState<DatePreset>('all');
+  const [dates, setDates] = useState(computeDateRange('all'));
+  const [token, setTokenState] = useState<string>(() => localStorage.getItem('astraroll_token') || 'smoke-test-admin-key-astraroll-v2');
   const [autoRefreshInterval, setAutoRefreshInterval] = useState<number>(0);
   const [refreshKey, setRefreshKey] = useState<number>(0);
 

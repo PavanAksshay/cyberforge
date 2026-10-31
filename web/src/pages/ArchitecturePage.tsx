@@ -32,11 +32,11 @@ export const ArchitecturePage: React.FC = () => {
   return (
     <div className="space-y-8">
       {/* Hero Header */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-indigo-900 via-indigo-800 to-slate-900 text-white shadow-xl">
+      <div className="p-6 rounded-3xl bg-gradient-to-r from-emerald-900 via-emerald-800 to-slate-900 text-white shadow-xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center space-x-2 mb-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-indigo-500/30 border border-indigo-400/40 text-indigo-200">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-500/30 border border-emerald-400/40 text-emerald-200">
                 Verified Benchmark Milestone
               </span>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-emerald-500/30 border border-emerald-400/40 text-emerald-200 flex items-center">
@@ -46,14 +46,14 @@ export const ArchitecturePage: React.FC = () => {
             <h1 className="text-2xl font-extrabold tracking-tight">
               AstraRoll V2: Database-Per-Tenant Architecture
             </h1>
-            <p className="text-xs text-indigo-200 mt-1 max-w-2xl leading-relaxed">
+            <p className="text-xs text-emerald-200 mt-1 max-w-2xl leading-relaxed">
               Transitioned from legacy single-schema multi-tenancy to an enterprise-grade database-per-tenant topology, proven at 1,000,000 orders across 100 dedicated customer databases.
             </p>
           </div>
 
           <div className="flex items-center space-x-3 shrink-0">
             <div className="text-right">
-              <div className="text-xs text-indigo-300">Alembic Head</div>
+              <div className="text-xs text-emerald-300">Alembic Head</div>
               <div className="font-mono font-bold text-sm">0005_tenant_access_paths</div>
             </div>
           </div>
@@ -69,7 +69,7 @@ export const ArchitecturePage: React.FC = () => {
           {benchmarkStats.map((st, i) => (
             <div
               key={i}
-              className="p-5 rounded-2xl bg-white dark:bg-[#131B31] border border-slate-200/80 dark:border-slate-800 shadow-sm"
+              className="p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm"
             >
               <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                 {st.label}
@@ -77,7 +77,7 @@ export const ArchitecturePage: React.FC = () => {
               <div className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1 font-mono">
                 {st.value}
               </div>
-              <div className="text-[11px] text-indigo-600 dark:text-indigo-400 mt-1 font-medium">
+              <div className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 font-medium">
                 {st.subtitle}
               </div>
             </div>
@@ -86,10 +86,10 @@ export const ArchitecturePage: React.FC = () => {
       </div>
 
       {/* Latency Table */}
-      <div className="p-5 rounded-2xl bg-white dark:bg-[#131B31] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+      <div className="p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <Activity className="w-4 h-4 text-indigo-500" />
+            <Activity className="w-4 h-4 text-emerald-500" />
             <h3 className="font-bold text-sm text-slate-900 dark:text-white">
               Measured Benchmark p95 Response Times (100 Tenants Concurrently)
             </h3>
@@ -115,7 +115,7 @@ export const ArchitecturePage: React.FC = () => {
                   <td className="px-4 py-3 text-slate-900 dark:text-white font-sans font-medium">
                     <code>{row.endpoint}</code>
                   </td>
-                  <td className="px-4 py-3 font-bold text-indigo-600 dark:text-indigo-400">
+                  <td className="px-4 py-3 font-bold text-emerald-600 dark:text-emerald-400">
                     {row.p95}
                   </td>
                   <td className="px-4 py-3 text-slate-500">{row.target}</td>
@@ -132,7 +132,7 @@ export const ArchitecturePage: React.FC = () => {
       </div>
 
       {/* 10M Scale Competition Benchmark Targets */}
-      <div className="p-5 rounded-2xl bg-white dark:bg-[#131B31] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+      <div className="p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center space-x-2">
             <Award className="w-5 h-5 text-amber-500" />
@@ -172,7 +172,7 @@ export const ArchitecturePage: React.FC = () => {
                 </td>
                 <td className="px-4 py-3 text-slate-500">Under 1 second</td>
                 <td className="px-4 py-3 text-emerald-600 dark:text-emerald-400 font-bold">Under 200 ms</td>
-                <td className="px-4 py-3 text-indigo-600 dark:text-indigo-400 font-bold">
+                <td className="px-4 py-3 text-emerald-600 dark:text-emerald-400 font-bold">
                   ~145 ms avg (p95: 105-195ms)
                 </td>
                 <td className="px-4 py-3">
@@ -190,7 +190,7 @@ export const ArchitecturePage: React.FC = () => {
                 </td>
                 <td className="px-4 py-3 text-slate-500">Under 5 minutes</td>
                 <td className="px-4 py-3 text-emerald-600 dark:text-emerald-400 font-bold">Under 30 seconds</td>
-                <td className="px-4 py-3 text-indigo-600 dark:text-indigo-400 font-bold">
+                <td className="px-4 py-3 text-emerald-600 dark:text-emerald-400 font-bold">
                   ~4.5 seconds (outbox + consumer)
                 </td>
                 <td className="px-4 py-3">
@@ -208,7 +208,7 @@ export const ArchitecturePage: React.FC = () => {
                 </td>
                 <td className="px-4 py-3 text-slate-500">Less than 25% slower</td>
                 <td className="px-4 py-3 text-emerald-600 dark:text-emerald-400 font-bold">Less than 10% slower</td>
-                <td className="px-4 py-3 text-indigo-600 dark:text-indigo-400 font-bold">
+                <td className="px-4 py-3 text-emerald-600 dark:text-emerald-400 font-bold">
                   &lt; 5.2% slower (DB-per-tenant isolation)
                 </td>
                 <td className="px-4 py-3">
@@ -226,7 +226,7 @@ export const ArchitecturePage: React.FC = () => {
                 </td>
                 <td className="px-4 py-3 text-slate-500">Matches on most queries</td>
                 <td className="px-4 py-3 text-emerald-600 dark:text-emerald-400 font-bold">Matches on all queries</td>
-                <td className="px-4 py-3 text-indigo-600 dark:text-indigo-400 font-bold">
+                <td className="px-4 py-3 text-emerald-600 dark:text-emerald-400 font-bold">
                   100% exact SQL parity (verified)
                 </td>
                 <td className="px-4 py-3">
@@ -244,7 +244,7 @@ export const ArchitecturePage: React.FC = () => {
                 </td>
                 <td className="px-4 py-3 text-slate-500">Less than 5x slower</td>
                 <td className="px-4 py-3 text-emerald-600 dark:text-emerald-400 font-bold">Less than 2x slower</td>
-                <td className="px-4 py-3 text-indigo-600 dark:text-indigo-400 font-bold">
+                <td className="px-4 py-3 text-emerald-600 dark:text-emerald-400 font-bold">
                   1.08x slower (135ms → 145ms)
                 </td>
                 <td className="px-4 py-3">
@@ -259,7 +259,7 @@ export const ArchitecturePage: React.FC = () => {
       </div>
 
       {/* Visual Topology Diagram */}
-      <div className="p-6 rounded-2xl bg-white dark:bg-[#131B31] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-6">
+      <div className="p-6 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-6">
         <div>
           <h3 className="font-bold text-sm text-slate-900 dark:text-white">
             AstraRoll V2 Distributed Topology
@@ -274,7 +274,7 @@ export const ArchitecturePage: React.FC = () => {
           {/* Column 1: Control Plane */}
           <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 space-y-3">
             <div className="flex items-center space-x-2 font-bold text-slate-900 dark:text-white">
-              <Database className="w-4 h-4 text-indigo-500" />
+              <Database className="w-4 h-4 text-emerald-500" />
               <span>1. Control Plane Database</span>
             </div>
             <p className="text-[11px] text-slate-500 leading-relaxed">
@@ -322,9 +322,9 @@ export const ArchitecturePage: React.FC = () => {
 
       {/* Honest Architectural Trade-Offs & Scaling Roadmap */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs leading-relaxed">
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#131B31] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
           <div className="flex items-center space-x-2 font-bold text-slate-900 dark:text-white">
-            <ShieldCheck className="w-4 h-4 text-indigo-500" />
+            <ShieldCheck className="w-4 h-4 text-emerald-500" />
             <span>Honest Architectural Analysis</span>
           </div>
           <ul className="space-y-2 text-slate-600 dark:text-slate-300">
@@ -340,9 +340,9 @@ export const ArchitecturePage: React.FC = () => {
           </ul>
         </div>
 
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#131B31] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
           <div className="flex items-center space-x-2 font-bold text-slate-900 dark:text-white">
-            <Layers className="w-4 h-4 text-indigo-500" />
+            <Layers className="w-4 h-4 text-emerald-500" />
             <span>Horizontal Next-Scale Roadmap</span>
           </div>
           <ul className="space-y-2 text-slate-600 dark:text-slate-300">
