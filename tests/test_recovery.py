@@ -103,7 +103,7 @@ def test_recovery_commit_before_ack_crash(factory, redis_client):
         event_id=str(event_id),
         version=1,
         amount="75.00",
-        status="placed",
+        status="shipped",
     )
     redis_client.xadd(stream_name, {"event": json.dumps(payload)})
 
@@ -258,7 +258,7 @@ def test_recovery_xautoclaim_cursor_progression(factory, redis_client):
             event_id=str(uuid4()),
             version=1,
             amount="10.00",
-            status="placed",
+            status="shipped",
         )
         redis_client.xadd(stream_name, {"event": json.dumps(payload)})
 
@@ -384,7 +384,7 @@ def test_recovery_concurrent_workers(factory, redis_client):
             event_id=str(uuid4()),
             version=1,
             amount="25.00",
-            status="placed",
+            status="shipped",
         )
         redis_client.xadd(stream_name, {"event": json.dumps(payload)})
 

@@ -136,8 +136,8 @@ def test_reader_top_products_ranking_and_zero_sales_inclusion(factory):
             limit=10,
         )
 
-        # prod_zero is INCLUDED because order_count >= 1 even if sales_amount == 0.00
-        assert len(top_prods) == 3
+        # prod_zero is EXCLUDED because sales_amount == 0.00 (positive shipped sales only)
+        assert len(top_prods) == 2
         assert top_prods[0].product_id == prod_high
         assert top_prods[0].rank == 1
         assert top_prods[0].sales_amount == Decimal("200.00")
@@ -145,11 +145,6 @@ def test_reader_top_products_ranking_and_zero_sales_inclusion(factory):
         assert top_prods[1].product_id == prod_med
         assert top_prods[1].rank == 2
         assert top_prods[1].sales_amount == Decimal("50.00")
-
-        assert top_prods[2].product_id == prod_zero
-        assert top_prods[2].rank == 3
-        assert top_prods[2].sales_amount == Decimal("0.00")
-        assert top_prods[2].order_count == 3
 
 
 def test_reader_status_breakdown_all_three_statuses(factory):

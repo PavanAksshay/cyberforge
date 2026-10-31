@@ -48,7 +48,7 @@ from astraroll.aggregation.models import (
 )
 
 Interval = Literal["hour", "day"]
-METRIC_SEMANTICS = "created_at_current_state_v1"
+METRIC_SEMANTICS = "created_at_shipped_sales_v2"
 MAX_WINDOW = timedelta(days=366)
 Count = Annotated[int, Field(strict=True, ge=0)]
 Money = Annotated[Decimal, Field(strict=True, ge=0, decimal_places=2, allow_inf_nan=False)]
@@ -524,9 +524,10 @@ class PostgresAnalyticsReader:
                 product_model.bucket_start < to_utc,
             )
             .group_by(product_model.product_id)
-            .having(sum_orders >= 1)
+            .having(sum_sales > Decimal("0.00"))
             .order_by(
                 desc(sum_sales),
+                desc(sum_orders),
                 product_model.product_id.asc(),
             )
             .limit(bounded_limit)
