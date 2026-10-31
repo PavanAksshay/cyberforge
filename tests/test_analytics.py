@@ -144,7 +144,13 @@ def test_cross_tenant_denial_before_read(analytics_client, scope, reader, endpoi
 
 
 @pytest.mark.parametrize("endpoint", ENDPOINTS)
-def test_absent_real_reader_is_unavailable(analytics_client, scope, reader, endpoint):
+def test_absent_real_reader_is_unavailable(analytics_client, scope, reader, endpoint, monkeypatch):
+    from astraroll import config as module
+    from astraroll.config import Settings
+
+    monkeypatch.setattr(
+        module, "get_settings", lambda: Settings(_env_file=None, analytics_backend="unavailable")
+    )
     app.dependency_overrides.pop(get_analytics_reader)
     response = analytics_client.get(f"/analytics/{endpoint}", params=scope)
     assert response.status_code == 503

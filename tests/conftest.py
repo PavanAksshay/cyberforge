@@ -9,6 +9,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
 from alembic import command
+from astraroll.analytics.auth import AuthenticatedPrincipal, get_authenticated_principal
 from astraroll.api import app, session_dependency
 from astraroll.config import get_settings
 from astraroll.db import get_engine
@@ -81,6 +82,9 @@ def client(factory):
         with factory() as session:
             yield session
 
+    app.dependency_overrides[get_authenticated_principal] = lambda: AuthenticatedPrincipal(
+        subject="producer-test-admin", tenant_ids=frozenset(), is_admin=True
+    )
     app.dependency_overrides[session_dependency] = override
     with TestClient(app) as client:
         yield client

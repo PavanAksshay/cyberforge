@@ -1,9 +1,4 @@
-"""Real aggregate/API checks, enabled only in the temporary combined checkout.
-
-Coverage is a test-harness assertion AFTER known input is processed, not an
-application provider. Aggregate values always come from B's actual PostgreSQL
-reader. No B implementation files or tables are duplicated here.
-"""
+"""Live producer/relay/consumer/coverage/API release checks."""
 
 import hashlib
 import json
@@ -19,15 +14,14 @@ from fastapi.testclient import TestClient
 from sqlalchemy import event, func, select, text, update
 from sqlalchemy.orm import sessionmaker
 
-aggregation = pytest.importorskip("astraroll.aggregation.models")
-consumer_module = pytest.importorskip("astraroll.aggregation.consumer")
-backend_module = pytest.importorskip("astraroll.aggregation.reader")
-replay_module = pytest.importorskip("astraroll.aggregation.replay")
-
 from astraroll import orders  # noqa: E402
+from astraroll.aggregation import consumer as consumer_module
+from astraroll.aggregation import models as aggregation
+from astraroll.aggregation import reader as backend_module
+from astraroll.aggregation import replay as replay_module
+from astraroll.aggregation.bootstrap import bootstrap
+from astraroll.aggregation.coverage import read_coverage
 from astraroll.analytics import auth  # noqa: E402
-from astraroll.analytics.contracts import METRIC_SEMANTICS  # noqa: E402
-from astraroll.analytics.coverage import CoverageProof  # noqa: E402
 from astraroll.analytics.postgres import PostgresAnalyticsAdapter  # noqa: E402
 from astraroll.analytics.reader import get_analytics_reader  # noqa: E402
 from astraroll.api import app, session_dependency  # noqa: E402
@@ -43,11 +37,6 @@ ENDPOINTS = ("summary", "trends", "top-products", "status-breakdown")
 
 @pytest.fixture
 def store(migration_engine):
-    advertised = getattr(backend_module, "METRIC_SEMANTICS", METRIC_SEMANTICS)
-    if advertised != METRIC_SEMANTICS:
-        pytest.skip(
-            f"B advertises {advertised}; owner approved {METRIC_SEMANTICS}; real reads blocked"
-        )
     migrate(migration_engine)
     return sessionmaker(migration_engine, expire_on_commit=False)
 
@@ -56,11 +45,12 @@ def store(migration_engine):
 def identity(monkeypatch):
     records = []
 
-    def register(tenant):
+    def register(tenant, admin=False):
         token = secrets.token_urlsafe(32)
         records.append(
             {
                 "subject": f"subject-{len(records)}",
+                "is_admin": admin,
                 "tenant_ids": [str(tenant)],
                 "key_sha256": hashlib.sha256(token.encode()).hexdigest(),
                 "expires_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
@@ -77,7 +67,7 @@ def identity(monkeypatch):
 
 
 @contextmanager
-def wired_client(store, coverage):
+def wired_client(store, coverage=read_coverage):
     previous = app.dependency_overrides.copy()
 
     def session_override():
@@ -94,19 +84,6 @@ def wired_client(store, coverage):
     finally:
         app.dependency_overrides.clear()
         app.dependency_overrides.update(previous)
-
-
-def proof(query, ready=True, intervals=frozenset({"hour", "day"})):
-    return CoverageProof(
-        tenant_id=query.tenant_id,
-        currency=query.currency,
-        start=START,
-        end=END + timedelta(days=1),
-        metric_semantics=METRIC_SEMANTICS,
-        ready=ready,
-        intervals=intervals,
-        dimensions={"summary", "status", "product"},
-    )
 
 
 def params(tenant, currency="USD", **changes):
@@ -136,10 +113,6 @@ def test_full_pipeline_and_all_four_authenticated_endpoints(
         store, redis_client, stream_name=stream, group_name=group, batch_size=1000, block_ms=1
     )
     worker.init_group()
-    ready = set()
-
-    def coverage(session, query):
-        return proof(query, (query.tenant_id, query.currency) in ready)
 
     def drain():
         while relay_batch(store, redis_client, stream, batch_size=1000):
@@ -148,9 +121,10 @@ def test_full_pipeline_and_all_four_authenticated_endpoints(
             pass
         assert redis_client.xpending(stream, group)["pending"] == 0
 
-    with wired_client(store, coverage) as client:
-        a = UUID(client.post("/tenants", json={"name": "Pipeline A"}).json()["id"])
-        b = UUID(client.post("/tenants", json={"name": "Pipeline B"}).json()["id"])
+    with wired_client(store) as client:
+        admin = identity(uuid4(), admin=True)
+        a = UUID(client.post("/tenants", json={"name": "Pipeline A"}, headers=admin).json()["id"])
+        b = UUID(client.post("/tenants", json={"name": "Pipeline B"}, headers=admin).json()["id"])
         headers_a, headers_b = identity(a), identity(b)
         # Before known coverage, even valid credentials cannot produce success zeros.
         assert (
@@ -162,6 +136,7 @@ def test_full_pipeline_and_all_four_authenticated_endpoints(
             response = client.post(
                 f"/tenants/{tenant}/orders",
                 json={"product_id": str(product), "amount": amount, "currency": currency},
+                headers=headers_a if tenant == a else headers_b,
             )
             assert response.status_code == 201, response.text
             drain()
@@ -172,6 +147,7 @@ def test_full_pipeline_and_all_four_authenticated_endpoints(
             response = client.patch(
                 f"/tenants/{tenant}/orders/{order['id']}",
                 json={"expected_version": order["version"], **changes},
+                headers=headers_a if tenant == a else headers_b,
             )
             assert response.status_code == 200, response.text
             drain()
@@ -188,14 +164,17 @@ def test_full_pipeline_and_all_four_authenticated_endpoints(
         patch(a, create(a, UUID(int=3), "25.00"), status="shipped")
         cancelled = create(a, UUID(int=8), "100.00")
         response = client.post(
-            f"/tenants/{a}/orders/{cancelled['id']}/cancel", json={"expected_version": 1}
+            f"/tenants/{a}/orders/{cancelled['id']}/cancel",
+            json={"expected_version": 1},
+            headers=headers_a,
         )
         assert response.status_code == 200
         drain()
         create(a, UUID(int=7), "5.00")
         patch(a, create(a, UUID(int=5), "99.00", "EUR"), status="shipped")
         patch(b, create(b, UUID(int=6), "1000.00"), status="shipped")
-        ready.update({(a, "USD"), (a, "EUR"), (b, "USD")})
+        for tenant, currencies in ((a, ["USD", "EUR"]), (b, ["USD"])):
+            bootstrap(store, tenant, currencies, START, END + timedelta(days=1))
         # Harness certification: all generated outbox work was drained above. This
         # is NOT inferred from first revision and is NOT a production provider.
         with store() as session:
@@ -310,12 +289,12 @@ def test_unready_vs_covered_empty_and_grain(store, identity, endpoint):
     with store.begin() as session:
         session.add(Tenant(id=tenant, name="Known empty fixture"))
         session.add(aggregation.TenantProcessingState(tenant_id=tenant, revision=0))
-    with wired_client(store, lambda s, q: proof(q, False)) as client:
+    with wired_client(store) as client:
         assert (
             client.get(f"/analytics/{endpoint}", params=params(tenant), headers=headers).status_code
             == 503
         )
-    with wired_client(store, lambda s, q: proof(q)) as client:
+        bootstrap(store, tenant, ["USD"], START, END + timedelta(days=1))
         response = client.get(f"/analytics/{endpoint}", params=params(tenant), headers=headers)
         assert response.status_code == 200, response.text
         if endpoint == "summary":
@@ -323,13 +302,12 @@ def test_unready_vs_covered_empty_and_grain(store, identity, endpoint):
         assert response.json()["freshness"] == {
             "checkpoint": None,
             "last_processed_at": None,
-            "tenant_revision": 0,
+            "tenant_revision": 1,
         }
-    with wired_client(store, lambda s, q: proof(q, intervals=frozenset({"day"}))) as client:
         assert (
             client.get(
                 f"/analytics/{endpoint}",
-                params=params(tenant, start=(START + timedelta(hours=1)).isoformat()),
+                params=params(tenant, start=(START - timedelta(days=1)).isoformat()),
                 headers=headers,
             ).status_code
             == 422
@@ -355,6 +333,17 @@ def test_revision_and_metrics_share_repeatable_read_snapshot(store, identity, mo
                 sales_amount=Decimal("10.00"),
             )
         )
+    bootstrap(store, tenant, ["USD"], START, END)
+    with store.begin() as session:
+        session.add(
+            aggregation.HourlySummaryAggregate(
+                tenant_id=tenant,
+                currency="USD",
+                bucket_start=START,
+                order_count=1,
+                sales_amount=Decimal("10.00"),
+            )
+        )
     original = backend_module.PostgresAnalyticsReader.get_summary
 
     def concurrent_writer(backend, **kwargs):
@@ -369,20 +358,20 @@ def test_revision_and_metrics_share_repeatable_read_snapshot(store, identity, mo
             writer.execute(
                 update(aggregation.TenantProcessingState)
                 .where(aggregation.TenantProcessingState.tenant_id == tenant)
-                .values(revision=2)
+                .values(revision=3)
             )
         return original(backend, **kwargs)
 
     monkeypatch.setattr(backend_module.PostgresAnalyticsReader, "get_summary", concurrent_writer)
-    with wired_client(store, lambda s, q: proof(q)) as client:
+    with wired_client(store) as client:
         response = client.get("/analytics/summary", params=params(tenant), headers=headers)
         assert response.status_code == 200, response.text
         assert Decimal(response.json()["sales_amount"]) == Decimal("10.00")
-        assert response.json()["freshness"]["tenant_revision"] == 1
+        assert response.json()["freshness"]["tenant_revision"] == 2
         monkeypatch.setattr(backend_module.PostgresAnalyticsReader, "get_summary", original)
         response = client.get("/analytics/summary", params=params(tenant), headers=headers)
         assert Decimal(response.json()["sales_amount"]) == Decimal("22.00")
-        assert response.json()["freshness"]["tenant_revision"] == 2
+        assert response.json()["freshness"]["tenant_revision"] == 3
 
 
 def test_b_processing_revision_alone_does_not_enable_default_reader(store, identity):

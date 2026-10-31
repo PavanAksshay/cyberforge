@@ -238,7 +238,7 @@ def test_mixed_version_history_is_relayed_unchanged(migration_engine, redis_clie
 
 
 def test_upgrade_and_downgrade_0003_aggregation(migration_engine):
-    migrate(migration_engine)
+    migrate(migration_engine, "0003_aggregation")
     assert current_revision(migration_engine) == "0003_aggregation"
     tables = set(inspect(migration_engine).get_table_names())
     expected_tables = {

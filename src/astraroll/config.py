@@ -12,9 +12,10 @@ class Settings(BaseSettings):
     order_stream: str = "astraroll:orders:v1"
     relay_batch_size: int = Field(default=100, ge=1, le=1000)
     relay_poll_seconds: float = Field(default=0.5, gt=0)
-    analytics_backend: Literal["unavailable", "postgres"] = "unavailable"
-    analytics_coverage_provider: str | None = None
+    analytics_backend: Literal["unavailable", "postgres"] = "postgres"
+    analytics_coverage_provider: str | None = "astraroll.aggregation.coverage:read_coverage"
     analytics_api_keys_json: SecretStr | None = None
+    coverage_max_age_seconds: int = Field(default=86400, ge=1)
 
 
 @lru_cache

@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Depends, HTTPException, Query
+from fastapi import Depends, HTTPException, Path, Query
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import AwareDatetime, Field, StringConstraints, TypeAdapter, ValidationError
 
@@ -17,6 +17,7 @@ bearer = HTTPBearer(auto_error=False)
 class AuthenticatedPrincipal(Contract):
     subject: str = Field(min_length=1)
     tenant_ids: frozenset[UUID]
+    is_admin: bool = False
 
 
 class TenantContext(Contract):
@@ -27,7 +28,8 @@ class TenantContext(Contract):
 class ApiKeyRecord(Contract):
     key_sha256: Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]
     subject: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=120)]
-    tenant_ids: frozenset[UUID] = Field(min_length=1)
+    tenant_ids: frozenset[UUID] = Field(default_factory=frozenset)
+    is_admin: bool = Field(default=False, strict=True)
     expires_at: AwareDatetime
 
 
@@ -69,13 +71,34 @@ def get_authenticated_principal(
             matched = record
     if matched is None or matched.expires_at <= datetime.now(UTC):
         raise invalid_credentials()
-    return AuthenticatedPrincipal(subject=matched.subject, tenant_ids=matched.tenant_ids)
+    if not matched.is_admin and not matched.tenant_ids:
+        raise invalid_credentials()
+    return AuthenticatedPrincipal(
+        subject=matched.subject, tenant_ids=matched.tenant_ids, is_admin=matched.is_admin
+    )
 
 
 def get_authorized_tenant(
     tenant_id: Annotated[UUID, Query()],
     principal: Annotated[AuthenticatedPrincipal, Depends(get_authenticated_principal)],
 ) -> TenantContext:
-    if tenant_id not in principal.tenant_ids:
+    if not principal.is_admin and tenant_id not in principal.tenant_ids:
+        raise HTTPException(403, "Tenant access denied")
+    return TenantContext(tenant_id=tenant_id, subject=principal.subject)
+
+
+def require_admin(
+    principal: Annotated[AuthenticatedPrincipal, Depends(get_authenticated_principal)],
+):
+    if not principal.is_admin:
+        raise HTTPException(403, "Administrator credential required")
+    return principal
+
+
+def get_authorized_path_tenant(
+    tenant_id: Annotated[UUID, Path()],
+    principal: Annotated[AuthenticatedPrincipal, Depends(get_authenticated_principal)],
+):
+    if not principal.is_admin and tenant_id not in principal.tenant_ids:
         raise HTTPException(403, "Tenant access denied")
     return TenantContext(tenant_id=tenant_id, subject=principal.subject)

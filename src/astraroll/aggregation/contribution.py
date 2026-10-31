@@ -61,10 +61,10 @@ def get_daily_bucket_start(dt: datetime) -> datetime:
 def calculate_sales_contribution(snapshot: OrderSnapshot) -> int:
     """Calculate sales cents contributed by the snapshot based on shared analytics semantics.
 
-    - placed and shipped orders contribute their full amount_cents.
-    - cancelled orders contribute 0 cents (cancellation reverses sales).
+    - shipped orders contribute their full amount_cents.
+    - placed and cancelled orders contribute zero sales.
     """
-    if snapshot.status in (OrderStatus.PLACED, OrderStatus.SHIPPED):
+    if snapshot.status == OrderStatus.SHIPPED:
         return snapshot.amount_cents
     return 0
 

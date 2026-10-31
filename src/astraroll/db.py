@@ -1,6 +1,7 @@
 from functools import lru_cache
 
 from sqlalchemy import create_engine
+from sqlalchemy.engine import make_url
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
 
 from astraroll.config import get_settings
@@ -12,10 +13,12 @@ class Base(DeclarativeBase):
 
 @lru_cache
 def get_engine():
+    url = make_url(get_settings().database_url)
+    options = url.query.get("options", "")
     return create_engine(
-        get_settings().database_url,
+        url,
         pool_pre_ping=True,
-        connect_args={"options": "-c timezone=UTC"},
+        connect_args={"options": f"{options} -c timezone=UTC"},
     )
 
 

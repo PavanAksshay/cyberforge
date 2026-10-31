@@ -88,9 +88,9 @@ def cancelled_snapshot_b() -> OrderSnapshot:
 class TestSalesContribution:
     """Tests for sales contribution rules."""
 
-    def test_placed_order_contributes_amount(self, placed_snapshot_a: OrderSnapshot):
-        # Under reconciled contract: placed orders contribute sales
-        assert calculate_sales_contribution(placed_snapshot_a) == 5000
+    def test_placed_order_contributes_zero(self, placed_snapshot_a: OrderSnapshot):
+        # Placed orders have no recognized sales
+        assert calculate_sales_contribution(placed_snapshot_a) == 0
 
     def test_shipped_order_contributes_amount(self, shipped_snapshot_a: OrderSnapshot):
         assert calculate_sales_contribution(shipped_snapshot_a) == 5000
@@ -111,7 +111,7 @@ class TestIndividualBucketContributions:
         assert key.bucket_start == datetime(2026, 10, 31, 14, 0, 0, tzinfo=UTC)
         assert key.dimension_value is None
         assert delta.order_count == 1
-        assert delta.sales_cents == 5000
+        assert delta.sales_cents == 0
 
     def test_daily_summary_contribution(self, placed_snapshot_a: OrderSnapshot):
         key, delta = calculate_daily_summary_contribution(placed_snapshot_a, TENANT_ID)
@@ -121,7 +121,7 @@ class TestIndividualBucketContributions:
         assert key.bucket_start == datetime(2026, 10, 31, 0, 0, 0, tzinfo=UTC)
         assert key.dimension_value is None
         assert delta.order_count == 1
-        assert delta.sales_cents == 5000
+        assert delta.sales_cents == 0
 
     def test_hourly_status_contribution_placed(self, placed_snapshot_a: OrderSnapshot):
         key, delta = calculate_hourly_status_contribution(placed_snapshot_a, TENANT_ID)
@@ -130,7 +130,7 @@ class TestIndividualBucketContributions:
         assert key.bucket_start == datetime(2026, 10, 31, 14, 0, 0, tzinfo=UTC)
         assert key.dimension_value == "placed"
         assert delta.order_count == 1
-        assert delta.sales_cents == 5000
+        assert delta.sales_cents == 0
 
     def test_daily_status_contribution_shipped(self, shipped_snapshot_a: OrderSnapshot):
         key, delta = calculate_daily_status_contribution(shipped_snapshot_a, TENANT_ID)
@@ -154,7 +154,7 @@ class TestIndividualBucketContributions:
         assert key.bucket_start == datetime(2026, 10, 31, 14, 0, 0, tzinfo=UTC)
         assert key.dimension_value == "PROD-A"
         assert delta.order_count == 1
-        assert delta.sales_cents == 5000
+        assert delta.sales_cents == 0
 
     def test_daily_product_contribution_cancelled(self, cancelled_snapshot_b: OrderSnapshot):
         key, delta = calculate_daily_product_contribution(cancelled_snapshot_b, TENANT_ID)
@@ -196,13 +196,12 @@ class TestComputeContributionDelta:
         deltas = compute_contribution_delta(None, placed_snapshot_a, TENANT_ID)
         assert len(deltas) == 6
 
-        # Placed orders contribute positive order_count=1 and sales_cents=5000
         for key, delta in deltas.items():
             assert delta.order_count == 1
-            assert delta.sales_cents == 5000
+            assert delta.sales_cents == 0
 
     def test_updating_amount_reverses_old_amount(self, placed_snapshot_a: OrderSnapshot):
-        """Updating amount while placed updates sales delta by net difference."""
+        """Repricing while placed changes no recognized sales; shipped math is reversible."""
         updated_snapshot = OrderSnapshot(
             product_id="PROD-A",
             amount_cents=8000,
@@ -216,7 +215,7 @@ class TestComputeContributionDelta:
         # Net order_count delta must be 0 for all buckets; sales_cents delta must be +3000
         for key, delta in deltas.items():
             assert delta.order_count == 0
-            assert delta.sales_cents == 3000
+            assert delta.sales_cents == 0
 
         # Shipped order updates
         shipped_v1 = OrderSnapshot(
@@ -260,7 +259,6 @@ class TestComputeContributionDelta:
         assert deltas[h_summary_k].order_count == 0
         assert deltas[h_summary_k].sales_cents == 0
 
-        # Hourly product PROD-A must lose 1 order and 5000 sales
         h_prod_a_k = AggregationKey(
             tenant_id=TENANT_ID,
             window=AggregationWindow.HOURLY,
@@ -269,9 +267,8 @@ class TestComputeContributionDelta:
             dimension_value="PROD-A",
         )
         assert deltas[h_prod_a_k].order_count == -1
-        assert deltas[h_prod_a_k].sales_cents == -5000
+        assert deltas[h_prod_a_k].sales_cents == 0
 
-        # Hourly product PROD-B must gain 1 order and 5000 sales
         h_prod_b_k = AggregationKey(
             tenant_id=TENANT_ID,
             window=AggregationWindow.HOURLY,
@@ -280,7 +277,7 @@ class TestComputeContributionDelta:
             dimension_value="PROD-B",
         )
         assert deltas[h_prod_b_k].order_count == 1
-        assert deltas[h_prod_b_k].sales_cents == 5000
+        assert deltas[h_prod_b_k].sales_cents == 0
 
     def test_changing_status_updates_both_status_buckets(self, placed_snapshot_a: OrderSnapshot):
         """Changing status placed -> shipped moves order between status buckets."""
@@ -294,7 +291,6 @@ class TestComputeContributionDelta:
 
         deltas = compute_contribution_delta(placed_snapshot_a, updated_snapshot, TENANT_ID)
 
-        # Status 'placed' loses 1 count and 5000 sales
         h_status_placed_k = AggregationKey(
             tenant_id=TENANT_ID,
             window=AggregationWindow.HOURLY,
@@ -303,9 +299,8 @@ class TestComputeContributionDelta:
             dimension_value="placed",
         )
         assert deltas[h_status_placed_k].order_count == -1
-        assert deltas[h_status_placed_k].sales_cents == -5000
+        assert deltas[h_status_placed_k].sales_cents == 0
 
-        # Status 'shipped' gains 1 count and 5000 sales
         h_status_shipped_k = AggregationKey(
             tenant_id=TENANT_ID,
             window=AggregationWindow.HOURLY,
@@ -316,7 +311,6 @@ class TestComputeContributionDelta:
         assert deltas[h_status_shipped_k].order_count == 1
         assert deltas[h_status_shipped_k].sales_cents == 5000
 
-        # Summary receives 0 net sales (since placed and shipped both contribute full sales)
         h_summary_k = AggregationKey(
             tenant_id=TENANT_ID,
             window=AggregationWindow.HOURLY,
@@ -324,7 +318,7 @@ class TestComputeContributionDelta:
             bucket_start=datetime(2026, 10, 31, 14, 0, 0, tzinfo=UTC),
         )
         assert deltas[h_summary_k].order_count == 0
-        assert deltas[h_summary_k].sales_cents == 0
+        assert deltas[h_summary_k].sales_cents == 5000
 
     def test_cancellation_reverses_sales_without_removing_total_order_count(
         self, placed_snapshot_a: OrderSnapshot
@@ -341,7 +335,6 @@ class TestComputeContributionDelta:
         # Placed -> Cancelled transition
         deltas = compute_contribution_delta(placed_snapshot_a, cancelled_snapshot, TENANT_ID)
 
-        # Hourly summary: order_count delta is 0, sales delta is -5000 (placed 5000 -> cancelled 0)
         h_summary_k = AggregationKey(
             tenant_id=TENANT_ID,
             window=AggregationWindow.HOURLY,
@@ -349,9 +342,8 @@ class TestComputeContributionDelta:
             bucket_start=datetime(2026, 10, 31, 14, 0, 0, tzinfo=UTC),
         )
         assert deltas[h_summary_k].order_count == 0
-        assert deltas[h_summary_k].sales_cents == -5000
+        assert deltas[h_summary_k].sales_cents == 0
 
-        # Status 'placed' loses 1 count and 5000 sales
         h_placed_k = AggregationKey(
             tenant_id=TENANT_ID,
             window=AggregationWindow.HOURLY,
@@ -360,7 +352,7 @@ class TestComputeContributionDelta:
             dimension_value="placed",
         )
         assert deltas[h_placed_k].order_count == -1
-        assert deltas[h_placed_k].sales_cents == -5000
+        assert deltas[h_placed_k].sales_cents == 0
 
         # Status 'cancelled' gains 1 count and 0 sales
         h_cancelled_k = AggregationKey(
@@ -408,7 +400,6 @@ class TestComputeContributionDelta:
 
         deltas = compute_contribution_delta(old_snapshot, new_snapshot, TENANT_ID)
 
-        # 1. Hourly Summary: order_count delta = 0 (-1 + 1), sales delta = -5000 (-5000 + 0)
         h_summary_k = AggregationKey(
             tenant_id=TENANT_ID,
             window=AggregationWindow.HOURLY,
@@ -416,9 +407,8 @@ class TestComputeContributionDelta:
             bucket_start=datetime(2026, 10, 31, 14, 0, 0, tzinfo=UTC),
         )
         assert deltas[h_summary_k].order_count == 0
-        assert deltas[h_summary_k].sales_cents == -5000
+        assert deltas[h_summary_k].sales_cents == 0
 
-        # 2. Daily Summary: order_count delta = 0, sales delta = -5000
         d_summary_k = AggregationKey(
             tenant_id=TENANT_ID,
             window=AggregationWindow.DAILY,
@@ -426,7 +416,7 @@ class TestComputeContributionDelta:
             bucket_start=datetime(2026, 10, 31, 0, 0, 0, tzinfo=UTC),
         )
         assert deltas[d_summary_k].order_count == 0
-        assert deltas[d_summary_k].sales_cents == -5000
+        assert deltas[d_summary_k].sales_cents == 0
 
         # 3. Status 'placed': order_count = -1, sales = -5000
         h_placed_k = AggregationKey(
@@ -437,7 +427,7 @@ class TestComputeContributionDelta:
             dimension_value="placed",
         )
         assert deltas[h_placed_k].order_count == -1
-        assert deltas[h_placed_k].sales_cents == -5000
+        assert deltas[h_placed_k].sales_cents == 0
 
         # 4. Status 'cancelled': order_count = +1, sales = 0
         h_cancelled_k = AggregationKey(
@@ -459,7 +449,7 @@ class TestComputeContributionDelta:
             dimension_value="A",
         )
         assert deltas[h_prod_a_k].order_count == -1
-        assert deltas[h_prod_a_k].sales_cents == -5000
+        assert deltas[h_prod_a_k].sales_cents == 0
 
         # 6. Product 'B': order_count = +1, sales = 0 (cancelled order contributes 0 sales)
         h_prod_b_k = AggregationKey(

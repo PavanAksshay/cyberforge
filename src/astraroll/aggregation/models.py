@@ -51,7 +51,7 @@ class HourlySummaryAggregate(Base):
     bucket_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True)
     order_count: Mapped[int] = mapped_column(BigInteger, default=0, nullable=False)
     sales_amount: Mapped[Decimal] = mapped_column(
-        Numeric(18, 2), default=Decimal("0.00"), nullable=False
+        Numeric(38, 2), default=Decimal("0.00"), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False
@@ -77,7 +77,7 @@ class DailySummaryAggregate(Base):
     bucket_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True)
     order_count: Mapped[int] = mapped_column(BigInteger, default=0, nullable=False)
     sales_amount: Mapped[Decimal] = mapped_column(
-        Numeric(18, 2), default=Decimal("0.00"), nullable=False
+        Numeric(38, 2), default=Decimal("0.00"), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False
@@ -107,7 +107,7 @@ class HourlyStatusAggregate(Base):
     bucket_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True)
     order_count: Mapped[int] = mapped_column(BigInteger, default=0, nullable=False)
     sales_amount: Mapped[Decimal] = mapped_column(
-        Numeric(18, 2), default=Decimal("0.00"), nullable=False
+        Numeric(38, 2), default=Decimal("0.00"), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False
@@ -137,7 +137,7 @@ class DailyStatusAggregate(Base):
     bucket_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True)
     order_count: Mapped[int] = mapped_column(BigInteger, default=0, nullable=False)
     sales_amount: Mapped[Decimal] = mapped_column(
-        Numeric(18, 2), default=Decimal("0.00"), nullable=False
+        Numeric(38, 2), default=Decimal("0.00"), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False
@@ -172,7 +172,7 @@ class HourlyProductAggregate(Base):
     bucket_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True)
     order_count: Mapped[int] = mapped_column(BigInteger, default=0, nullable=False)
     sales_amount: Mapped[Decimal] = mapped_column(
-        Numeric(18, 2), default=Decimal("0.00"), nullable=False
+        Numeric(38, 2), default=Decimal("0.00"), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False
@@ -207,7 +207,7 @@ class DailyProductAggregate(Base):
     bucket_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True)
     order_count: Mapped[int] = mapped_column(BigInteger, default=0, nullable=False)
     sales_amount: Mapped[Decimal] = mapped_column(
-        Numeric(18, 2), default=Decimal("0.00"), nullable=False
+        Numeric(38, 2), default=Decimal("0.00"), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False
@@ -234,7 +234,10 @@ class ProcessedEvent(Base):
     """Durable record of processed event IDs for exact once deduplication."""
 
     __tablename__ = "processed_events"
-    __table_args__ = (Index("ix_processed_events_order", "tenant_id", "order_id", "order_version"),)
+    __table_args__ = (
+        Index("ix_processed_events_order", "tenant_id", "order_id", "order_version"),
+        Index("ix_processed_events_time", "processed_at"),
+    )
 
     event_id: Mapped[UUID] = mapped_column(primary_key=True)
     tenant_id: Mapped[UUID] = mapped_column(nullable=False)

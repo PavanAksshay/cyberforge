@@ -19,11 +19,14 @@ from decimal import Decimal, InvalidOperation
 from typing import Any
 from uuid import UUID
 
+from pydantic import TypeAdapter, ValidationError
+
 from astraroll.aggregation.contracts import (
     OrderEvent,
     OrderSnapshot,
     OrderStatus,
 )
+from astraroll.schemas import Amount
 
 
 @dataclass(frozen=True)
@@ -57,14 +60,14 @@ def _parse_uuid(val: Any) -> UUID | None:
 def _parse_datetime(val: Any) -> datetime:
     if isinstance(val, datetime):
         if val.tzinfo is None:
-            return val.replace(tzinfo=UTC)
+            raise ValueError("Timestamp must include a timezone")
         return val.astimezone(UTC)
     if isinstance(val, str):
         # Fromisoformat handles trailing Z in Python 3.11+
         s = val.replace("Z", "+00:00")
         dt = datetime.fromisoformat(s)
         if dt.tzinfo is None:
-            return dt.replace(tzinfo=UTC)
+            raise ValueError("Timestamp must include a timezone")
         return dt.astimezone(UTC)
     raise ValueError(f"Cannot parse datetime from {type(val).__name__}: {val}")
 
@@ -82,9 +85,11 @@ def parse_order_snapshot(data: dict[str, Any]) -> OrderSnapshot:
         raise ValueError("amount is missing")
     if isinstance(raw_amount, float):
         raise ValueError("amount must not be a float")
+    if not isinstance(raw_amount, str):
+        raise ValueError("amount must be an exact decimal string")
 
     try:
-        dec_amount = Decimal(str(raw_amount))
+        dec_amount = Decimal(raw_amount)
     except (InvalidOperation, TypeError) as exc:
         raise ValueError(f"Invalid decimal amount: {raw_amount}") from exc
 
@@ -93,13 +98,12 @@ def parse_order_snapshot(data: dict[str, Any]) -> OrderSnapshot:
 
     if dec_amount < 0:
         raise ValueError(f"amount cannot be negative: {dec_amount}")
-
-    # Reject amounts with more than 2 decimal places (e.g. "12.345")
-    if dec_amount.as_tuple().exponent < -2:
-        raise ValueError(f"amount exceeds 2 decimal places: {raw_amount}")
-
-    if len(dec_amount.as_tuple().digits) > 18:
-        raise ValueError("amount exceeds maximum precision of 18 digits")
+    try:
+        dec_amount = TypeAdapter(Amount).validate_python(raw_amount)
+    except ValidationError as exc:
+        if any(error["type"] == "decimal_max_places" for error in exc.errors()):
+            raise ValueError("amount exceeds 2 decimal places") from exc
+        raise ValueError("amount exceeds supported precision") from exc
 
     cents_val = dec_amount * Decimal(100)
     if cents_val != cents_val.to_integral_value():
@@ -184,7 +188,7 @@ def adapt_stream_message(
     order_id = _parse_uuid(data.get("order_id"))
 
     # Envelope validation: must be schema_version 2
-    if data.get("schema_version") != 2:
+    if type(data.get("schema_version")) is not int or data.get("schema_version") != 2:
         reason = f"Unsupported schema_version: {data.get('schema_version')} (expected 2)"
         return AdaptedMessage(
             stream_id=stream_id,
@@ -235,7 +239,9 @@ def adapt_stream_message(
         )
 
     try:
-        order_version = int(data.get("order_version", 0))
+        order_version = data.get("order_version", 0)
+        if type(order_version) is not int:
+            raise ValueError("order_version must be an integer")
         if order_version < 1:
             raise ValueError(f"order_version must be >= 1, got {order_version}")
     except (ValueError, TypeError) as exc:
@@ -320,6 +326,41 @@ def adapt_stream_message(
                 tenant_id=tenant_id,
                 order_id=order_id,
             )
+
+    try:
+        for snapshot, expected_version in (
+            (after_data, order_version),
+            (before_data, order_version - 1),
+        ):
+            if snapshot is None:
+                continue
+            if (
+                _parse_uuid(snapshot.get("id")) != order_id
+                or _parse_uuid(snapshot.get("tenant_id")) != tenant_id
+                or type(snapshot.get("version")) is not int
+                or snapshot["version"] != expected_version
+            ):
+                raise ValueError("Snapshot identity/version disagrees with envelope")
+        if event_type not in ("order.created", "order.updated", "order.cancelled"):
+            raise ValueError("Unsupported event_type")
+        if "before" not in data or (order_version > 1 and before_data is None):
+            raise ValueError("Full before snapshot required for updates")
+        if before_snapshot is not None and (
+            before_snapshot.created_at != after_snapshot.created_at
+            or before_snapshot.currency != after_snapshot.currency
+        ):
+            raise ValueError("Immutable snapshot fields changed")
+    except ValueError as exc:
+        return AdaptedMessage(
+            stream_id=stream_id,
+            stream_name=stream_name,
+            raw_payload=payload_str,
+            quarantine_reason=str(exc),
+            event_id=event_id,
+            schema_version=schema_version,
+            tenant_id=tenant_id,
+            order_id=order_id,
+        )
 
     domain_event = OrderEvent(
         event_id=str(event_id),

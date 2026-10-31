@@ -79,7 +79,6 @@ def test_order_event_processor_lifecycle(factory):
         assert proc_evt is not None
         assert proc_evt.order_version == 1
 
-        # Check summary aggregate (placed contributes $100.00 sales)
         summary = session.scalar(
             select(HourlySummaryAggregate).where(
                 HourlySummaryAggregate.tenant_id == tenant_id,
@@ -89,7 +88,7 @@ def test_order_event_processor_lifecycle(factory):
         )
         assert summary is not None
         assert summary.order_count == 1
-        assert summary.sales_amount == Decimal("100.00")
+        assert summary.sales_amount == Decimal("0.00")
 
         # Check status aggregate
         placed_status = session.scalar(
@@ -102,7 +101,7 @@ def test_order_event_processor_lifecycle(factory):
         )
         assert placed_status is not None
         assert placed_status.order_count == 1
-        assert placed_status.sales_amount == Decimal("100.00")
+        assert placed_status.sales_amount == Decimal("0.00")
 
     # Step 2: Process v2 'shipped' ($100.00)
     with factory() as session:
@@ -276,4 +275,4 @@ def test_corrupted_projection_snapshot_raises_error_and_does_not_double_count(fa
         assert summary is not None
         # Must still be exactly 1 order, never double counted!
         assert summary.order_count == 1
-        assert summary.sales_amount == Decimal("100.00")
+        assert summary.sales_amount == Decimal("0.00")

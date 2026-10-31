@@ -30,6 +30,7 @@ from astraroll.aggregation.processor import OrderEventProcessor
 from astraroll.aggregation.repository import AggregateRepository
 from astraroll.config import get_settings
 from astraroll.db import get_session_factory
+from astraroll.operations import increment
 
 log = logging.getLogger("astraroll.consumer")
 
@@ -56,6 +57,8 @@ class AggregationConsumer:
         self.stream_name = stream_name
         self.group_name = group_name
         self.consumer_name = consumer_name or f"consumer-{uuid4().hex[:8]}"
+        if not 1 <= batch_size <= 10000:
+            raise ValueError("Batch size must be 1..10000")
         self.batch_size = batch_size
         self.block_ms = block_ms
         self.min_idle_claim_ms = min_idle_claim_ms
@@ -193,6 +196,8 @@ class AggregationConsumer:
                 if self.process_message(stream_id, fields):
                     claimed_count += 1
             if claimed_count > 0:
+                with self.session_factory.begin() as session:
+                    increment(session, "recovered", claimed_count)
                 log.info(
                     "Recovered and processed %d abandoned messages via XAUTOCLAIM (cursor: %s)",
                     claimed_count,
@@ -247,6 +252,11 @@ class AggregationConsumer:
             except Exception as exc:
                 if stop_event.is_set():
                     break
+                try:
+                    with self.session_factory.begin() as session:
+                        increment(session, "worker_errors")
+                except Exception:
+                    log.warning("Could not persist worker error counter")
                 log.error("Error in consumer loop: %s", exc, exc_info=True)
                 time.sleep(1.0)
 
