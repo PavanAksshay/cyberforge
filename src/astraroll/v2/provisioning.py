@@ -119,7 +119,24 @@ class TenantProvisioner:
         db_name = make_tenant_db_name(tenant_id, self.tenant_database_prefix)
         alias = database_alias or db_name
 
-        # 1. Register tenant in control registry as PENDING
+        # 1. Check for pre-existing physical database on the cluster
+        if self._database_exists(db_name):
+            existing_rec = self.registry.get_tenant_by_database(db_name)
+            if existing_rec and existing_rec.tenant_id != tenant_id:
+                raise ValueError(
+                    f"Pre-existing database '{db_name}' belongs to tenant "
+                    f"{existing_rec.tenant_id}; refusing to overwrite."
+                )
+            if not existing_rec:
+                raise ValueError(
+                    f"Pre-existing database '{db_name}' detected on cluster with "
+                    "unverified provenance; refusing to overwrite or drop."
+                )
+            log.info(
+                "Database %s already exists and is verified owned by tenant %s", db_name, tenant_id
+            )
+
+        # 2. Register tenant in control registry as PENDING
         record = self.registry.register_tenant(
             tenant_id=tenant_id,
             name=name,
@@ -128,19 +145,17 @@ class TenantProvisioner:
             status=TenantStatus.PENDING,
         )
 
-        db_created = False
         try:
-            # 2. Transition to PROVISIONING and create physical database
+            # 3. Transition to PROVISIONING and create physical database if not already existing
             self.registry.update_status(tenant_id, TenantStatus.PROVISIONING)
             self._create_database(db_name)
-            db_created = True
 
-            # 3. Transition to MIGRATING and apply DDL schema
+            # 4. Transition to MIGRATING and apply DDL schema
             self.registry.update_status(tenant_id, TenantStatus.MIGRATING)
             tenant_url = self.admin_url.set(database=db_name).render_as_string(hide_password=False)
             self._apply_schema(tenant_url, tenant_id, name)
 
-            # 4. Transition to ACTIVE
+            # 5. Transition to ACTIVE
             record = self.registry.update_status(
                 tenant_id,
                 TenantStatus.ACTIVE,
@@ -151,12 +166,9 @@ class TenantProvisioner:
             return record
 
         except Exception as exc:
-            log.exception("Provisioning failed for tenant %s; rolling back", tenant_id)
-            if db_created:
-                try:
-                    self._drop_database(db_name)
-                except Exception as drop_err:
-                    log.error("Failed to drop database %s during rollback: %s", db_name, drop_err)
+            log.exception(
+                "Provisioning failed for tenant %s; marking FAILED for safe diagnosis", tenant_id
+            )
             self.registry.update_status(
                 tenant_id,
                 TenantStatus.FAILED,

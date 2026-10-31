@@ -7,7 +7,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from sqlalchemy import Column, DateTime, String, Text, select
+from sqlalchemy import Column, DateTime, Integer, String, Text, select
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import DeclarativeBase, Session
 
@@ -21,6 +21,7 @@ class TenantStatus(StrEnum):
     MIGRATING = "migrating"
     ACTIVE = "active"
     FAILED = "failed"
+    QUARANTINED = "quarantined"
     DECOMMISSIONED = "decommissioned"
 
 
@@ -51,6 +52,31 @@ class TenantRegistryRecord(ControlBase):
 
     def is_active(self) -> bool:
         return self.status == TenantStatus.ACTIVE.value
+
+
+class TenantMigrationCheckpoint(ControlBase):
+    """Durable checkpoint tracking online/offline tenant migration progress."""
+
+    __tablename__ = "control_tenant_migration_checkpoints"
+
+    tenant_id = Column(PG_UUID(as_uuid=True), primary_key=True)
+    phase = Column(String(50), nullable=False, default="INIT")
+    last_order_id = Column(PG_UUID(as_uuid=True), nullable=True)
+    last_order_created_at = Column(DateTime(timezone=True), nullable=True)
+    orders_copied = Column(Integer, nullable=False, default=0)
+    outbox_copied = Column(Integer, nullable=False, default=0)
+    rollups_copied = Column(Integer, nullable=False, default=0)
+    status = Column(String(50), nullable=False, default="IN_PROGRESS")
+    error_message = Column(Text, nullable=True)
+    recovery_backup_path = Column(Text, nullable=True)
+    started_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC))
+    updated_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+    )
+    completed_at = Column(DateTime(timezone=True), nullable=True)
 
 
 class ControlRegistry:
@@ -138,6 +164,18 @@ class ControlRegistry:
                 session.expunge(record)
             return record
 
+    def get_tenant_by_database(self, database_name: str) -> TenantRegistryRecord | None:
+        """Fetch tenant record by physical database name from control plane."""
+        with Session(self.engine) as session:
+            record = session.scalar(
+                select(TenantRegistryRecord).where(
+                    TenantRegistryRecord.database_name == database_name
+                )
+            )
+            if record:
+                session.expunge(record)
+            return record
+
     def list_active_tenants(self) -> list[TenantRegistryRecord]:
         """List all active tenant records."""
         with Session(self.engine) as session:
@@ -159,3 +197,77 @@ class ControlRegistry:
             for r in records:
                 session.expunge(r)
             return list(records)
+
+    def get_checkpoint(self, tenant_id: UUID) -> TenantMigrationCheckpoint | None:
+        """Retrieve migration checkpoint for a tenant."""
+        with Session(self.engine) as session:
+            cp = session.get(TenantMigrationCheckpoint, tenant_id)
+            if cp:
+                session.expunge(cp)
+            return cp
+
+    def save_checkpoint(
+        self,
+        tenant_id: UUID,
+        phase: str,
+        orders_copied: int = 0,
+        outbox_copied: int = 0,
+        rollups_copied: int = 0,
+        last_order_id: UUID | None = None,
+        last_order_created_at: datetime | None = None,
+        status: str = "IN_PROGRESS",
+        error_message: str | None = None,
+        recovery_backup_path: str | None = None,
+        completed: bool = False,
+    ) -> TenantMigrationCheckpoint:
+        """Create or update a durable migration checkpoint."""
+        now = datetime.now(UTC)
+        with Session(self.engine) as session:
+            cp = session.get(TenantMigrationCheckpoint, tenant_id)
+            if not cp:
+                cp = TenantMigrationCheckpoint(
+                    tenant_id=tenant_id,
+                    phase=phase,
+                    last_order_id=last_order_id,
+                    last_order_created_at=last_order_created_at,
+                    orders_copied=orders_copied,
+                    outbox_copied=outbox_copied,
+                    rollups_copied=rollups_copied,
+                    status=status,
+                    error_message=error_message,
+                    recovery_backup_path=recovery_backup_path,
+                    started_at=now,
+                    updated_at=now,
+                    completed_at=now if completed else None,
+                )
+                session.add(cp)
+            else:
+                cp.phase = phase
+                if last_order_id is not None:
+                    cp.last_order_id = last_order_id
+                if last_order_created_at is not None:
+                    cp.last_order_created_at = last_order_created_at
+                cp.orders_copied = orders_copied
+                cp.outbox_copied = outbox_copied
+                cp.rollups_copied = rollups_copied
+                cp.status = status
+                if error_message is not None:
+                    cp.error_message = error_message
+                if recovery_backup_path is not None:
+                    cp.recovery_backup_path = recovery_backup_path
+                cp.updated_at = now
+                if completed:
+                    cp.completed_at = now
+
+            session.commit()
+            session.refresh(cp)
+            session.expunge(cp)
+            return cp
+
+    def delete_checkpoint(self, tenant_id: UUID) -> None:
+        """Remove migration checkpoint after cleanup."""
+        with Session(self.engine) as session:
+            cp = session.get(TenantMigrationCheckpoint, tenant_id)
+            if cp:
+                session.delete(cp)
+                session.commit()
