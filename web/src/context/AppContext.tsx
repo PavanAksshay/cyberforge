@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { Currency, Tenant } from '../types';
 import { fetchTenants } from '../lib/api';
 
-export type DatePreset = '24h' | '7d' | '30d' | '90d' | 'all';
+export type DatePreset = '24h' | '3d' | '7d' | '30d' | '90d' | 'all';
 
 interface AppContextType {
   theme: 'light' | 'dark';
@@ -40,9 +40,12 @@ function computeDateRange(preset: DatePreset): { start: string; end: string } {
   if (preset === '24h') {
     start = baseStart;
     end = new Date(Date.UTC(2026, 9, 2, 0, 0, 0)); // 24h: Oct 1 - Oct 2
+  } else if (preset === '3d') {
+    start = baseStart;
+    end = new Date(Date.UTC(2026, 9, 4, 0, 0, 0)); // 3 Days: Oct 1 - Oct 4
   } else if (preset === '7d' || preset === 'all' || preset === '30d' || preset === '90d') {
     start = baseStart;
-    end = baseEnd; // Full coverage: Oct 1 - Oct 8
+    end = baseEnd; // All 7 Days: Oct 1 - Oct 8
   }
 
   return {

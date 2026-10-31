@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import {
+  Layers,
+  ChevronDown,
+  RefreshCw,
+  Key,
   Sun,
   Moon,
-  RefreshCw,
-  Database,
-  Layers,
-  Key,
   Clock,
-  ChevronDown,
   Check,
+  Building2,
+  Database,
 } from 'lucide-react';
 import { useApp, DatePreset } from '../context/AppContext';
 import { Currency } from '../types';
@@ -44,55 +45,64 @@ export const Header: React.FC = () => {
 
   // Primary settlement currencies pre-aggregated in 100 tenant DBs
   const currencies: Currency[] = ['USD', 'EUR'];
-  const presets: { id: DatePreset; label: string }[] = [
-    { id: '24h', label: '24h' },
-    { id: '7d', label: '7d' },
-    { id: 'all', label: 'All Time' },
+  const presets: { id: DatePreset; label: string; tooltip: string }[] = [
+    { id: '24h', label: '24 Hours', tooltip: 'First 24 hours of dataset (Oct 1 - Oct 2)' },
+    { id: '3d', label: '3 Days', tooltip: 'First 3 days of dataset (Oct 1 - Oct 4)' },
+    { id: 'all', label: 'All 7 Days', tooltip: 'Full dataset coverage (Oct 1 - Oct 8)' },
   ];
 
+  const formatTenantDisplayName = (name?: string) => {
+    if (!name) return 'Select Tenant';
+    const match = name.match(/\/ (\d+)$/);
+    if (match) {
+      return `Enterprise Tenant #${match[1]}`;
+    }
+    return name;
+  };
+
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between px-6 py-3 border-b bg-white/80 dark:bg-[#060B08]/90 backdrop-blur-md border-slate-200 dark:border-slate-800 transition-colors">
+    <header className="sticky top-0 z-30 flex items-center justify-between px-8 py-4 border-b bg-[#051c15]/95 backdrop-blur-md border-[#0f4838] transition-colors">
       {/* Brand & Mode */}
-      <div className="flex items-center space-x-3">
-        <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-emerald-500 text-white shadow-md shadow-emerald-500/20">
-          <Layers className="w-5 h-5" />
+      <div className="flex items-center space-x-3.5">
+        <div className="flex items-center justify-center w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-600 to-emerald-500 text-white shadow-lg shadow-emerald-900/30">
+          <Layers className="w-6 h-6" />
         </div>
         <div>
-          <div className="flex items-center space-x-2">
-            <span className="font-extrabold text-lg tracking-tight text-slate-900 dark:text-white">
+          <div className="flex items-center space-x-2.5">
+            <span className="font-extrabold text-xl tracking-tight text-white">
               AstraRoll
             </span>
-            <span className="px-2 py-0.5 text-xs font-semibold rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/60">
+            <span className="px-2.5 py-0.5 text-xs font-bold rounded-lg bg-emerald-950/80 text-emerald-300 border border-emerald-800">
               V2 DB-Per-Tenant
             </span>
           </div>
-          <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
-            Enterprise Analytics Control Center
+          <span className="text-xs font-medium text-emerald-400/80">
+            10M Record Physical Sharding Platform
           </span>
         </div>
       </div>
 
-      {/* Controls & Selectors */}
-      <div className="flex items-center space-x-3">
-        {/* Tenant Switcher */}
+      {/* Center Controls (Tenant, Currency, Date Presets, Auto-Refresh) */}
+      <div className="flex items-center space-x-3.5">
+        {/* Tenant Selector Dropdown */}
         <div className="relative">
           <button
             onClick={() => setTenantDropdownOpen(!tenantDropdownOpen)}
-            className="flex items-center space-x-2 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200/80 dark:bg-slate-800/80 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 transition"
+            className="flex items-center space-x-2.5 px-3.5 py-2 rounded-xl bg-[#082920] border border-[#114f3c] text-sm font-semibold text-white hover:border-emerald-500/50 transition shadow-sm"
           >
-            <Database className="w-3.5 h-3.5 text-emerald-500" />
-            <span className="max-w-[140px] truncate">
-              {activeTenant ? activeTenant.name : 'Select Tenant'}
+            <Database className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span className="max-w-[160px] truncate">
+              {formatTenantDisplayName(activeTenant?.name)}
             </span>
-            <ChevronDown className="w-3 h-3 text-slate-400" />
+            <ChevronDown className="w-4 h-4 text-slate-400" />
           </button>
 
           {tenantDropdownOpen && (
-            <div className="absolute left-0 mt-1.5 w-64 p-1 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl z-50 animate-in fade-in zoom-in-95">
-              <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800">
-                Active Tenant Databases ({tenants.length})
+            <div className="absolute left-0 mt-2 w-72 max-h-96 overflow-y-auto rounded-2xl bg-[#07261d] border border-[#12533f] shadow-2xl p-2 z-50">
+              <div className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-emerald-400 border-b border-[#0f4738] mb-1">
+                Select Isolated Database ({tenants.length} Tenants)
               </div>
-              <div className="max-h-56 overflow-y-auto py-1">
+              <div className="space-y-1">
                 {tenants.map((t) => (
                   <button
                     key={t.id}
@@ -100,19 +110,19 @@ export const Header: React.FC = () => {
                       setActiveTenant(t);
                       setTenantDropdownOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-lg transition ${
+                    className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-xl transition ${
                       activeTenant?.id === t.id
-                        ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 font-semibold'
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                        ? 'bg-emerald-600 text-white font-bold'
+                        : 'text-slate-300 hover:bg-[#0c382b]'
                     }`}
                   >
                     <div className="text-left truncate mr-2">
-                      <div className="truncate font-medium">{t.name}</div>
-                      <div className="text-[10px] text-slate-400 dark:text-slate-500 font-mono truncate">
+                      <div className="truncate font-medium">{formatTenantDisplayName(t.name)}</div>
+                      <div className="text-[10px] text-emerald-300/70 font-mono truncate">
                         {t.id}
                       </div>
                     </div>
-                    {activeTenant?.id === t.id && <Check className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />}
+                    {activeTenant?.id === t.id && <Check className="w-4 h-4 shrink-0 text-white" />}
                   </button>
                 ))}
               </div>
@@ -121,15 +131,15 @@ export const Header: React.FC = () => {
         </div>
 
         {/* Currency Selector */}
-        <div className="flex items-center rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 p-0.5">
+        <div className="flex items-center rounded-xl bg-[#082920] border border-[#114f3c] p-1">
           {currencies.map((c) => (
             <button
               key={c}
               onClick={() => setCurrency(c)}
-              className={`px-2.5 py-1 text-xs font-semibold rounded-md transition ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition ${
                 currency === c
-                  ? 'bg-white dark:bg-emerald-600 text-slate-900 dark:text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'text-slate-300 hover:text-white'
               }`}
             >
               {c}
@@ -137,16 +147,17 @@ export const Header: React.FC = () => {
           ))}
         </div>
 
-        {/* Date Presets */}
-        <div className="hidden lg:flex items-center rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 p-0.5">
+        {/* Date Presets (24h, 3d, All 7 Days) */}
+        <div className="hidden lg:flex items-center rounded-xl bg-[#082920] border border-[#114f3c] p-1">
           {presets.map((p) => (
             <button
               key={p.id}
               onClick={() => setDatePreset(p.id)}
-              className={`px-2.5 py-1 text-xs font-semibold rounded-md transition ${
+              title={p.tooltip}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
                 datePreset === p.id
-                  ? 'bg-white dark:bg-emerald-600 text-slate-900 dark:text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  ? 'bg-emerald-600 text-white shadow-sm'
+                  : 'text-slate-300 hover:text-white'
               }`}
             >
               {p.label}
@@ -154,107 +165,78 @@ export const Header: React.FC = () => {
           ))}
         </div>
 
-        {/* Auto Refresh Menu */}
-        <div className="flex items-center space-x-1.5 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 text-xs">
-          <Clock className="w-3.5 h-3.5 text-slate-400" />
+        {/* Auto Refresh Menu (With clear label explaining what it does) */}
+        <div
+          title="Auto-refresh periodically re-fetches analytics from the database so live CSV ingestion updates automatically without clicking refresh"
+          className="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-[#082920] border border-[#114f3c] text-xs"
+        >
+          <Clock className="w-4 h-4 text-emerald-400" />
           <select
             value={autoRefreshInterval}
             onChange={(e) => setAutoRefreshInterval(Number(e.target.value))}
-            className="bg-transparent text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer"
+            className="bg-transparent text-xs font-semibold text-slate-200 focus:outline-none cursor-pointer"
           >
-            <option value={0}>Manual</option>
-            <option value={5}>Every 5s</option>
-            <option value={15}>Every 15s</option>
-            <option value={30}>Every 30s</option>
+            <option value={0} className="bg-[#07261d] text-white">Auto-Refresh: Off</option>
+            <option value={5} className="bg-[#07261d] text-white">Auto-Refresh: 5s</option>
+            <option value={15} className="bg-[#07261d] text-white">Auto-Refresh: 15s</option>
+            <option value={30} className="bg-[#07261d] text-white">Auto-Refresh: 30s</option>
           </select>
         </div>
 
-        {/* Refresh Button */}
+        {/* Manual Refresh Button */}
         <button
           onClick={handleManualRefresh}
-          title="Refresh Data"
-          className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 transition"
+          className="p-2 rounded-xl bg-[#082920] border border-[#114f3c] text-slate-300 hover:text-white hover:bg-[#0c382b] transition"
+          title="Refresh analytics data"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isRotating ? 'animate-spin text-emerald-600 dark:text-emerald-400' : ''}`} />
+          <RefreshCw className={`w-4 h-4 text-emerald-400 ${isRotating ? 'animate-spin' : ''}`} />
         </button>
 
-        {/* Auth / Token Modal Trigger */}
+        {/* Auth Token Key Button */}
         <button
           onClick={() => {
             setTempToken(token);
             setTokenModalOpen(true);
           }}
-          title="API Authentication Key"
-          className={`p-2 rounded-lg border transition ${
-            token
-              ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/60'
-              : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-slate-700'
-          }`}
+          className="p-2 rounded-xl bg-[#082920] border border-[#114f3c] text-slate-300 hover:text-white hover:bg-[#0c382b] transition"
+          title="API Bearer Token"
         >
-          <Key className="w-3.5 h-3.5" />
-        </button>
-
-        {/* Theme Toggle */}
-        <button
-          onClick={toggleTheme}
-          title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Theme`}
-          className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700 transition"
-        >
-          {theme === 'dark' ? <Sun className="w-3.5 h-3.5 text-amber-400" /> : <Moon className="w-3.5 h-3.5 text-emerald-600" />}
+          <Key className="w-4 h-4 text-emerald-400" />
         </button>
       </div>
 
-      {/* Auth Token Modal */}
+      {/* Token Modal */}
       {tokenModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
-          <div className="w-full max-w-md p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400">
-                <Key className="w-5 h-5" />
-              </div>
-              <div>
-                <h3 className="font-bold text-base text-slate-900 dark:text-white">
-                  Analytics Bearer Authentication
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Configure server-issued bearer key for tenant routes
-                </p>
-              </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md p-6 rounded-3xl bg-[#07261d] border border-[#12533f] text-white space-y-4 shadow-2xl">
+            <div className="flex items-center space-x-2.5">
+              <Key className="w-5 h-5 text-emerald-400" />
+              <h3 className="font-bold text-base">API Authentication Token</h3>
             </div>
-
-            <p className="text-xs text-slate-600 dark:text-slate-300 mb-4 leading-relaxed">
-              In AstraRoll V2, tenant analytics are cryptographically authorized against SHA-256 digests in <code className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[11px] font-mono">ANALYTICS_API_KEYS_JSON</code>.
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Pre-configured with verified demo key. Passed as <code className="text-emerald-400 font-mono">Authorization: Bearer &lt;token&gt;</code> to port 8000.
             </p>
-
-            <div className="space-y-3 mb-6">
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Bearer Token (Opaque Key)
-              </label>
-              <input
-                type="text"
-                placeholder="Enter issued bearer token..."
-                value={tempToken}
-                onChange={(e) => setTempToken(e.target.value)}
-                className="w-full px-3.5 py-2.5 text-xs font-mono rounded-lg bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
-            </div>
-
-            <div className="flex items-center justify-end space-x-2">
+            <input
+              type="text"
+              value={tempToken}
+              onChange={(e) => setTempToken(e.target.value)}
+              className="w-full px-3.5 py-2.5 rounded-xl bg-[#051c15] border border-[#114f3c] font-mono text-xs text-emerald-300 focus:outline-none focus:border-emerald-500"
+            />
+            <div className="flex justify-end space-x-2 pt-2">
               <button
                 onClick={() => setTokenModalOpen(false)}
-                className="px-4 py-2 text-xs font-semibold rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:bg-[#0c382b]"
               >
                 Cancel
               </button>
               <button
                 onClick={() => {
-                  setToken(tempToken.trim());
+                  setToken(tempToken);
                   setTokenModalOpen(false);
-                  triggerRefresh();
                 }}
-                className="px-4 py-2 text-xs font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shadow-md shadow-emerald-600/20 transition"
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-500"
               >
-                Save Credentials
+                Save Token
               </button>
             </div>
           </div>
@@ -263,4 +245,3 @@ export const Header: React.FC = () => {
     </header>
   );
 };
-

@@ -263,7 +263,7 @@ export const ArchitecturePage: React.FC = () => {
           {benchmarkStats.map((st, i) => (
             <div
               key={i}
-              className="p-6 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2 hover:border-emerald-500/40 transition-colors"
+              className="p-6 rounded-2xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-2 hover:border-emerald-500/40 transition-colors"
             >
               <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                 {st.label}
@@ -282,7 +282,7 @@ export const ArchitecturePage: React.FC = () => {
       {/* ============================================================== */}
       {/* INTERACTIVE ARCHITECTURE TREE & PIPELINE EXPLORER */}
       {/* ============================================================== */}
-      <div className="p-8 rounded-3xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-lg space-y-8">
+      <div className="p-8 rounded-3xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 shadow-lg space-y-8">
         <div>
           <div className="flex items-center space-x-2.5">
             <Workflow className="w-5 h-5 text-emerald-500" />
@@ -436,7 +436,7 @@ export const ArchitecturePage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-          <div className="p-6 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 space-y-3 shadow-sm">
+          <div className="p-6 rounded-2xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 space-y-3 shadow-sm">
             <div className="flex items-center justify-between">
               <h4 className="font-bold text-slate-900 dark:text-white text-sm">
                 1. Physical Sharding (10M Orders → 100x 100k)
@@ -450,7 +450,7 @@ export const ArchitecturePage: React.FC = () => {
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 space-y-3 shadow-sm">
+          <div className="p-6 rounded-2xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 space-y-3 shadow-sm">
             <div className="flex items-center justify-between">
               <h4 className="font-bold text-slate-900 dark:text-white text-sm">
                 2. Dynamic LRU Connection Pool Recycling
@@ -464,7 +464,7 @@ export const ArchitecturePage: React.FC = () => {
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 space-y-3 shadow-sm">
+          <div className="p-6 rounded-2xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 space-y-3 shadow-sm">
             <div className="flex items-center justify-between">
               <h4 className="font-bold text-slate-900 dark:text-white text-sm">
                 3. Transactional Outbox vs Distributed 2PC
@@ -478,7 +478,7 @@ export const ArchitecturePage: React.FC = () => {
             </p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 space-y-3 shadow-sm">
+          <div className="p-6 rounded-2xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 space-y-3 shadow-sm">
             <div className="flex items-center justify-between">
               <h4 className="font-bold text-slate-900 dark:text-white text-sm">
                 4. O(1) Pre-Computed Aggregates vs Raw Scans
@@ -495,7 +495,7 @@ export const ArchitecturePage: React.FC = () => {
       </div>
 
       {/* 10M Scale Competition Benchmark Targets */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center space-x-2">
             <Award className="w-5 h-5 text-amber-500" />
@@ -622,7 +622,7 @@ export const ArchitecturePage: React.FC = () => {
       </div>
 
       {/* Latency Table */}
-      <div className="p-6 rounded-3xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+      <div className="p-6 rounded-3xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Activity className="w-4 h-4 text-emerald-500" />
@@ -669,7 +669,7 @@ export const ArchitecturePage: React.FC = () => {
 
       {/* Honest Architectural Trade-Offs & Scaling Roadmap */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs leading-relaxed">
-        <div className="p-6 rounded-3xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
+        <div className="p-6 rounded-3xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
           <div className="flex items-center space-x-2 font-bold text-slate-900 dark:text-white">
             <ShieldCheck className="w-4 h-4 text-emerald-500" />
             <span>Honest Architectural Analysis</span>
@@ -687,7 +687,7 @@ export const ArchitecturePage: React.FC = () => {
           </ul>
         </div>
 
-        <div className="p-6 rounded-3xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
+        <div className="p-6 rounded-3xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
           <div className="flex items-center space-x-2 font-bold text-slate-900 dark:text-white">
             <Layers className="w-4 h-4 text-emerald-500" />
             <span>Horizontal Next-Scale Roadmap</span>

@@ -573,7 +573,7 @@ export const DualAxisAreaBarChart: React.FC<DualAxisAreaBarChartProps> = ({
                   cx={p.x}
                   cy={p.y}
                   r={hoveredIdx === i ? 6 : 3.5}
-                  fill="#060B08"
+                  fill="#051b14"
                   stroke="#10B981"
                   strokeWidth={hoveredIdx === i ? 3 : 2}
                   className="transition-all duration-150 cursor-pointer"
@@ -630,6 +630,218 @@ export const DualAxisAreaBarChart: React.FC<DualAxisAreaBarChartProps> = ({
             </div>
           </div>
         )}
+      </div>
+    </div>
+  );
+};
+
+
+// --- ADVANCED PRODUCT PERFORMANCE MATRIX CHART (FOR ADVANCED ANALYTICS) ---
+export interface AdvancedProductMatrixChartProps {
+  products: ProductMetric[];
+  currency: Currency;
+}
+
+export const AdvancedProductMatrixChart: React.FC<AdvancedProductMatrixChartProps> = ({
+  products,
+  currency,
+}) => {
+  const [selectedProduct, setSelectedProduct] = useState<ProductMetric | null>(null);
+
+  if (!products || products.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-slate-400 text-sm">
+        No product analytics recorded in this window.
+      </div>
+    );
+  }
+
+  const totalTopSales = products.reduce((sum, p) => sum + (parseFloat(p.sales_amount) || 0), 0);
+  const totalTopOrders = products.reduce((sum, p) => sum + (p.total_order_count || 0), 0);
+  const maxSales = Math.max(...products.map((p) => parseFloat(p.sales_amount) || 0), 1);
+  const maxVolume = Math.max(...products.map((p) => p.total_order_count || 0), 1);
+
+  return (
+    <div className="space-y-6">
+      {/* KPI Header Bar */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+        <div className="p-4 rounded-2xl bg-[#082920] border border-[#114f3c]">
+          <div className="text-xs uppercase font-bold text-emerald-400">Top 10 Aggregate Revenue</div>
+          <div className="text-xl font-extrabold text-white font-mono mt-1">
+            {formatCurrency(totalTopSales, currency)}
+          </div>
+          <div className="text-xs text-slate-300 mt-1">Cumulative sales across top 10 catalog items</div>
+        </div>
+        <div className="p-4 rounded-2xl bg-[#082920] border border-[#114f3c]">
+          <div className="text-xs uppercase font-bold text-teal-400">Top 10 Shipped Units</div>
+          <div className="text-xl font-extrabold text-white font-mono mt-1">
+            {formatNumber(totalTopOrders)} units
+          </div>
+          <div className="text-xs text-slate-300 mt-1">Shipped order items recorded</div>
+        </div>
+        <div className="p-4 rounded-2xl bg-[#082920] border border-[#114f3c]">
+          <div className="text-xs uppercase font-bold text-emerald-300">Catalog Leader Contribution</div>
+          <div className="text-xl font-extrabold text-emerald-400 font-mono mt-1">
+            {totalTopSales > 0
+              ? `${Math.round(((parseFloat(products[0]?.sales_amount) || 0) / totalTopSales) * 100)}%`
+              : '0%'}
+          </div>
+          <div className="text-xs text-slate-300 mt-1">Share held by #1 ranked SKU</div>
+        </div>
+      </div>
+
+      {/* Visual Product Comparative Lollipop / Bar SVG Chart */}
+      <div className="p-5 rounded-2xl bg-[#07261d] border border-[#114f3c] space-y-3">
+        <div className="flex items-center justify-between text-xs pb-2 border-b border-[#0f4838]">
+          <span className="font-bold text-sm text-white">SKU Volume vs Revenue Comparison</span>
+          <span className="text-xs text-emerald-400">Bar = Revenue ($) | Circle Radius = Volume</span>
+        </div>
+
+        <div className="h-44 w-full">
+          <svg viewBox="0 0 700 140" className="w-full h-full select-none overflow-visible">
+            {products.slice(0, 10).map((prod, idx) => {
+              const sales = parseFloat(prod.sales_amount) || 0;
+              const x = 35 + idx * 70;
+              const barH = (sales / maxSales) * 90;
+              const y = 110 - barH;
+              const r = Math.max(5, Math.min(14, (prod.total_order_count / maxVolume) * 14));
+              const isHover = selectedProduct?.product_id === prod.product_id;
+
+              return (
+                <g
+                  key={prod.product_id}
+                  className="cursor-pointer group"
+                  onClick={() => setSelectedProduct(prod)}
+                >
+                  {/* Stem line */}
+                  <line
+                    x1={x}
+                    y1={115}
+                    x2={x}
+                    y2={y}
+                    stroke={isHover ? '#34D399' : '#059669'}
+                    strokeWidth={isHover ? 3.5 : 2.5}
+                    className="transition-all"
+                  />
+                  {/* Head circle */}
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r={r}
+                    fill={idx === 0 ? '#F59E0B' : '#10B981'}
+                    stroke="#041712"
+                    strokeWidth={2}
+                    className="transition-all group-hover:scale-125"
+                  />
+                  {/* Product Rank Label */}
+                  <text
+                    x={x}
+                    y={130}
+                    textAnchor="middle"
+                    className="text-[11px] font-mono font-bold fill-slate-300"
+                  >
+                    #{idx + 1}
+                  </text>
+                  {/* Value on top */}
+                  <text
+                    x={x}
+                    y={y - 8}
+                    textAnchor="middle"
+                    className="text-[10px] font-mono font-semibold fill-emerald-300"
+                  >
+                    {formatCurrency(sales, currency).slice(0, -3)}
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+      </div>
+
+      {/* Ranked Product Matrix Table */}
+      <div className="overflow-x-auto rounded-2xl border border-[#114f3c]">
+        <table className="w-full text-sm text-left">
+          <thead className="bg-[#051c15] text-slate-300 uppercase tracking-wider text-xs font-bold">
+            <tr>
+              <th className="px-5 py-3.5">Rank</th>
+              <th className="px-5 py-3.5">Product Identifier</th>
+              <th className="px-5 py-3.5">Shipped Revenue</th>
+              <th className="px-5 py-3.5">Revenue Share</th>
+              <th className="px-5 py-3.5">Volume Sold</th>
+              <th className="px-5 py-3.5">Avg Unit Price (ASP)</th>
+              <th className="px-5 py-3.5">Category Tier</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#0f4838] bg-[#07261d] text-slate-200 font-mono text-xs">
+            {products.map((prod, idx) => {
+              const sales = parseFloat(prod.sales_amount) || 0;
+              const sharePct = totalTopSales > 0 ? ((sales / totalTopSales) * 100).toFixed(1) : '0';
+              const asp = prod.total_order_count > 0 ? sales / prod.total_order_count : 0;
+              const isFirst = idx === 0;
+
+              return (
+                <tr
+                  key={prod.product_id}
+                  className={`hover:bg-[#0c382b] transition cursor-pointer ${
+                    selectedProduct?.product_id === prod.product_id ? 'bg-[#0e4233]' : ''
+                  }`}
+                  onClick={() => setSelectedProduct(prod)}
+                >
+                  <td className="px-5 py-3.5">
+                    <span
+                      className={`inline-flex items-center justify-center w-6 h-6 rounded-lg text-xs font-extrabold ${
+                        isFirst
+                          ? 'bg-amber-400 text-slate-950 font-black'
+                          : idx === 1
+                          ? 'bg-slate-300 text-slate-900 font-bold'
+                          : 'bg-[#092e23] text-emerald-300 border border-[#114f3c]'
+                      }`}
+                    >
+                      {idx + 1}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3.5 font-sans font-medium text-white">
+                    <div className="font-mono text-xs">{truncateId(prod.product_id, 16)}</div>
+                    <div className="text-[11px] text-slate-400 font-sans">Verified SKU</div>
+                  </td>
+                  <td className="px-5 py-3.5 font-bold text-emerald-400 text-sm">
+                    {formatCurrency(prod.sales_amount, currency)}
+                  </td>
+                  <td className="px-5 py-3.5">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-16 h-2 rounded-full bg-[#051c15] overflow-hidden">
+                        <div
+                          className="h-full bg-emerald-500 rounded-full"
+                          style={{ width: `${Math.min(100, Math.max(5, parseFloat(sharePct)))}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-slate-300 font-bold">{sharePct}%</span>
+                    </div>
+                  </td>
+                  <td className="px-5 py-3.5 text-teal-300 font-semibold">
+                    {formatNumber(prod.total_order_count)} units
+                  </td>
+                  <td className="px-5 py-3.5 font-medium text-slate-300">
+                    {formatCurrency(asp, currency)}
+                  </td>
+                  <td className="px-5 py-3.5 font-sans">
+                    <span
+                      className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
+                        isFirst
+                          ? 'bg-amber-950 text-amber-300 border border-amber-800'
+                          : idx < 3
+                          ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
+                          : 'bg-teal-950 text-teal-300 border border-teal-800'
+                      }`}
+                    >
+                      {isFirst ? '★ #1 Revenue Driver' : idx < 3 ? 'High Volume' : 'Catalog Core'}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   );

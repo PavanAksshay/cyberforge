@@ -5,39 +5,38 @@
 @layer base {
   :root {
     color-scheme: dark;
+    /* Substantially increase base text size across overall UI */
+    font-size: 16.5px;
   }
 
   body {
     margin: 0;
     min-height: 100vh;
-    background-color: #060B08;
-    color: #E2E8F0;
+    /* Deep pine-forest emerald velvet theme from verified milestone hero */
+    background: radial-gradient(ellipse at 50% -10%, #0d3d2f 0%, #07261d 45%, #041712 100%) fixed;
+    color: #F1F5F9;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.01em;
   }
 }
 
-/* Custom dark & green scrollbars */
+/* Custom dark forest emerald scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(4, 23, 18, 0.6);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.35);
   border-radius: 9999px;
+  border: 1px solid rgba(4, 23, 18, 0.4);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(16, 185, 129, 0.6);
-}
-
-.dark ::-webkit-scrollbar-thumb {
-  background: rgba(16, 185, 129, 0.3);
-}
-
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: rgba(16, 185, 129, 0.6);
+  background: rgba(52, 211, 153, 0.6);
 }

@@ -138,9 +138,9 @@ export const AssistantPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-140px)] rounded-2xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
       {/* Header bar */}
-      <div className="flex items-center justify-between px-6 py-3.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-[#101C15]/50">
+      <div className="flex items-center justify-between px-6 py-3.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-[#092c22]/50">
         <div className="flex items-center space-x-3">
           <div className="p-2 rounded-xl bg-emerald-600 text-white shadow-md shadow-emerald-600/20">
             <Bot className="w-4 h-4" />
@@ -191,7 +191,7 @@ export const AssistantPage: React.FC = () => {
                 className={`max-w-2xl rounded-2xl p-4 space-y-2 text-xs leading-relaxed ${
                   isUser
                     ? 'bg-emerald-600 text-white rounded-tr-none'
-                    : 'bg-slate-50 dark:bg-[#101C15] text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-800 rounded-tl-none'
+                    : 'bg-slate-50 dark:bg-[#092c22] text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-800 rounded-tl-none'
                 }`}
               >
                 {/* Clean content with no markdown characters */}
@@ -247,7 +247,7 @@ export const AssistantPage: React.FC = () => {
             <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center">
               <Bot className="w-4 h-4 animate-pulse" />
             </div>
-            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#101C15] border border-slate-200 dark:border-slate-800 rounded-tl-none">
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-[#092c22] border border-slate-200 dark:border-slate-800 rounded-tl-none">
               <div className="flex items-center space-x-1.5 text-xs text-slate-500">
                 <span className="w-2 h-2 rounded-full bg-emerald-600 animate-bounce" />
                 <span className="w-2 h-2 rounded-full bg-emerald-600 animate-bounce [animation-delay:0.2s]" />
@@ -262,7 +262,7 @@ export const AssistantPage: React.FC = () => {
       </div>
 
       {/* Suggested Prompt Chips */}
-      <div className="px-6 py-2 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-[#101C15]/30 flex items-center space-x-2 overflow-x-auto">
+      <div className="px-6 py-2 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-[#092c22]/30 flex items-center space-x-2 overflow-x-auto">
         <Sparkles className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 shrink-0">
           Suggested:
@@ -280,7 +280,7 @@ export const AssistantPage: React.FC = () => {
       </div>
 
       {/* Input Bar */}
-      <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-[#0B140F]">
+      <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-[#07261d]">
         <div className="flex items-center space-x-2 p-1.5 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus-within:ring-2 focus-within:ring-emerald-500 transition">
           <textarea
             rows={1}

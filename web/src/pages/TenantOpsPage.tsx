@@ -68,7 +68,7 @@ export const TenantOpsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Overview Banner */}
-      <div className="p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="p-5 rounded-2xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center space-x-3">
           <div className="p-3 rounded-2xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400">
             <Server className="w-6 h-6" />
@@ -95,7 +95,7 @@ export const TenantOpsPage: React.FC = () => {
 
       {/* Cluster Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 font-mono">
-        <div className="p-4 rounded-xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800">
+        <div className="p-4 rounded-xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800">
           <span className="text-[10px] uppercase font-bold text-slate-400 font-sans block">
             Active Tenant Databases
           </span>
@@ -108,7 +108,7 @@ export const TenantOpsPage: React.FC = () => {
           </span>
         </div>
 
-        <div className="p-4 rounded-xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800">
+        <div className="p-4 rounded-xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800">
           <span className="text-[10px] uppercase font-bold text-slate-400 font-sans block">
             Schema Head Revision
           </span>
@@ -120,7 +120,7 @@ export const TenantOpsPage: React.FC = () => {
           </span>
         </div>
 
-        <div className="p-4 rounded-xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800">
+        <div className="p-4 rounded-xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800">
           <span className="text-[10px] uppercase font-bold text-slate-400 font-sans block">
             Connection Pool Budget
           </span>
@@ -132,7 +132,7 @@ export const TenantOpsPage: React.FC = () => {
           </span>
         </div>
 
-        <div className="p-4 rounded-xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800">
+        <div className="p-4 rounded-xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800">
           <span className="text-[10px] uppercase font-bold text-slate-400 font-sans block">
             Streaming Outbox Engine
           </span>
@@ -147,7 +147,7 @@ export const TenantOpsPage: React.FC = () => {
       </div>
 
       {/* Tenant Database Table */}
-      <div className="p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+      <div className="p-5 rounded-2xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
         <div className="flex items-center justify-between">
           <h3 className="font-bold text-sm text-slate-900 dark:text-white">
             Physical Tenant Databases Directory

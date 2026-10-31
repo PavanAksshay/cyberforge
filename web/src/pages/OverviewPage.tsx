@@ -108,7 +108,7 @@ export const OverviewPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Freshness & Pipeline Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-emerald-50/80 via-white to-slate-50 dark:from-[#0B140F] dark:via-[#101C15] dark:to-[#0B140F] border border-emerald-100 dark:border-emerald-900/60 shadow-sm gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-emerald-50/80 via-white to-slate-50 dark:from-[#07261d] dark:via-[#092c22] dark:to-[#07261d] border border-emerald-100 dark:border-emerald-900/60 shadow-sm gap-3">
         <div className="flex items-center space-x-3">
           <div className="p-2.5 rounded-xl bg-emerald-600 text-white shadow-md shadow-emerald-600/20">
             <Zap className="w-4 h-4" />
@@ -202,7 +202,7 @@ export const OverviewPage: React.FC = () => {
       {/* Charts Section: Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Sales & Orders Time Series */}
-        <div className="lg:col-span-2 p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="lg:col-span-2 p-5 rounded-2xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <BarChart3 className="w-4 h-4 text-emerald-500" />
@@ -250,7 +250,7 @@ export const OverviewPage: React.FC = () => {
         </div>
 
         {/* Order Lifecycle Breakdown */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
           <div className="flex items-center space-x-2">
             <PieChart className="w-4 h-4 text-teal-500" />
             <h3 className="font-bold text-sm text-slate-900 dark:text-white">
@@ -268,7 +268,7 @@ export const OverviewPage: React.FC = () => {
       {/* Charts Section: Row 2 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top 5 Products */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <TrendingUp className="w-4 h-4 text-amber-500" />
@@ -288,7 +288,7 @@ export const OverviewPage: React.FC = () => {
         </div>
 
         {/* Status Lifecycle Cards */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="p-5 rounded-2xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
           <div className="flex items-center space-x-2">
             <ShieldCheck className="w-4 h-4 text-emerald-500" />
             <h3 className="font-bold text-sm text-slate-900 dark:text-white">

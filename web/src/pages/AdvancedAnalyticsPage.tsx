@@ -12,7 +12,7 @@ import {
 import { useApp } from '../context/AppContext';
 import { fetchTrends, fetchTopProducts, fetchStatusBreakdown } from '../lib/api';
 import { TrendsResponse, TopProductsResponse, StatusBreakdownResponse, Interval } from '../types';
-import { DualAxisAreaBarChart, TopProductsBarChart } from '../components/Charts';
+import { DualAxisAreaBarChart, AdvancedProductMatrixChart } from '../components/Charts';
 import { formatCurrency, formatNumber, formatDate, downloadCsv } from '../lib/utils';
 
 export const AdvancedAnalyticsPage: React.FC = () => {
@@ -74,7 +74,7 @@ export const AdvancedAnalyticsPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Top Controls Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-white bg-[#07261d] border border-slate-200/80 border-[#114f3c] shadow-sm gap-4">
         {/* View Switcher Tabs */}
         <div className="flex items-center rounded-xl bg-slate-100 dark:bg-slate-800 p-1 text-xs">
           <button
@@ -149,7 +149,7 @@ export const AdvancedAnalyticsPage: React.FC = () => {
       {/* Main Content Area */}
       {activeView === 'trends' && (
         <div className="space-y-6">
-          <div className="p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm">
+          <div className="p-5 rounded-2xl bg-white bg-[#07261d] border border-slate-200/80 border-[#114f3c] shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="font-bold text-sm text-slate-900 dark:text-white">
@@ -171,7 +171,7 @@ export const AdvancedAnalyticsPage: React.FC = () => {
           </div>
 
           {/* Table View */}
-          <div className="p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm">
+          <div className="p-5 rounded-2xl bg-white bg-[#07261d] border border-slate-200/80 border-[#114f3c] shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-sm text-slate-900 dark:text-white">
                 Detailed Granular Buckets
@@ -223,7 +223,7 @@ export const AdvancedAnalyticsPage: React.FC = () => {
       )}
 
       {activeView === 'products' && (
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="p-5 rounded-2xl bg-white bg-[#07261d] border border-slate-200/80 border-[#114f3c] shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="font-bold text-sm text-slate-900 dark:text-white">
               Top 10 Global Products (Deterministically Tied)
@@ -233,7 +233,7 @@ export const AdvancedAnalyticsPage: React.FC = () => {
             </span>
           </div>
 
-          <TopProductsBarChart
+          <AdvancedProductMatrixChart
             products={topProducts?.products || []}
             currency={currency}
           />
@@ -241,7 +241,7 @@ export const AdvancedAnalyticsPage: React.FC = () => {
       )}
 
       {activeView === 'statuses' && (
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
+        <div className="p-5 rounded-2xl bg-white bg-[#07261d] border border-slate-200/80 border-[#114f3c] shadow-sm space-y-4">
           <h3 className="font-bold text-sm text-slate-900 dark:text-white mb-2">
             Status Volume & Revenue Recognition Matrix
           </h3>
