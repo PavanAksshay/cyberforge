@@ -3,15 +3,23 @@
 Pure functions that calculate an order's positive, negative, and net incremental
 contributions to hourly and daily summary, status, and product aggregates.
 
-Business Semantics:
-- Total order count includes every extant order.
-- Cancelled orders remain included in order counts.
-- Cancelled orders contribute zero to sales.
-- Placed and shipped orders contribute their amount_cents to sales.
-- Every order contributes to exactly one current-status bucket.
-- Product and status changes must be reversible.
-- All updates are attributed to the original immutable created_at timestamp.
-- Financial arithmetic uses exact integer cents (minor currency units).
+Frozen Business Semantics:
+- Every non-deleted order contributes exactly 1 to overall order count, including cancelled orders.
+- Recognized sales:
+  - placed: ZERO sales (0 cents).
+  - shipped: FULL order amount (amount_cents).
+  - cancelled: ZERO sales (0 cents).
+- Status aggregates count orders by their CURRENT status, grouped into the bucket
+  of their ORIGINAL immutable created_at.
+- Product aggregates count orders by their CURRENT product, grouped into the bucket
+  of their ORIGINAL immutable created_at.
+- When status/product changes:
+  - Reverse the previously projected contribution.
+  - Apply the new canonical contribution.
+  - Overall order count is preserved.
+  - Recognized sales change only when sales contribution changes.
+- Multi-currency: Every aggregate key is explicitly partitioned by currency and tenant_id.
+- Financial arithmetic uses exact integer cents (minor currency units) and exact Decimals.
 """
 
 from __future__ import annotations
@@ -52,15 +60,13 @@ def get_daily_bucket_start(dt: datetime) -> datetime:
 
 
 def calculate_sales_contribution(snapshot: OrderSnapshot) -> int:
-    """Calculate sales cents contributed by the snapshot based on status semantics.
+    """Calculate sales cents contributed by the snapshot based on frozen status semantics.
 
-    - Placed and Shipped orders contribute their amount_cents.
-    - Cancelled orders contribute 0 cents.
+    - shipped orders contribute their full amount_cents.
+    - placed and cancelled orders contribute 0 cents (placed is unfulfilled; cancelled is zero).
     """
-    if snapshot.status in (OrderStatus.PLACED, OrderStatus.SHIPPED):
+    if snapshot.status == OrderStatus.SHIPPED:
         return snapshot.amount_cents
-    if snapshot.status == OrderStatus.CANCELLED:
-        return 0
     return 0
 
 
@@ -69,10 +75,11 @@ def calculate_hourly_summary_contribution(
 ) -> Tuple[AggregationKey, AggregateDelta]:
     """Calculate an order's positive contribution to the hourly summary aggregate.
 
-    Attributed to the immutable created_at hour bucket.
+    Attributed to the immutable created_at hour bucket and partitioned by currency.
     """
     key = AggregationKey(
         tenant_id=tenant_id,
+        currency=snapshot.currency,
         window=AggregationWindow.HOURLY,
         aggregate_type=AggregateType.SUMMARY,
         bucket_start=get_hourly_bucket_start(snapshot.created_at),
@@ -90,10 +97,11 @@ def calculate_daily_summary_contribution(
 ) -> Tuple[AggregationKey, AggregateDelta]:
     """Calculate an order's positive contribution to the daily summary aggregate.
 
-    Attributed to the immutable created_at day bucket.
+    Attributed to the immutable created_at day bucket and partitioned by currency.
     """
     key = AggregationKey(
         tenant_id=tenant_id,
+        currency=snapshot.currency,
         window=AggregationWindow.DAILY,
         aggregate_type=AggregateType.SUMMARY,
         bucket_start=get_daily_bucket_start(snapshot.created_at),
@@ -111,10 +119,11 @@ def calculate_hourly_status_contribution(
 ) -> Tuple[AggregationKey, AggregateDelta]:
     """Calculate an order's positive contribution to the hourly status aggregate.
 
-    Attributed to the immutable created_at hour bucket and snapshot.status.
+    Attributed to the immutable created_at hour bucket, currency, and snapshot.status.
     """
     key = AggregationKey(
         tenant_id=tenant_id,
+        currency=snapshot.currency,
         window=AggregationWindow.HOURLY,
         aggregate_type=AggregateType.STATUS,
         bucket_start=get_hourly_bucket_start(snapshot.created_at),
@@ -132,10 +141,11 @@ def calculate_daily_status_contribution(
 ) -> Tuple[AggregationKey, AggregateDelta]:
     """Calculate an order's positive contribution to the daily status aggregate.
 
-    Attributed to the immutable created_at day bucket and snapshot.status.
+    Attributed to the immutable created_at day bucket, currency, and snapshot.status.
     """
     key = AggregationKey(
         tenant_id=tenant_id,
+        currency=snapshot.currency,
         window=AggregationWindow.DAILY,
         aggregate_type=AggregateType.STATUS,
         bucket_start=get_daily_bucket_start(snapshot.created_at),
@@ -153,10 +163,11 @@ def calculate_hourly_product_contribution(
 ) -> Tuple[AggregationKey, AggregateDelta]:
     """Calculate an order's positive contribution to the hourly product aggregate.
 
-    Attributed to the immutable created_at hour bucket and snapshot.product_id.
+    Attributed to the immutable created_at hour bucket, currency, and snapshot.product_id.
     """
     key = AggregationKey(
         tenant_id=tenant_id,
+        currency=snapshot.currency,
         window=AggregationWindow.HOURLY,
         aggregate_type=AggregateType.PRODUCT,
         bucket_start=get_hourly_bucket_start(snapshot.created_at),
@@ -174,10 +185,11 @@ def calculate_daily_product_contribution(
 ) -> Tuple[AggregationKey, AggregateDelta]:
     """Calculate an order's positive contribution to the daily product aggregate.
 
-    Attributed to the immutable created_at day bucket and snapshot.product_id.
+    Attributed to the immutable created_at day bucket, currency, and snapshot.product_id.
     """
     key = AggregationKey(
         tenant_id=tenant_id,
+        currency=snapshot.currency,
         window=AggregationWindow.DAILY,
         aggregate_type=AggregateType.PRODUCT,
         bucket_start=get_daily_bucket_start(snapshot.created_at),
@@ -202,15 +214,17 @@ def calculate_order_contribution(
     5. Hourly product
     6. Daily product
     """
-    if not tenant_id or not tenant_id.strip():
-        raise InvalidSnapshotError("tenant_id must be a non-empty string")
+    if not tenant_id or not str(tenant_id).strip():
+        raise InvalidSnapshotError("tenant_id must be a non-empty string or UUID")
 
-    h_summary_k, h_summary_v = calculate_hourly_summary_contribution(snapshot, tenant_id)
-    d_summary_k, d_summary_v = calculate_daily_summary_contribution(snapshot, tenant_id)
-    h_status_k, h_status_v = calculate_hourly_status_contribution(snapshot, tenant_id)
-    d_status_k, d_status_v = calculate_daily_status_contribution(snapshot, tenant_id)
-    h_prod_k, h_prod_v = calculate_hourly_product_contribution(snapshot, tenant_id)
-    d_prod_k, d_prod_v = calculate_daily_product_contribution(snapshot, tenant_id)
+    t_id = str(tenant_id).strip()
+
+    h_summary_k, h_summary_v = calculate_hourly_summary_contribution(snapshot, t_id)
+    d_summary_k, d_summary_v = calculate_daily_summary_contribution(snapshot, t_id)
+    h_status_k, h_status_v = calculate_hourly_status_contribution(snapshot, t_id)
+    d_status_k, d_status_v = calculate_daily_status_contribution(snapshot, t_id)
+    h_prod_k, h_prod_v = calculate_hourly_product_contribution(snapshot, t_id)
+    d_prod_k, d_prod_v = calculate_daily_product_contribution(snapshot, t_id)
 
     return {
         h_summary_k: h_summary_v,
@@ -246,18 +260,21 @@ def compute_contribution_delta(
       contribution of new_snapshot, returning the net delta per aggregation key.
     - Preserves immutable created_at constraint: all updates are attributed to the original
       created_at timestamp.
+    - Preserves immutable currency constraint: old and new snapshots must match currency.
     """
-    if not tenant_id or not tenant_id.strip():
-        raise InvalidSnapshotError("tenant_id must be a non-empty string")
+    if not tenant_id or not str(tenant_id).strip():
+        raise InvalidSnapshotError("tenant_id must be a non-empty string or UUID")
+
+    t_id = str(tenant_id).strip()
 
     if old_snapshot is None and new_snapshot is None:
         return {}
 
     if old_snapshot is None and new_snapshot is not None:
-        return calculate_order_contribution(new_snapshot, tenant_id)
+        return calculate_order_contribution(new_snapshot, t_id)
 
     if old_snapshot is not None and new_snapshot is None:
-        return calculate_negative_contribution(old_snapshot, tenant_id)
+        return calculate_negative_contribution(old_snapshot, t_id)
 
     # Both old_snapshot and new_snapshot are present
     assert old_snapshot is not None and new_snapshot is not None
@@ -271,8 +288,15 @@ def compute_contribution_delta(
             f"New: {new_utc_created.isoformat()}"
         )
 
-    neg_contrib = calculate_negative_contribution(old_snapshot, tenant_id)
-    pos_contrib = calculate_order_contribution(new_snapshot, tenant_id)
+    # Immutable currency validation
+    if old_snapshot.currency != new_snapshot.currency:
+        raise ImmutableFieldViolationError(
+            f"Order currency is immutable. Old: '{old_snapshot.currency}', "
+            f"New: '{new_snapshot.currency}'"
+        )
+
+    neg_contrib = calculate_negative_contribution(old_snapshot, t_id)
+    pos_contrib = calculate_order_contribution(new_snapshot, t_id)
 
     merged: Dict[AggregationKey, AggregateDelta] = dict(neg_contrib)
     for key, pos_delta in pos_contrib.items():
@@ -282,4 +306,3 @@ def compute_contribution_delta(
             merged[key] = pos_delta
 
     return merged
-

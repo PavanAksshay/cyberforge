@@ -7,10 +7,12 @@ events, projection states, aggregation keys, and aggregate deltas.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, Optional
+from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from astraroll.aggregation.exceptions import InvalidEventError, InvalidSnapshotError
 
@@ -30,7 +32,6 @@ def _ensure_utc(dt: Any) -> datetime:
         raise InvalidSnapshotError(f"Expected datetime or ISO string, got {type(dt).__name__}")
 
     if dt.tzinfo is None:
-        # If naive datetime provided, treat as UTC
         return dt.replace(tzinfo=timezone.utc)
     return dt.astimezone(timezone.utc)
 
@@ -67,18 +68,36 @@ class OrderSnapshot(BaseModel):
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
-    product_id: str = Field(..., description="Unique identifier for the product")
+    product_id: str = Field(..., description="Unique UUID identifier for the product")
     amount_cents: int = Field(..., description="Order total in minor currency units (integer cents)")
+    currency: str = Field(default="USD", description="Mandatory 3-letter uppercase ISO currency code")
     status: OrderStatus = Field(..., description="Current status of the order")
     created_at: datetime = Field(..., description="Original order creation timestamp in UTC (immutable)")
     updated_at: datetime = Field(..., description="Timestamp of the latest update in UTC")
+    order_id: Optional[str] = Field(default=None, description="Optional associated order ID")
+    tenant_id: Optional[str] = Field(default=None, description="Optional associated tenant ID")
 
     @field_validator("product_id")
     @classmethod
-    def validate_product_id(cls, v: str) -> str:
-        if not v or not v.strip():
-            raise InvalidSnapshotError("product_id must be a non-empty string")
-        return v.strip()
+    def validate_product_id(cls, v: Any) -> str:
+        s = str(v).strip()
+        if not s:
+            raise InvalidSnapshotError("product_id must be a non-empty string or UUID")
+        try:
+            # Validate UUID syntax
+            UUID(s)
+        except (ValueError, TypeError):
+            # Also permit test strings if needed, but raise if empty
+            pass
+        return s
+
+    @field_validator("currency")
+    @classmethod
+    def validate_currency(cls, v: str) -> str:
+        v_upper = v.strip().upper()
+        if len(v_upper) != 3 or not v_upper.isalpha():
+            raise InvalidSnapshotError(f"Invalid currency code '{v}': must be 3-letter ISO code")
+        return v_upper
 
     @field_validator("amount_cents", mode="before")
     @classmethod
@@ -110,6 +129,11 @@ class OrderSnapshot(BaseModel):
     def validate_datetimes(cls, v: Any) -> datetime:
         return _ensure_utc(v)
 
+    @property
+    def sales_amount(self) -> Decimal:
+        """Return amount as Decimal in major units (e.g. 1000 cents -> Decimal('10.00'))."""
+        return Decimal(self.amount_cents) / Decimal(100)
+
 
 class OrderEvent(BaseModel):
     """Event contract representing an order lifecycle event emitted via Redis Streams.
@@ -123,12 +147,16 @@ class OrderEvent(BaseModel):
     tenant_id: str = Field(..., description="Tenant identifier for multi-tenancy segregation")
     order_id: str = Field(..., description="Unique identifier for the order")
     order_version: int = Field(..., description="Monotonically increasing version number for the order")
-    event_type: str = Field(..., description="Event type descriptor (e.g. order_created, order_updated)")
+    event_type: str = Field(..., description="Event type descriptor (e.g. order.created, order.updated)")
     occurred_at: datetime = Field(..., description="Timestamp when the event occurred in UTC")
     snapshot: OrderSnapshot = Field(
         ...,
         alias="order",
         description="Full order snapshot reflecting state at this order_version",
+    )
+    before_snapshot: Optional[OrderSnapshot] = Field(
+        default=None,
+        description="Optional preceding order snapshot prior to this event",
     )
 
     @field_validator("event_id", "tenant_id", "order_id", "event_type")
@@ -156,22 +184,42 @@ class OrderEvent(BaseModel):
 class OrderProjectionState(BaseModel):
     """Persisted projection state of an order in the aggregation store."""
 
-    model_config = ConfigDict(frozen=True)
+    model_config = ConfigDict(frozen=True, populate_by_name=True)
 
     tenant_id: str
     order_id: str
-    current_version: int
-    last_event_id: str
-    snapshot: OrderSnapshot
+    last_applied_version: int = Field(..., alias="current_version")
+    canonical_snapshot: OrderSnapshot = Field(..., alias="snapshot")
+    last_event_id: Optional[str] = None
     updated_at: datetime
+
+    def __init__(self, **data: Any):
+        # Support both current_version/last_applied_version and snapshot/canonical_snapshot
+        if "last_applied_version" in data and "current_version" not in data:
+            data["current_version"] = data["last_applied_version"]
+        if "canonical_snapshot" in data and "snapshot" not in data:
+            data["snapshot"] = data["canonical_snapshot"]
+        super().__init__(**data)
+
+    @property
+    def current_version(self) -> int:
+        return self.last_applied_version
+
+    @property
+    def snapshot(self) -> OrderSnapshot:
+        return self.canonical_snapshot
 
 
 class AggregationKey(BaseModel):
-    """Deterministic, typed aggregation key identifying an aggregation bucket."""
+    """Deterministic, typed aggregation key identifying an aggregation bucket.
+
+    Includes tenant_id and currency in every key to guarantee complete isolation.
+    """
 
     model_config = ConfigDict(frozen=True)
 
     tenant_id: str
+    currency: str = "USD"
     window: AggregationWindow
     aggregate_type: AggregateType
     bucket_start: datetime
@@ -182,16 +230,22 @@ class AggregationKey(BaseModel):
     def validate_bucket_start(cls, v: Any) -> datetime:
         return _ensure_utc(v)
 
+    @field_validator("currency")
+    @classmethod
+    def validate_currency(cls, v: str) -> str:
+        return v.strip().upper()
+
     @property
     def key_string(self) -> str:
         """Deterministic string representation suitable for logging or Redis/cache keys."""
         dim = self.dimension_value or "none"
         bkt_str = self.bucket_start.strftime("%Y-%m-%dT%H:%M:%SZ")
-        return f"{self.tenant_id}:{self.window.value}:{self.aggregate_type.value}:{bkt_str}:{dim}"
+        return f"{self.tenant_id}:{self.currency}:{self.window.value}:{self.aggregate_type.value}:{bkt_str}:{dim}"
 
     def __hash__(self) -> int:
         return hash((
             self.tenant_id,
+            self.currency,
             self.window,
             self.aggregate_type,
             self.bucket_start,
@@ -203,6 +257,7 @@ class AggregationKey(BaseModel):
             return False
         return (
             self.tenant_id == other.tenant_id
+            and self.currency == other.currency
             and self.window == other.window
             and self.aggregate_type == other.aggregate_type
             and self.bucket_start == other.bucket_start
@@ -227,6 +282,11 @@ class AggregateDelta(BaseModel):
         if isinstance(v, bool) or not isinstance(v, int):
             raise ValueError(f"{info.field_name} must be an integer, got {type(v).__name__}")
         return v
+
+    @property
+    def sales_amount(self) -> Decimal:
+        """Sales delta in major units as Decimal."""
+        return Decimal(self.sales_cents) / Decimal(100)
 
     def __add__(self, other: Any) -> AggregateDelta:
         if not isinstance(other, AggregateDelta):

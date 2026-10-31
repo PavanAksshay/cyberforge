@@ -91,18 +91,18 @@ class TestPureReduceEvent:
         assert result.new_state.current_version == 1
         assert result.new_state.last_event_id == "evt-1"
 
-        # 6 aggregate dimensions
+        # 6 aggregate dimensions; placed order contributes 1 count and 0 sales
         assert len(result.deltas) == 6
         for delta in result.deltas.values():
             assert delta.order_count == 1
-            assert delta.sales_cents == 10000
+            assert delta.sales_cents == 0
 
     def test_updating_amount_reverses_old_amount(self):
-        event_v1 = create_test_event("evt-1", 1, amount_cents=10000)
+        event_v1 = create_test_event("evt-1", 1, amount_cents=10000, status=OrderStatus.SHIPPED)
         res_v1 = reduce_event(event_v1, current_state=None)
 
         # Version 2 with amount 15000 (+$50)
-        event_v2 = create_test_event("evt-2", 2, amount_cents=15000)
+        event_v2 = create_test_event("evt-2", 2, amount_cents=15000, status=OrderStatus.SHIPPED)
         res_v2 = reduce_event(event_v2, current_state=res_v1.new_state)
 
         assert res_v2.applied is True
@@ -114,11 +114,11 @@ class TestPureReduceEvent:
             assert delta.sales_cents == 5000
 
     def test_changing_product_updates_both_product_buckets(self):
-        event_v1 = create_test_event("evt-1", 1, product_id="PROD-A", amount_cents=10000)
+        event_v1 = create_test_event("evt-1", 1, product_id="PROD-A", amount_cents=10000, status=OrderStatus.SHIPPED)
         res_v1 = reduce_event(event_v1, current_state=None)
 
         # Version 2: product changed to PROD-B
-        event_v2 = create_test_event("evt-2", 2, product_id="PROD-B", amount_cents=10000)
+        event_v2 = create_test_event("evt-2", 2, product_id="PROD-B", amount_cents=10000, status=OrderStatus.SHIPPED)
         res_v2 = reduce_event(event_v2, current_state=res_v1.new_state)
 
         assert res_v2.applied is True
@@ -167,13 +167,16 @@ class TestPureReduceEvent:
             dimension_value="shipped",
         )
 
+        # placed had 0 sales
         assert res_v2.deltas[h_placed].order_count == -1
-        assert res_v2.deltas[h_placed].sales_cents == -10000
+        assert res_v2.deltas[h_placed].sales_cents == 0
+        # shipped has 10000 sales
         assert res_v2.deltas[h_shipped].order_count == 1
         assert res_v2.deltas[h_shipped].sales_cents == 10000
 
     def test_cancellation_reverses_sales_without_removing_total_order_count(self):
-        event_v1 = create_test_event("evt-1", 1, status=OrderStatus.PLACED, amount_cents=10000)
+        # Shipped order cancelled reverses sales to 0
+        event_v1 = create_test_event("evt-1", 1, status=OrderStatus.SHIPPED, amount_cents=10000)
         res_v1 = reduce_event(event_v1, current_state=None)
 
         event_v2 = create_test_event("evt-2", 2, status=OrderStatus.CANCELLED, amount_cents=10000)
@@ -330,17 +333,18 @@ class TestAggregationReducerEngine:
             dimension_value="PROD-A",
         )
 
-        assert reducer.get_aggregate(h_summary_k) == AggregateDelta(order_count=1, sales_cents=10000)
-        assert reducer.get_aggregate(h_placed_k) == AggregateDelta(order_count=1, sales_cents=10000)
-        assert reducer.get_aggregate(h_prod_a_k) == AggregateDelta(order_count=1, sales_cents=10000)
+        # Placed orders contribute 0 sales
+        assert reducer.get_aggregate(h_summary_k) == AggregateDelta(order_count=1, sales_cents=0)
+        assert reducer.get_aggregate(h_placed_k) == AggregateDelta(order_count=1, sales_cents=0)
+        assert reducer.get_aggregate(h_prod_a_k) == AggregateDelta(order_count=1, sales_cents=0)
 
         # Step 2: Update Amount to $150 (v2: placed, $150, PROD-A)
         evt_2 = create_test_event("e2", 2, product_id="PROD-A", amount_cents=15000, status=OrderStatus.PLACED)
         res_2 = reducer.process_event(evt_2)
         assert res_2.applied is True
-        assert reducer.get_aggregate(h_summary_k) == AggregateDelta(order_count=1, sales_cents=15000)
-        assert reducer.get_aggregate(h_placed_k) == AggregateDelta(order_count=1, sales_cents=15000)
-        assert reducer.get_aggregate(h_prod_a_k) == AggregateDelta(order_count=1, sales_cents=15000)
+        assert reducer.get_aggregate(h_summary_k) == AggregateDelta(order_count=1, sales_cents=0)
+        assert reducer.get_aggregate(h_placed_k) == AggregateDelta(order_count=1, sales_cents=0)
+        assert reducer.get_aggregate(h_prod_a_k) == AggregateDelta(order_count=1, sales_cents=0)
 
         # Step 3: Change Product to PROD-B (v3: placed, $150, PROD-B)
         evt_3 = create_test_event("e3", 3, product_id="PROD-B", amount_cents=15000, status=OrderStatus.PLACED)
@@ -356,10 +360,10 @@ class TestAggregationReducerEngine:
         )
         # PROD-A is now 0 count, 0 sales
         assert reducer.get_aggregate(h_prod_a_k) == AggregateDelta(order_count=0, sales_cents=0)
-        # PROD-B has 1 count, 15000 sales
-        assert reducer.get_aggregate(h_prod_b_k) == AggregateDelta(order_count=1, sales_cents=15000)
+        # PROD-B has 1 count, 0 sales
+        assert reducer.get_aggregate(h_prod_b_k) == AggregateDelta(order_count=1, sales_cents=0)
         # Summary is unchanged
-        assert reducer.get_aggregate(h_summary_k) == AggregateDelta(order_count=1, sales_cents=15000)
+        assert reducer.get_aggregate(h_summary_k) == AggregateDelta(order_count=1, sales_cents=0)
 
         # Step 4: Status change to SHIPPED (v4: shipped, $150, PROD-B)
         evt_4 = create_test_event("e4", 4, product_id="PROD-B", amount_cents=15000, status=OrderStatus.SHIPPED)
@@ -377,6 +381,10 @@ class TestAggregationReducerEngine:
         assert reducer.get_aggregate(h_placed_k) == AggregateDelta(order_count=0, sales_cents=0)
         # 'shipped' has 1 count, 15000 sales
         assert reducer.get_aggregate(h_shipped_k) == AggregateDelta(order_count=1, sales_cents=15000)
+        # PROD-B has 1 count, 15000 sales
+        assert reducer.get_aggregate(h_prod_b_k) == AggregateDelta(order_count=1, sales_cents=15000)
+        # Summary has 1 count, 15000 sales
+        assert reducer.get_aggregate(h_summary_k) == AggregateDelta(order_count=1, sales_cents=15000)
 
         # Step 5: Duplicate event delivery (e4 delivered again)
         res_4_dup = reducer.process_event(evt_4)
@@ -417,11 +425,11 @@ class TestAggregationReducerEngine:
         reducer = AggregationReducer()
 
         # Tenant 1 order
-        evt_t1 = create_test_event("evt-t1", 1, tenant_id="tenant-1", amount_cents=5000)
+        evt_t1 = create_test_event("evt-t1", 1, tenant_id="tenant-1", amount_cents=5000, status=OrderStatus.SHIPPED)
         reducer.process_event(evt_t1)
 
         # Tenant 2 order
-        evt_t2 = create_test_event("evt-t2", 1, tenant_id="tenant-2", amount_cents=8000)
+        evt_t2 = create_test_event("evt-t2", 1, tenant_id="tenant-2", amount_cents=8000, status=OrderStatus.SHIPPED)
         reducer.process_event(evt_t2)
 
         h_summary_t1 = AggregationKey(

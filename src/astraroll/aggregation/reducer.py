@@ -149,9 +149,9 @@ def reduce_event(
     new_state = OrderProjectionState(
         tenant_id=event.tenant_id,
         order_id=event.order_id,
-        current_version=event.order_version,
+        last_applied_version=event.order_version,
         last_event_id=event.event_id,
-        snapshot=event.snapshot,
+        canonical_snapshot=event.snapshot,
         updated_at=event.occurred_at,
     )
 
