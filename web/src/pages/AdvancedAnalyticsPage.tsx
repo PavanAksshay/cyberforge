@@ -12,7 +12,7 @@ import {
 import { useApp } from '../context/AppContext';
 import { fetchTrends, fetchTopProducts, fetchStatusBreakdown } from '../lib/api';
 import { TrendsResponse, TopProductsResponse, StatusBreakdownResponse, Interval } from '../types';
-import { DualAxisAreaBarChart, AdvancedProductMatrixChart } from '../components/Charts';
+import { DualAxisAreaBarChart, AdvancedProductMatrixChart, AdvancedLifecycleBreakdownChart } from '../components/Charts';
 import { formatCurrency, formatNumber, formatDate, downloadCsv } from '../lib/utils';
 
 export const AdvancedAnalyticsPage: React.FC = () => {
@@ -241,10 +241,26 @@ export const AdvancedAnalyticsPage: React.FC = () => {
       )}
 
       {activeView === 'statuses' && (
-        <div className="p-5 rounded-2xl bg-white bg-[#07261d] border border-slate-200/80 border-[#114f3c] shadow-sm space-y-4">
-          <h3 className="font-bold text-sm text-slate-900 dark:text-white mb-2">
-            Status Volume & Revenue Recognition Matrix
-          </h3>
+        <div className="space-y-6">
+          <AdvancedLifecycleBreakdownChart
+            statuses={statuses?.statuses || []}
+            currency={currency}
+          />
+
+          <div className="p-6 rounded-3xl bg-[#062118] border border-[#0d3d2f] shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-extrabold text-base text-white">
+                  Lifecycle Status & Revenue Recognition Ledger
+                </h3>
+                <p className="text-xs text-slate-300 mt-0.5">
+                  Direct breakdown of raw order states and mathematical financial parity.
+                </p>
+              </div>
+              <span className="px-2.5 py-1 rounded-full text-xs font-mono font-bold uppercase bg-emerald-950 text-emerald-400 border border-emerald-800">
+                AstraRoll V2 Semantics
+              </span>
+            </div>
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
               <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[10px]">
@@ -281,6 +297,7 @@ export const AdvancedAnalyticsPage: React.FC = () => {
             </table>
           </div>
         </div>
+      </div>
       )}
     </div>
   );

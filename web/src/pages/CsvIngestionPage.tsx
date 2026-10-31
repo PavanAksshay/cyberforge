@@ -147,10 +147,10 @@ PROD-ERGONOMIC-CHAIR,349.50,USD,shipped,2026-10-24T10:30:00Z`;
       {/* Header Banner */}
       <div className="p-5 rounded-2xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
+          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
             Transactional CSV Ingestion Pipeline
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-sm sm:text-base text-slate-300 mt-1 leading-relaxed">
             Atomically insert orders into tenant database with transactional outbox event emission and live rollup propagation.
           </p>
         </div>
@@ -158,14 +158,14 @@ PROD-ERGONOMIC-CHAIR,349.50,USD,shipped,2026-10-24T10:30:00Z`;
         <div className="flex items-center space-x-2">
           <button
             onClick={handleDownloadTemplate}
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition"
+            className="flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-sm font-bold shadow-sm transition"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Download Template</span>
           </button>
           <button
             onClick={handleLoadSample}
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900 text-emerald-600 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800 text-xs font-semibold transition"
+            className="flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900 text-emerald-600 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-700 text-sm font-bold shadow-sm transition"
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>Load Demo Orders</span>
@@ -175,67 +175,67 @@ PROD-ERGONOMIC-CHAIR,349.50,USD,shipped,2026-10-24T10:30:00Z`;
 
       {/* Architecture Flow Visualizer */}
       <div className="p-5 rounded-2xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 shadow-sm">
-        <div className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-4">
+        <div className="text-sm sm:text-base font-black uppercase tracking-wider text-emerald-400 mb-4">
           End-to-End Transactional Pipeline Stages
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
           <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700 text-center space-y-1">
-            <div className="w-7 h-7 mx-auto rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+            <div className="w-9 h-9 mx-auto rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-black text-sm sm:text-base border border-emerald-500/40 shadow-sm">
               1
             </div>
-            <div className="font-bold text-xs text-slate-800 dark:text-slate-200">
+            <div className="font-black text-sm sm:text-base text-slate-800 dark:text-white mt-1">
               CSV Validation
             </div>
-            <div className="text-[10px] text-slate-400 leading-tight">
+            <div className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
               Client & server parsing, type & boundary checks
             </div>
           </div>
 
           <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700 text-center space-y-1">
-            <div className="w-7 h-7 mx-auto rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+            <div className="w-9 h-9 mx-auto rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-black text-sm sm:text-base border border-emerald-500/40 shadow-sm">
               2
             </div>
-            <div className="font-bold text-xs text-slate-800 dark:text-slate-200">
+            <div className="font-black text-sm sm:text-base text-slate-800 dark:text-white mt-1">
               Tenant PostgreSQL
             </div>
-            <div className="text-[10px] text-slate-400 leading-tight">
+            <div className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
               Atomic write: <code>orders</code> + <code>outbox_events</code>
             </div>
           </div>
 
           <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700 text-center space-y-1">
-            <div className="w-7 h-7 mx-auto rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+            <div className="w-9 h-9 mx-auto rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-black text-sm sm:text-base border border-emerald-500/40 shadow-sm">
               3
             </div>
-            <div className="font-bold text-xs text-slate-800 dark:text-slate-200">
+            <div className="font-black text-sm sm:text-base text-slate-800 dark:text-white mt-1">
               MultiTenantRelay
             </div>
-            <div className="text-[10px] text-slate-400 leading-tight">
+            <div className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
               Streams unpublished events to Redis Stream
             </div>
           </div>
 
           <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700 text-center space-y-1">
-            <div className="w-7 h-7 mx-auto rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+            <div className="w-9 h-9 mx-auto rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-black text-sm sm:text-base border border-emerald-500/40 shadow-sm">
               4
             </div>
-            <div className="font-bold text-xs text-slate-800 dark:text-slate-200">
+            <div className="font-black text-sm sm:text-base text-slate-800 dark:text-white mt-1">
               Aggregation Worker
             </div>
-            <div className="text-[10px] text-slate-400 leading-tight">
+            <div className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
               Consumes stream, applies rollups, XACKs
             </div>
           </div>
 
           <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700 text-center space-y-1">
-            <div className="w-7 h-7 mx-auto rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
+            <div className="w-9 h-9 mx-auto rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-black text-sm sm:text-base border border-emerald-500/40 shadow-sm">
               5
             </div>
-            <div className="font-bold text-xs text-slate-800 dark:text-slate-200">
+            <div className="font-black text-sm sm:text-base text-slate-800 dark:text-white mt-1">
               Dashboard Live
             </div>
-            <div className="text-[10px] text-slate-400 leading-tight">
+            <div className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
               Analytics API reflects incremental delta
             </div>
           </div>
@@ -259,13 +259,13 @@ PROD-ERGONOMIC-CHAIR,349.50,USD,shipped,2026-10-24T10:30:00Z`;
           <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 mb-3">
             <UploadCloud className="w-8 h-8" />
           </div>
-          <p className="font-bold text-sm text-slate-800 dark:text-slate-200">
+          <p className="font-black text-base sm:text-lg text-slate-800 dark:text-white">
             Drag and drop orders CSV file here
           </p>
-          <p className="text-xs text-slate-400 mt-1 mb-4">
+          <p className="text-sm text-slate-300 mt-1.5 mb-5 leading-relaxed">
             Supports UTF-8 CSV with product_id, amount, currency, status, created_at
           </p>
-          <label className="cursor-pointer px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition">
+          <label className="cursor-pointer px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-sm font-bold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition">
             Browse File
             <input
               type="file"
@@ -279,11 +279,11 @@ PROD-ERGONOMIC-CHAIR,349.50,USD,shipped,2026-10-24T10:30:00Z`;
         {/* Raw CSV Text Area */}
         <div className="flex flex-col p-5 rounded-2xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center space-x-1.5">
+            <label className="text-sm sm:text-base font-black text-slate-700 dark:text-white flex items-center space-x-2">
               <FileText className="w-3.5 h-3.5 text-emerald-500" />
               <span>CSV Editor / Direct Input</span>
             </label>
-            <span className="text-[11px] text-slate-400 font-mono">
+            <span className="text-xs sm:text-sm text-emerald-400 font-mono font-bold">
               {csvContent.split('\n').filter((l) => l.trim()).length} lines
             </span>
           </div>
@@ -293,12 +293,12 @@ PROD-ERGONOMIC-CHAIR,349.50,USD,shipped,2026-10-24T10:30:00Z`;
             value={csvContent}
             onChange={(e) => setCsvContent(e.target.value)}
             placeholder="product_id,amount,currency,status,created_at&#10;PROD-1,100.00,USD,shipped,2026-10-20T12:00:00Z"
-            className="w-full flex-1 p-3 text-xs font-mono rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full flex-1 p-4 text-sm font-mono leading-relaxed rounded-2xl bg-slate-50 dark:bg-[#041a13] border border-slate-200 dark:border-[#0d3d2f] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
 
           {/* Controls & Submit */}
           <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-            <div className="flex items-center space-x-4 text-xs">
+            <div className="flex items-center space-x-5 text-sm sm:text-base">
               <label className="flex items-center space-x-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -327,7 +327,7 @@ PROD-ERGONOMIC-CHAIR,349.50,USD,shipped,2026-10-24T10:30:00Z`;
             <button
               onClick={handleIngest}
               disabled={isSubmitting || !csvContent.trim()}
-              className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold text-xs shadow-md shadow-emerald-600/20 transition"
+              className="flex items-center space-x-2 px-7 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-black text-sm sm:text-base shadow-lg shadow-emerald-600/30 transition hover:scale-[1.02]"
             >
               {isSubmitting ? (
                 <>

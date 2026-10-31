@@ -237,10 +237,10 @@ export const ArchitecturePage: React.FC = () => {
                 <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> 10,000,000 Orders Across 100 Tenants
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight">
               AstraRoll V2: Database-Per-Tenant Architecture
             </h1>
-            <p className="text-xs sm:text-sm text-emerald-200/90 max-w-3xl leading-relaxed">
+            <p className="text-sm sm:text-base text-emerald-200/90 max-w-3xl leading-relaxed">
               Enterprise-grade physical database-per-tenant topology with asynchronous streaming rollups, proven at 10,000,000 orders across 100 dedicated customer databases on a standard laptop.
             </p>
           </div>
@@ -315,10 +315,10 @@ export const ArchitecturePage: React.FC = () => {
                   </div>
                   <span className="text-xs font-mono font-bold text-slate-400">{st.number}</span>
                 </div>
-                <div className="font-bold text-xs leading-snug line-clamp-2 text-slate-900 dark:text-white">
+                <div className="font-black text-sm leading-snug text-slate-900 dark:text-white">
                   {st.title}
                 </div>
-                <div className="text-[10px] text-slate-400 mt-1 line-clamp-1">
+                <div className="text-xs text-slate-300 mt-1 line-clamp-1 font-mono">
                   {st.badge}
                 </div>
               </button>
@@ -336,12 +336,12 @@ export const ArchitecturePage: React.FC = () => {
               </div>
               <div>
                 <div className="flex items-center space-x-2">
-                  <span className="text-xs font-mono font-bold text-emerald-500">STAGE {activeStage.number}</span>
-                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border font-mono ${activeStage.badgeColor}`}>
+                  <span className="text-sm font-mono font-black text-emerald-400 tracking-wide">STAGE {activeStage.number}</span>
+                  <span className={`px-3 py-1 rounded-full text-xs font-extrabold border font-mono ${activeStage.badgeColor}`}>
                     {activeStage.badge}
                   </span>
                 </div>
-                <h3 className="text-lg font-extrabold text-slate-900 dark:text-white mt-0.5">
+                <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1 tracking-tight">
                   {activeStage.title}
                 </h3>
               </div>
@@ -350,8 +350,8 @@ export const ArchitecturePage: React.FC = () => {
             <div className="flex items-center space-x-3">
               {activeStage.keySpecs.map((spec, i) => (
                 <div key={i} className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-right">
-                  <div className="text-[10px] uppercase font-bold text-slate-400">{spec.label}</div>
-                  <div className="text-xs font-extrabold text-emerald-400 font-mono">{spec.value}</div>
+                  <div className="text-xs uppercase font-extrabold text-slate-300 tracking-wider">{spec.label}</div>
+                  <div className="text-sm sm:text-base font-black text-emerald-300 font-mono">{spec.value}</div>
                 </div>
               ))}
             </div>
@@ -359,37 +359,37 @@ export const ArchitecturePage: React.FC = () => {
 
           {/* Interactive Tree Node Flow Graphic */}
           <div className="space-y-3">
-            <div className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center">
+            <div className="text-sm sm:text-base font-black uppercase tracking-wider text-emerald-400 flex items-center">
               <GitBranch className="w-3.5 h-3.5 mr-1.5 text-emerald-500" />
               Stage Data Flow & Branching Tree
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-sm">
               {/* Node 1: Input */}
               <div className="p-4 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 space-y-1.5">
-                <div className="text-[10px] font-bold uppercase text-slate-400">1. Upstream Input</div>
-                <div className="font-semibold text-slate-900 dark:text-white leading-relaxed">
+                <div className="text-xs font-black uppercase tracking-wider text-slate-300">1. Upstream Input</div>
+                <div className="font-semibold text-base text-slate-900 dark:text-white leading-relaxed">
                   {activeStage.dataFlow.input}
                 </div>
               </div>
 
               {/* Node 2: Processing Action */}
               <div className="p-4 rounded-xl bg-white dark:bg-slate-900/80 border border-emerald-800/60 space-y-1.5 shadow-sm">
-                <div className="text-[10px] font-bold uppercase text-emerald-400">2. Core Processing Engine</div>
-                <div className="font-semibold text-slate-900 dark:text-white leading-relaxed">
+                <div className="text-xs font-black uppercase tracking-wider text-emerald-400">2. Core Processing Engine</div>
+                <div className="font-semibold text-base text-slate-900 dark:text-white leading-relaxed">
                   {activeStage.dataFlow.action}
                 </div>
               </div>
 
               {/* Node 3: Output & Branches */}
               <div className="p-4 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 space-y-2">
-                <div className="text-[10px] font-bold uppercase text-slate-400">3. Downstream Branches</div>
-                <div className="font-semibold text-slate-900 dark:text-white">
+                <div className="text-xs font-black uppercase tracking-wider text-slate-300">3. Downstream Branches</div>
+                <div className="font-semibold text-base text-slate-900 dark:text-white leading-relaxed">
                   {activeStage.dataFlow.output}
                 </div>
                 <div className="space-y-1 pt-1 border-t border-slate-200 dark:border-slate-800">
                   {activeStage.dataFlow.branching.map((br, idx) => (
-                    <div key={idx} className="flex items-center text-[11px] text-emerald-400 font-mono">
+                    <div key={idx} className="flex items-center text-xs sm:text-sm text-emerald-300 font-mono font-medium">
                       <ChevronRight className="w-3 h-3 mr-1 shrink-0" />
                       <span>{br}</span>
                     </div>
@@ -400,23 +400,23 @@ export const ArchitecturePage: React.FC = () => {
           </div>
 
           {/* Efficiency & Laptop Resource Explanation */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs pt-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-sm pt-2">
             <div className="p-4 rounded-xl bg-emerald-950/20 border border-emerald-800/50 space-y-1.5">
-              <div className="font-bold text-emerald-400 flex items-center">
+              <div className="font-black text-base sm:text-lg text-emerald-400 flex items-center">
                 <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
                 Why This Approach Is 10x More Efficient
               </div>
-              <p className="text-slate-300 leading-relaxed text-[11px]">
+              <p className="text-slate-200 leading-relaxed text-sm sm:text-base font-normal">
                 {activeStage.whyEfficient}
               </p>
             </div>
 
             <div className="p-4 rounded-xl bg-teal-950/20 border border-teal-800/50 space-y-1.5">
-              <div className="font-bold text-teal-400 flex items-center">
+              <div className="font-black text-base sm:text-lg text-teal-400 flex items-center">
                 <Cpu className="w-3.5 h-3.5 mr-1.5" />
                 Standard Laptop Resource Footprint
               </div>
-              <p className="text-slate-300 leading-relaxed text-[11px]">
+              <p className="text-slate-200 leading-relaxed text-sm sm:text-base font-normal">
                 {activeStage.laptopFootprint}
               </p>
             </div>
@@ -430,64 +430,64 @@ export const ArchitecturePage: React.FC = () => {
       <div className="space-y-4">
         <div className="flex items-center space-x-2">
           <Gauge className="w-5 h-5 text-emerald-500" />
-          <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
+          <h3 className="font-black text-xl sm:text-2xl text-slate-900 dark:text-white">
             The 4 Foundational Pillars: How 10M Runs on a Normal Laptop
           </h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
           <div className="p-6 rounded-2xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 space-y-3 shadow-sm">
             <div className="flex items-center justify-between">
-              <h4 className="font-bold text-slate-900 dark:text-white text-sm">
+              <h4 className="font-black text-slate-900 dark:text-white text-base sm:text-lg">
                 1. Physical Sharding (10M Orders → 100x 100k)
               </h4>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">
+              <span className="px-3 py-1 rounded-full text-xs font-black uppercase bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">
                 Isolation
               </span>
             </div>
-            <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+            <p className="text-slate-200 dark:text-slate-200 leading-relaxed text-sm sm:text-base">
               In a single monolithic 10M table, B-tree indexes grow deep, requiring multi-level disk page lookups and causing catastrophic lock contention during concurrent writes. Sharding into 100 dedicated databases ensures each B-tree fits entirely in RAM cache.
             </p>
           </div>
 
           <div className="p-6 rounded-2xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 space-y-3 shadow-sm">
             <div className="flex items-center justify-between">
-              <h4 className="font-bold text-slate-900 dark:text-white text-sm">
+              <h4 className="font-black text-slate-900 dark:text-white text-base sm:text-lg">
                 2. Dynamic LRU Connection Pool Recycling
               </h4>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">
+              <span className="px-3 py-1 rounded-full text-xs font-black uppercase bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">
                 Memory
               </span>
             </div>
-            <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+            <p className="text-slate-200 dark:text-slate-200 leading-relaxed text-sm sm:text-base">
               Opening persistent connection pools to 100 separate databases would crash PostgreSQL on a laptop with &quot;sorry, too many clients already&quot;. AstraRoll V2 implements an LRU connection cache (<code className="font-mono text-[11px]">max_active_pools=10</code>) that recycles engines effortlessly under 150MB total RAM.
             </p>
           </div>
 
           <div className="p-6 rounded-2xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 space-y-3 shadow-sm">
             <div className="flex items-center justify-between">
-              <h4 className="font-bold text-slate-900 dark:text-white text-sm">
+              <h4 className="font-black text-slate-900 dark:text-white text-base sm:text-lg">
                 3. Transactional Outbox vs Distributed 2PC
               </h4>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">
+              <span className="px-3 py-1 rounded-full text-xs font-black uppercase bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">
                 Reliability
               </span>
             </div>
-            <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+            <p className="text-slate-200 dark:text-slate-200 leading-relaxed text-sm sm:text-base">
               Writing to both an order database and an analytical store simultaneously risks split-brain failure or distributed two-phase commit overhead. With the Transactional Outbox pattern, writes complete in &lt; 10ms with guaranteed eventual consistency via Redis Streams.
             </p>
           </div>
 
           <div className="p-6 rounded-2xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 space-y-3 shadow-sm">
             <div className="flex items-center justify-between">
-              <h4 className="font-bold text-slate-900 dark:text-white text-sm">
+              <h4 className="font-black text-slate-900 dark:text-white text-base sm:text-lg">
                 4. O(1) Pre-Computed Aggregates vs Raw Scans
               </h4>
-              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">
+              <span className="px-3 py-1 rounded-full text-xs font-black uppercase bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">
                 Query Speed
               </span>
             </div>
-            <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+            <p className="text-slate-200 dark:text-slate-200 leading-relaxed text-sm sm:text-base">
               Instead of recalculating SUM(sales) over 10,000,000 raw rows on every page refresh, the dashboard queries pre-aggregated hourly buckets. It reads at most 168 rows, explaining why query speed only grew by 1.08x between 1M and 10M rows.
             </p>
           </div>
@@ -514,7 +514,7 @@ export const ArchitecturePage: React.FC = () => {
         </div>
 
         <div className="overflow-x-auto pt-2">
-          <table className="w-full text-xs text-left">
+          <table className="w-full text-sm sm:text-base text-left">
             <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 uppercase tracking-wider text-[10px]">
               <tr>
                 <th className="px-4 py-3 rounded-l-lg">What We Measure</th>
@@ -626,7 +626,7 @@ export const ArchitecturePage: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Activity className="w-4 h-4 text-emerald-500" />
-            <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+            <h3 className="font-black text-lg sm:text-xl text-slate-900 dark:text-white">
               Measured Benchmark p95 Response Times (100 Tenants Concurrently)
             </h3>
           </div>
@@ -636,7 +636,7 @@ export const ArchitecturePage: React.FC = () => {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-xs text-left">
+          <table className="w-full text-sm sm:text-base text-left">
             <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 uppercase tracking-wider text-[10px]">
               <tr>
                 <th className="px-4 py-3 rounded-l-lg">Authorized Endpoint Shape</th>
@@ -672,7 +672,7 @@ export const ArchitecturePage: React.FC = () => {
         <div className="p-6 rounded-3xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
           <div className="flex items-center space-x-2 font-bold text-slate-900 dark:text-white">
             <ShieldCheck className="w-4 h-4 text-emerald-500" />
-            <span>Honest Architectural Analysis</span>
+            <span className="text-lg sm:text-xl font-black text-white">Honest Architectural Analysis</span>
           </div>
           <ul className="space-y-2 text-slate-600 dark:text-slate-300">
             <li>
@@ -690,7 +690,7 @@ export const ArchitecturePage: React.FC = () => {
         <div className="p-6 rounded-3xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
           <div className="flex items-center space-x-2 font-bold text-slate-900 dark:text-white">
             <Layers className="w-4 h-4 text-emerald-500" />
-            <span>Horizontal Next-Scale Roadmap</span>
+            <span className="text-lg sm:text-xl font-black text-white">Horizontal Next-Scale Roadmap</span>
           </div>
           <ul className="space-y-2 text-slate-600 dark:text-slate-300">
             <li>
