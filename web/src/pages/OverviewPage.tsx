@@ -42,6 +42,7 @@ export const OverviewPage: React.FC = () => {
   const [trends, setTrends] = useState<TrendsResponse | null>(null);
   const [topProducts, setTopProducts] = useState<TopProductsResponse | null>(null);
   const [statuses, setStatuses] = useState<StatusBreakdownResponse | null>(null);
+  const [queryLatencyMs, setQueryLatencyMs] = useState<number | null>(null);
 
   useEffect(() => {
     if (!activeTenant) return;
@@ -50,6 +51,7 @@ export const OverviewPage: React.FC = () => {
     setLoading(true);
     setError(null);
 
+    const t0 = performance.now();
     Promise.all([
       fetchSummary(activeTenant.id, currency, startDate, endDate, token),
       fetchTrends(activeTenant.id, currency, startDate, endDate, interval, token),
@@ -58,6 +60,8 @@ export const OverviewPage: React.FC = () => {
     ])
       .then(([sumRes, trendRes, prodRes, statRes]) => {
         if (!isMounted) return;
+        const elapsed = Math.round(performance.now() - t0);
+        setQueryLatencyMs(elapsed);
         setSummary(sumRes);
         setTrends(trendRes);
         setTopProducts(prodRes);
@@ -202,9 +206,17 @@ export const OverviewPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <BarChart3 className="w-4 h-4 text-emerald-500" />
-              <h3 className="font-bold text-sm text-slate-900 dark:text-white">
-                Shipped Sales & Volume Trends
-              </h3>
+              <div className="flex items-center space-x-2.5">
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                  Shipped Sales & Volume Trends
+                </h3>
+                {queryLatencyMs !== null && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-mono font-bold bg-emerald-950/80 text-emerald-400 border border-emerald-800 shadow-sm">
+                    <Zap className="w-3 h-3 mr-1 text-emerald-400" />
+                    {queryLatencyMs} ms
+                  </span>
+                )}
+              </div>
             </div>
             <div className="flex items-center rounded-lg bg-slate-100 dark:bg-slate-800 p-0.5 text-xs">
               <button

@@ -26,6 +26,19 @@ interface ChatMessage {
   data?: Record<string, any>;
 }
 
+function cleanMarkdownText(str: string): string {
+  if (!str) return '';
+  return str
+    .replace(/^#{1,6}\s*/gm, '')
+    .replace(/^>\s*(\[!.*?\])?\s*/gm, '')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/\*([^*]+)\*/g, '$1')
+    .replace(/__([^_]+)__/g, '$1')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/\u2011/g, '-')
+    .trim();
+}
+
 export const AssistantPage: React.FC = () => {
   const { activeTenant, currency, startDate, endDate, token } = useApp();
 
@@ -181,60 +194,26 @@ export const AssistantPage: React.FC = () => {
                     : 'bg-slate-50 dark:bg-[#101C15] text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-800 rounded-tl-none'
                 }`}
               >
-                {/* Content with basic markdown formatting */}
-                <div className="prose prose-sm dark:prose-invert max-w-none space-y-2 text-xs">
-                  {m.content.split('\n\n').map((para, i) => {
-                    // Check for headers
-                    if (para.startsWith('### ')) {
-                      return (
-                        <h4 key={i} className="font-bold text-sm text-slate-900 dark:text-white mt-1 mb-1">
-                          {para.replace('### ', '')}
-                        </h4>
-                      );
-                    }
-                    // Check for bullet lists
-                    if (para.startsWith('- ')) {
+                {/* Clean content with no markdown characters */}
+                <div className="space-y-2 text-xs leading-relaxed">
+                  {cleanMarkdownText(m.content).split('\n\n').map((para, i) => {
+                    const cleaned = cleanMarkdownText(para);
+                    if (!cleaned) return null;
+                    if (cleaned.startsWith('- ') || cleaned.includes('\n- ')) {
                       return (
                         <ul key={i} className="list-disc pl-4 space-y-1 my-1">
-                          {para.split('\n').map((item, idx) => (
-                            <li key={idx} dangerouslySetInnerHTML={{ __html: item.replace(/^- /, '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/`(.*?)`/g, '<code class="px-1 py-0.5 rounded bg-slate-200 dark:bg-slate-800 font-mono text-[11px]">$1</code>') }} />
-                          ))}
+                          {cleaned.split('\n').map((item, idx) => {
+                            const bulletText = cleanMarkdownText(item.replace(/^- \s*/, ''));
+                            if (!bulletText) return null;
+                            return <li key={idx} className="text-slate-800 dark:text-slate-200">{bulletText}</li>;
+                          })}
                         </ul>
                       );
                     }
-                    // Check for markdown tables
-                    if (para.includes('|')) {
-                      const rows = para.split('\n').filter((r) => r.includes('|') && !r.includes('---'));
-                      return (
-                        <div key={i} className="overflow-x-auto my-2">
-                          <table className="w-full text-[11px] text-left border-collapse">
-                            <tbody>
-                              {rows.map((r, rIdx) => {
-                                const cells = r.split('|').filter((c) => c.trim().length > 0);
-                                return (
-                                  <tr key={rIdx} className={rIdx === 0 ? 'font-bold border-b border-slate-200 dark:border-slate-700' : 'border-b border-slate-100 dark:border-slate-800'}>
-                                    {cells.map((c, cIdx) => (
-                                      <td key={cIdx} className="py-1 px-2" dangerouslySetInnerHTML={{ __html: c.trim().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/`(.*?)`/g, '<code>$1</code>') }} />
-                                    ))}
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
-                        </div>
-                      );
-                    }
-                    // General paragraph
                     return (
-                      <p
-                        key={i}
-                        dangerouslySetInnerHTML={{
-                          __html: para
-                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                            .replace(/`(.*?)`/g, '<code class="px-1 py-0.5 rounded bg-slate-200 dark:bg-slate-800 font-mono text-[11px]">$1</code>')
-                            .replace(/\n/g, '<br />'),
-                        }}
-                      />
+                      <p key={i} className="text-slate-800 dark:text-slate-200 whitespace-pre-line">
+                        {cleaned}
+                      </p>
                     );
                   })}
                 </div>

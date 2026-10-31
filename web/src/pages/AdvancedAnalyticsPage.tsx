@@ -12,7 +12,7 @@ import {
 import { useApp } from '../context/AppContext';
 import { fetchTrends, fetchTopProducts, fetchStatusBreakdown } from '../lib/api';
 import { TrendsResponse, TopProductsResponse, StatusBreakdownResponse, Interval } from '../types';
-import { TrendLineChart, TopProductsBarChart } from '../components/Charts';
+import { DualAxisAreaBarChart, TopProductsBarChart } from '../components/Charts';
 import { formatCurrency, formatNumber, formatDate, downloadCsv } from '../lib/utils';
 
 export const AdvancedAnalyticsPage: React.FC = () => {
@@ -150,10 +150,20 @@ export const AdvancedAnalyticsPage: React.FC = () => {
       {activeView === 'trends' && (
         <div className="space-y-6">
           <div className="p-5 rounded-2xl bg-white dark:bg-[#0B140F] border border-slate-200/80 dark:border-slate-800 shadow-sm">
-            <h3 className="font-bold text-sm text-slate-900 dark:text-white mb-4">
-              Historical Shipped Sales Curve ({interval === 'day' ? 'Daily' : 'Hourly'})
-            </h3>
-            <TrendLineChart
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                  Dual-Axis Composite Analytics ({interval === 'day' ? 'Daily' : 'Hourly'})
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Overlaid Shipped Sales Revenue curve and Order Volume distribution.
+                </p>
+              </div>
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-emerald-950/80 text-emerald-400 border border-emerald-800 font-mono">
+                Composite Mode
+              </span>
+            </div>
+            <DualAxisAreaBarChart
               data={trends?.buckets || []}
               currency={currency}
               interval={interval}

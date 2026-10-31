@@ -359,3 +359,278 @@ export const StatusDonutChart: React.FC<StatusDonutChartProps> = ({ statuses, cu
   );
 };
 
+
+
+// --- ADVANCED DUAL-AXIS COMPOSITE CHART (SALES AREA + ORDER VOLUME BARS) ---
+export interface DualAxisAreaBarChartProps {
+  data: TrendBucket[];
+  currency: Currency;
+  interval: 'hour' | 'day';
+}
+
+export const DualAxisAreaBarChart: React.FC<DualAxisAreaBarChartProps> = ({
+  data,
+  currency,
+  interval,
+}) => {
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const [displayMode, setDisplayMode] = useState<'both' | 'sales' | 'volume'>('both');
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-72 text-slate-400 dark:text-slate-500 text-xs">
+        No time-series analytics available for this range.
+      </div>
+    );
+  }
+
+  const salesValues = data.map((d) => parseFloat(d.sales_amount) || 0);
+  const volumeValues = data.map((d) => d.total_order_count || 0);
+
+  const maxSales = Math.max(...salesValues, 100);
+  const maxVolume = Math.max(...volumeValues, 10);
+  const totalSales = salesValues.reduce((a, b) => a + b, 0);
+  const totalVolume = volumeValues.reduce((a, b) => a + b, 0);
+  const avgTicket = totalVolume > 0 ? totalSales / totalVolume : 0;
+
+  const width = 800;
+  const height = 300;
+  const padLeft = 60;
+  const padRight = 60;
+  const padTop = 30;
+  const padBottom = 40;
+
+  const chartW = width - padLeft - padRight;
+  const chartH = height - padTop - padBottom;
+  const barWidth = Math.max(Math.min(chartW / data.length - 8, 36), 6);
+
+  const points = data.map((d, i) => {
+    const x = padLeft + (i / Math.max(data.length - 1, 1)) * chartW;
+    const yVal = parseFloat(d.sales_amount) || 0;
+    const y = padTop + chartH - (yVal / maxSales) * chartH;
+    const barH = (d.total_order_count / maxVolume) * (chartH * 0.75); // max 75% height
+    return { x, y, barH, bucket: d };
+  });
+
+  const pathD = points.reduce((acc, p, i) => {
+    if (i === 0) return `M ${p.x} ${p.y}`;
+    const prev = points[i - 1];
+    const cx = (prev.x + p.x) / 2;
+    return `${acc} C ${cx} ${prev.y}, ${cx} ${p.y}, ${p.x} ${p.y}`;
+  }, '');
+
+  const areaD = `${pathD} L ${points[points.length - 1].x} ${padTop + chartH} L ${points[0].x} ${padTop + chartH} Z`;
+
+  return (
+    <div className="space-y-4">
+      {/* Top KPI Summary Ribbon */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+        <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+          <div className="text-[10px] uppercase font-bold text-slate-400">Total Period Sales</div>
+          <div className="text-base font-extrabold text-emerald-500 font-mono mt-0.5">
+            {formatCurrency(totalSales, currency)}
+          </div>
+        </div>
+        <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+          <div className="text-[10px] uppercase font-bold text-slate-400">Total Volume</div>
+          <div className="text-base font-extrabold text-teal-400 font-mono mt-0.5">
+            {formatNumber(totalVolume)} orders
+          </div>
+        </div>
+        <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+          <div className="text-[10px] uppercase font-bold text-slate-400">Average Ticket (AOV)</div>
+          <div className="text-base font-extrabold text-slate-900 dark:text-white font-mono mt-0.5">
+            {formatCurrency(avgTicket, currency)}
+          </div>
+        </div>
+        <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <div>
+            <div className="text-[10px] uppercase font-bold text-slate-400">Active View</div>
+            <div className="flex items-center space-x-1 mt-1">
+              <button
+                onClick={() => setDisplayMode('both')}
+                className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                  displayMode === 'both' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400'
+                }`}
+              >
+                Dual
+              </button>
+              <button
+                onClick={() => setDisplayMode('sales')}
+                className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                  displayMode === 'sales' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400'
+                }`}
+              >
+                Sales
+              </button>
+              <button
+                onClick={() => setDisplayMode('volume')}
+                className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                  displayMode === 'volume' ? 'bg-teal-600 text-white' : 'bg-slate-800 text-slate-400'
+                }`}
+              >
+                Orders
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* SVG Canvas */}
+      <div className="relative w-full overflow-hidden">
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto select-none overflow-visible">
+          <defs>
+            <linearGradient id="advAreaGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#10B981" stopOpacity="0.45" />
+              <stop offset="60%" stopColor="#10B981" stopOpacity="0.12" />
+              <stop offset="100%" stopColor="#10B981" stopOpacity="0.0" />
+            </linearGradient>
+            <linearGradient id="advBarGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#0D9488" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#042F2E" stopOpacity="0.4" />
+            </linearGradient>
+          </defs>
+
+          {/* Grid lines */}
+          {[0, 0.25, 0.5, 0.75, 1].map((pct, idx) => {
+            const y = padTop + chartH * (1 - pct);
+            const salesLabel = formatCurrency(maxSales * pct, currency).slice(0, -3);
+            const volLabel = Math.round(maxVolume * pct);
+            return (
+              <g key={idx}>
+                <line
+                  x1={padLeft}
+                  y1={y}
+                  x2={width - padRight}
+                  y2={y}
+                  stroke="currentColor"
+                  className="text-slate-100 dark:text-slate-800/80"
+                  strokeDasharray="4 4"
+                />
+                {(displayMode === 'both' || displayMode === 'sales') && (
+                  <text
+                    x={padLeft - 8}
+                    y={y + 4}
+                    textAnchor="end"
+                    className="text-[10px] fill-slate-400 font-mono font-medium"
+                  >
+                    {salesLabel}
+                  </text>
+                )}
+                {(displayMode === 'both' || displayMode === 'volume') && (
+                  <text
+                    x={width - padRight + 8}
+                    y={y + 4}
+                    textAnchor="start"
+                    className="text-[10px] fill-teal-400 font-mono font-medium"
+                  >
+                    {volLabel}
+                  </text>
+                )}
+              </g>
+            );
+          })}
+
+          {/* Background Volume Bars */}
+          {(displayMode === 'both' || displayMode === 'volume') &&
+            points.map((p, i) => {
+              const bx = p.x - barWidth / 2;
+              const by = padTop + chartH - p.barH;
+              const isHover = hoveredIdx === i;
+              return (
+                <rect
+                  key={i}
+                  x={bx}
+                  y={by}
+                  width={barWidth}
+                  height={p.barH}
+                  rx={4}
+                  fill="url(#advBarGrad)"
+                  className={`transition-all duration-150 cursor-pointer ${
+                    isHover ? 'opacity-100 filter drop-shadow(0 0 6px rgba(13,148,136,0.6))' : 'opacity-70'
+                  }`}
+                  onMouseEnter={() => setHoveredIdx(i)}
+                  onMouseLeave={() => setHoveredIdx(null)}
+                />
+              );
+            })}
+
+          {/* Foreground Sales Area & Line */}
+          {(displayMode === 'both' || displayMode === 'sales') && (
+            <>
+              <path d={areaD} fill="url(#advAreaGrad)" />
+              <path
+                d={pathD}
+                fill="none"
+                stroke="#10B981"
+                strokeWidth={2.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              {points.map((p, i) => (
+                <circle
+                  key={i}
+                  cx={p.x}
+                  cy={p.y}
+                  r={hoveredIdx === i ? 6 : 3.5}
+                  fill="#060B08"
+                  stroke="#10B981"
+                  strokeWidth={hoveredIdx === i ? 3 : 2}
+                  className="transition-all duration-150 cursor-pointer"
+                  onMouseEnter={() => setHoveredIdx(i)}
+                  onMouseLeave={() => setHoveredIdx(null)}
+                />
+              ))}
+            </>
+          )}
+
+          {/* X-Axis Labels */}
+          {points.map((p, i) => {
+            if (data.length > 10 && i % 2 !== 0 && i !== data.length - 1) return null;
+            return (
+              <text
+                key={i}
+                x={p.x}
+                y={padTop + chartH + 20}
+                textAnchor="middle"
+                className="text-[10px] fill-slate-400 font-mono"
+              >
+                {formatDate(p.bucket.bucket_start)}
+              </text>
+            );
+          })}
+        </svg>
+
+        {/* Hover Tooltip Card */}
+        {hoveredIdx !== null && points[hoveredIdx] && (
+          <div
+            className="absolute z-20 pointer-events-none p-3 rounded-xl bg-slate-900/95 text-white border border-emerald-500/40 shadow-xl backdrop-blur-md text-xs space-y-1 transform -translate-x-1/2 -translate-y-full font-mono"
+            style={{
+              left: `${(points[hoveredIdx].x / width) * 100}%`,
+              top: `${(points[hoveredIdx].y / height) * 100 - 10}%`,
+            }}
+          >
+            <div className="text-[10px] text-slate-400 font-sans pb-1 border-b border-slate-800">
+              {new Date(points[hoveredIdx].bucket.bucket_start).toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: 'UTC',
+              })}{' '}
+              UTC
+            </div>
+            <div className="flex items-center justify-between gap-4 pt-0.5">
+              <span className="text-emerald-400 font-bold">Shipped Sales:</span>
+              <span>{formatCurrency(points[hoveredIdx].bucket.sales_amount, currency)}</span>
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-teal-400 font-bold">Orders Volume:</span>
+              <span>{formatNumber(points[hoveredIdx].bucket.total_order_count)} orders</span>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
