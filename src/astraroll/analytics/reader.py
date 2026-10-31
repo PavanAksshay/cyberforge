@@ -86,7 +86,13 @@ class UnavailableAnalyticsReader:
 def get_analytics_reader() -> AnalyticsReader:
     from astraroll.config import get_settings
 
-    if get_settings().analytics_backend == "postgres":
+    settings = get_settings()
+    if settings.analytics_backend == "postgres":
+        if settings.deployment_mode == "database_per_tenant":
+            from astraroll.v2.runtime import get_v2_analytics_adapter
+
+            return get_v2_analytics_adapter()
+
         # Optional integration imports stay off the default application startup path.
         from astraroll.analytics.postgres import configured_reader
 

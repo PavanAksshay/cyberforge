@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from astraroll.analytics.auth import get_authorized_path_tenant, require_admin
 from astraroll.analytics.routes import router as analytics_router
+from astraroll.config import get_settings
 from astraroll.db import get_session_factory
 from astraroll.models import Order, Tenant
 from astraroll.operations import record_latency
@@ -77,6 +78,16 @@ def live():
 
 @app.get("/health/ready")
 def ready(db: DB):
+    settings = get_settings()
+    if settings.deployment_mode == "database_per_tenant":
+        from astraroll.v2.runtime import get_control_engine
+
+        try:
+            with get_control_engine().connect() as conn:
+                conn.execute(text("SELECT 1"))
+        except Exception:
+            return JSONResponse(status_code=503, content={"status": "control database unavailable"})
+        return {"status": "ok"}
     try:
         db.execute(text("SELECT 1"))
     except Exception:
@@ -88,6 +99,16 @@ def ready(db: DB):
     "/tenants", response_model=TenantRead, status_code=201, dependencies=[Depends(require_admin)]
 )
 def tenant_create(data: TenantCreate, db: DB):
+    settings = get_settings()
+    if settings.deployment_mode == "database_per_tenant":
+        from uuid import uuid4
+
+        from astraroll.v2.runtime import get_tenant_provisioner
+
+        tenant_id = uuid4()
+        record = get_tenant_provisioner().provision_tenant(tenant_id, data.name)
+        return TenantRead(id=record.tenant_id, name=record.name)
+
     with db.begin():
         tenant = Tenant(name=data.name)
         db.add(tenant)
@@ -102,6 +123,16 @@ def tenant_create(data: TenantCreate, db: DB):
     dependencies=[Depends(get_authorized_path_tenant)],
 )
 def tenant_get(tenant_id: UUID, db: DB):
+    settings = get_settings()
+    if settings.deployment_mode == "database_per_tenant":
+        from astraroll.v2.runtime import get_control_registry, get_tenant_engine_manager
+
+        record = get_control_registry().get_tenant(tenant_id)
+        if not record or not record.is_active():
+            raise NotFound("Tenant not found")
+        with get_tenant_engine_manager().session(tenant_id) as tenant_db:
+            return tenant_db.get(Tenant, tenant_id)
+
     require_tenant(db, tenant_id)
     return db.get(Tenant, tenant_id)
 
@@ -113,6 +144,15 @@ def tenant_get(tenant_id: UUID, db: DB):
     dependencies=[Depends(get_authorized_path_tenant)],
 )
 def order_create(tenant_id: UUID, data: OrderCreate, db: DB):
+    settings = get_settings()
+    if settings.deployment_mode == "database_per_tenant":
+        from astraroll.v2.runtime import get_tenant_engine_manager
+
+        with get_tenant_engine_manager().session(tenant_id) as tenant_db:
+            with tenant_db.begin():
+                result = OrderRead.model_validate(create_order(tenant_db, tenant_id, data))
+        return result
+
     with db.begin():
         result = OrderRead.model_validate(create_order(db, tenant_id, data))
     return result
@@ -129,6 +169,20 @@ def order_list(
     limit: Annotated[int, Query(ge=1, le=500)] = 100,
     offset: Annotated[int, Query(ge=0)] = 0,
 ):
+    settings = get_settings()
+    if settings.deployment_mode == "database_per_tenant":
+        from astraroll.v2.runtime import get_tenant_engine_manager
+
+        with get_tenant_engine_manager().session(tenant_id) as tenant_db:
+            require_tenant(tenant_db, tenant_id)
+            return tenant_db.scalars(
+                select(Order)
+                .where(Order.tenant_id == tenant_id)
+                .order_by(Order.created_at, Order.id)
+                .limit(limit)
+                .offset(offset)
+            ).all()
+
     require_tenant(db, tenant_id)
     return db.scalars(
         select(Order)
@@ -145,6 +199,13 @@ def order_list(
     dependencies=[Depends(get_authorized_path_tenant)],
 )
 def order_get(tenant_id: UUID, order_id: UUID, db: DB):
+    settings = get_settings()
+    if settings.deployment_mode == "database_per_tenant":
+        from astraroll.v2.runtime import get_tenant_engine_manager
+
+        with get_tenant_engine_manager().session(tenant_id) as tenant_db:
+            return find_order(tenant_db, tenant_id, order_id)
+
     return find_order(db, tenant_id, order_id)
 
 
@@ -154,6 +215,17 @@ def order_get(tenant_id: UUID, order_id: UUID, db: DB):
     dependencies=[Depends(get_authorized_path_tenant)],
 )
 def order_update(tenant_id: UUID, order_id: UUID, data: OrderUpdate, db: DB):
+    settings = get_settings()
+    if settings.deployment_mode == "database_per_tenant":
+        from astraroll.v2.runtime import get_tenant_engine_manager
+
+        with get_tenant_engine_manager().session(tenant_id) as tenant_db:
+            with tenant_db.begin():
+                result = OrderRead.model_validate(
+                    mutate_order(tenant_db, tenant_id, order_id, data.expected_version, data)
+                )
+        return result
+
     with db.begin():
         result = OrderRead.model_validate(
             mutate_order(db, tenant_id, order_id, data.expected_version, data)
@@ -167,6 +239,17 @@ def order_update(tenant_id: UUID, order_id: UUID, data: OrderUpdate, db: DB):
     dependencies=[Depends(get_authorized_path_tenant)],
 )
 def order_cancel(tenant_id: UUID, order_id: UUID, data: OrderCancel, db: DB):
+    settings = get_settings()
+    if settings.deployment_mode == "database_per_tenant":
+        from astraroll.v2.runtime import get_tenant_engine_manager
+
+        with get_tenant_engine_manager().session(tenant_id) as tenant_db:
+            with tenant_db.begin():
+                result = OrderRead.model_validate(
+                    mutate_order(tenant_db, tenant_id, order_id, data.expected_version)
+                )
+        return result
+
     with db.begin():
         result = OrderRead.model_validate(
             mutate_order(db, tenant_id, order_id, data.expected_version)
