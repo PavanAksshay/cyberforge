@@ -21,6 +21,7 @@ astraroll-relay = "astraroll.relay:main"
 astraroll-seed = "astraroll.seed:main"
 astraroll-consumer = "astraroll.aggregation.consumer:main"
 astraroll-replay-outbox = "astraroll.aggregation.replay:main"
+astraroll-diagnostics = "astraroll.diagnostics:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

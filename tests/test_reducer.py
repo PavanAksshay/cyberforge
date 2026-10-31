@@ -339,9 +339,7 @@ class TestAggregationReducerEngine:
         )
 
         # Placed orders contribute 0 sales in v2
-        assert reducer.get_aggregate(h_summary_k) == AggregateDelta(
-            order_count=1, sales_cents=0
-        )
+        assert reducer.get_aggregate(h_summary_k) == AggregateDelta(order_count=1, sales_cents=0)
         assert reducer.get_aggregate(h_placed_k) == AggregateDelta(order_count=1, sales_cents=0)
         assert reducer.get_aggregate(h_prod_a_k) == AggregateDelta(order_count=1, sales_cents=0)
 
@@ -351,9 +349,7 @@ class TestAggregationReducerEngine:
         )
         res_2 = reducer.process_event(evt_2)
         assert res_2.applied is True
-        assert reducer.get_aggregate(h_summary_k) == AggregateDelta(
-            order_count=1, sales_cents=0
-        )
+        assert reducer.get_aggregate(h_summary_k) == AggregateDelta(order_count=1, sales_cents=0)
         assert reducer.get_aggregate(h_placed_k) == AggregateDelta(order_count=1, sales_cents=0)
         assert reducer.get_aggregate(h_prod_a_k) == AggregateDelta(order_count=1, sales_cents=0)
 
@@ -376,9 +372,7 @@ class TestAggregationReducerEngine:
         # PROD-B has 1 count, 0 sales
         assert reducer.get_aggregate(h_prod_b_k) == AggregateDelta(order_count=1, sales_cents=0)
         # Summary is 1 count, 0 sales
-        assert reducer.get_aggregate(h_summary_k) == AggregateDelta(
-            order_count=1, sales_cents=0
-        )
+        assert reducer.get_aggregate(h_summary_k) == AggregateDelta(order_count=1, sales_cents=0)
 
         # Step 4: Status change to SHIPPED (v4: shipped, $150, PROD-B)
         evt_4 = create_test_event(

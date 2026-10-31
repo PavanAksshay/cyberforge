@@ -14,11 +14,13 @@ Guarantees:
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import signal
 import time
+from collections import defaultdict
 from threading import Event
-from typing import Any
+from typing import Any, Literal
 from uuid import uuid4
 
 from redis import Redis
@@ -50,6 +52,7 @@ class AggregationConsumer:
         batch_size: int = 50,
         block_ms: int = 1000,
         min_idle_claim_ms: int = 30000,
+        dispatch_mode: Literal["fifo", "fair"] = "fifo",
     ):
         self.session_factory = session_factory
         self.redis = redis_client
@@ -59,6 +62,7 @@ class AggregationConsumer:
         self.batch_size = batch_size
         self.block_ms = block_ms
         self.min_idle_claim_ms = min_idle_claim_ms
+        self.dispatch_mode = dispatch_mode
         self.last_claim_ts: float = 0.0
         self.claim_cursor: str = "0-0"
 
@@ -203,6 +207,39 @@ class AggregationConsumer:
 
         return claimed_count
 
+    @staticmethod
+    def _reorder_fair(
+        messages: list[tuple[Any, dict[Any, Any]]],
+    ) -> list[tuple[Any, dict[Any, Any]]]:
+        """Round-robin interleave messages by tenant_id within the batch."""
+        tenant_queues: dict[str, list[tuple[Any, dict[Any, Any]]]] = defaultdict(list)
+        for stream_id, fields in messages:
+            payload_raw = fields.get(b"event") or fields.get("event")
+            tenant_key = "unknown"
+            if payload_raw:
+                try:
+                    data = (
+                        json.loads(payload_raw)
+                        if isinstance(payload_raw, (str, bytes))
+                        else payload_raw
+                    )
+                    tenant_key = str(data.get("tenant_id") or "unknown")
+                except Exception:
+                    tenant_key = "unknown"
+            tenant_queues[tenant_key].append((stream_id, fields))
+
+        reordered: list[tuple[Any, dict[Any, Any]]] = []
+        active_keys = list(tenant_queues.keys())
+        while active_keys:
+            next_keys = []
+            for k in active_keys:
+                q = tenant_queues[k]
+                reordered.append(q.pop(0))
+                if q:
+                    next_keys.append(k)
+            active_keys = next_keys
+        return reordered
+
     def process_batch(self) -> int:
         """Read and process a batch of new messages using XREADGROUP."""
         # 1. Recovery check for abandoned messages
@@ -228,6 +265,8 @@ class AggregationConsumer:
 
         processed_count = 0
         for stream_key, messages in streams_res:
+            if self.dispatch_mode == "fair":
+                messages = self._reorder_fair(messages)
             for stream_id, fields in messages:
                 if self.process_message(stream_id, fields):
                     processed_count += 1
@@ -261,6 +300,12 @@ def main() -> None:
     parser.add_argument("--group", type=str, default=DEFAULT_GROUP, help="Consumer group name")
     parser.add_argument("--consumer", type=str, default=None, help="Consumer instance name")
     parser.add_argument("--batch-size", type=int, default=50, help="Batch size per read")
+    parser.add_argument(
+        "--dispatch-mode",
+        choices=["fifo", "fair"],
+        default="fifo",
+        help="Batch dispatch mode (fifo or fair round-robin)",
+    )
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -283,6 +328,7 @@ def main() -> None:
             group_name=args.group,
             consumer_name=args.consumer,
             batch_size=args.batch_size,
+            dispatch_mode=args.dispatch_mode,
         )
         if args.once:
             consumer.init_group()

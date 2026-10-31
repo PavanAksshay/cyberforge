@@ -408,7 +408,7 @@ class TestComputeContributionDelta:
 
         deltas = compute_contribution_delta(old_snapshot, new_snapshot, TENANT_ID)
 
-        # 1. Hourly Summary: order_count delta = 0 (-1 + 1), sales delta = 0 (placed 0 -> cancelled 0 in v2)
+        # 1. Hourly Summary: order_count delta = 0, sales delta = 0 (v2: placed 0 -> cancelled 0)
         h_summary_k = AggregationKey(
             tenant_id=TENANT_ID,
             window=AggregationWindow.HOURLY,

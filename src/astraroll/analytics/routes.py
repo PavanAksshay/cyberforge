@@ -124,13 +124,17 @@ def response_fields(query: AnalyticsQuery, result: ReadResult):
 
 
 @router.get("/summary", response_model=SummaryResponse)
-def summary(query: Annotated[AnalyticsQuery, Depends(get_summary_query)], tenant: Tenant, reader: Reader):
+def summary(
+    query: Annotated[AnalyticsQuery, Depends(get_summary_query)], tenant: Tenant, reader: Reader
+):
     result = read(query, tenant, reader, lambda: reader.summary(query))
     return SummaryResponse(**response_fields(query, result), **result.value.model_dump())
 
 
 @router.get("/trends", response_model=TrendsResponse)
-def trends(query: Annotated[TrendsQuery, Depends(get_trends_query)], tenant: Tenant, reader: Reader):
+def trends(
+    query: Annotated[TrendsQuery, Depends(get_trends_query)], tenant: Tenant, reader: Reader
+):
     def operation():
         result = reader.trends(query)
         return ReadResult(shape_trends(query, result.value), result.freshness)
@@ -142,7 +146,11 @@ def trends(query: Annotated[TrendsQuery, Depends(get_trends_query)], tenant: Ten
 
 
 @router.get("/top-products", response_model=TopProductsResponse)
-def top_products(query: Annotated[TopProductsQuery, Depends(get_top_products_query)], tenant: Tenant, reader: Reader):
+def top_products(
+    query: Annotated[TopProductsQuery, Depends(get_top_products_query)],
+    tenant: Tenant,
+    reader: Reader,
+):
     def operation():
         result = reader.top_products(query)
         return ReadResult(shape_products(result.value, query.limit), result.freshness)
@@ -154,7 +162,11 @@ def top_products(query: Annotated[TopProductsQuery, Depends(get_top_products_que
 
 
 @router.get("/status-breakdown", response_model=StatusBreakdownResponse)
-def status_breakdown(query: Annotated[AnalyticsQuery, Depends(get_status_breakdown_query)], tenant: Tenant, reader: Reader):
+def status_breakdown(
+    query: Annotated[AnalyticsQuery, Depends(get_status_breakdown_query)],
+    tenant: Tenant,
+    reader: Reader,
+):
     def operation():
         result = reader.status_breakdown(query)
         return ReadResult(shape_statuses(result.value), result.freshness)

@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     order_stream: str = "astraroll:orders:v1"
     relay_batch_size: int = Field(default=100, ge=1, le=1000)
-    relay_poll_seconds: float = Field(default=0.5, gt=0)
+    relay_poll_seconds: float = Field(default=0.1, gt=0)
     analytics_backend: Literal["unavailable", "postgres"] = "unavailable"
     analytics_coverage_provider: str | None = None
     analytics_api_keys_json: SecretStr | None = None
