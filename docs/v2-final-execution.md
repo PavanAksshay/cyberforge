@@ -1,5 +1,8 @@
 # V2 independent execution preparation
 
+Historical preparation checkpoint at 972c365. See
+[actual V2 execution](v2-measured-execution.md) for subsequent migration and measurements.
+
 ## Verified state
 
 Review branch `codex/v2-final-backend`, worktree `D:/cyberforge-v2-final`, baseline

@@ -1,0 +1,17 @@
+# Explicit V2 launch: docker compose -f compose.yaml -f compose.v2.yaml ...
+# DATABASE_URL in the base file is the control DB, not the archival V1 source.
+x-v2-env: &v2-env
+  DEPLOYMENT_MODE: database_per_tenant
+  CONTROL_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-astraroll}:${POSTGRES_PASSWORD:-local-dev-only}@postgres:5432/${POSTGRES_DB:-astraroll}
+  MAX_ACTIVE_TENANT_POOLS: ${MAX_ACTIVE_TENANT_POOLS:-10}
+  TENANT_POOL_SIZE: ${TENANT_POOL_SIZE:-1}
+  TENANT_POOL_MAX_OVERFLOW: ${TENANT_POOL_MAX_OVERFLOW:-0}
+services:
+  api:
+    environment: *v2-env
+  relay:
+    environment: *v2-env
+    command: ["python", "-m", "astraroll.v2.workers", "relay"]
+  consumer:
+    environment: *v2-env
+    command: ["python", "-m", "astraroll.v2.workers", "consumer"]

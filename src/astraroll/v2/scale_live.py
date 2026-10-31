@@ -31,7 +31,7 @@ class FailFirstAck:
 
 
 def live_probe(manager, redis, client, tenant: UUID, params, timeout_seconds=300):
-    """Mutate one existing placed target order; keep total source cardinality unchanged.
+    """Mutate two existing placed target orders; keep cardinality unchanged.
 
     client must already carry an actual expiring bearer credential. manager must
     resolve a reviewed dedicated target database, never the retained V1 schema.
@@ -175,5 +175,5 @@ def live_probe(manager, redis, client, tenant: UUID, params, timeout_seconds=300
         "ordinary_visibility_ms": ordinary_ms,
         "visibility_including_recovery_ms": visibility_ms,
         "recovery": "commit-before-ACK, XAUTOCLAIM, deduplicated, ACKed",
-        "scope": "one existing target order; cardinality unchanged; includes injected recovery",
+        "scope": "two existing target orders; cardinality unchanged; ordinary and recovery cycles",
     }

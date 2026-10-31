@@ -19,6 +19,21 @@ def test_locked_manifest_rejects_wrong_total(tmp_path):
         module.SubsetMigration("unused", "unused", path)
 
 
+def test_v2_worker_launch_fails_closed_before_connections():
+    from types import SimpleNamespace
+
+    from astraroll.v2.workers import require_v2
+
+    for mode, url in (("shared", "postgresql://unused"), ("database_per_tenant", None)):
+        with pytest.raises(ValueError, match="explicit CONTROL_DATABASE_URL"):
+            require_v2(SimpleNamespace(deployment_mode=mode, control_database_url=url))
+    require_v2(
+        SimpleNamespace(
+            deployment_mode="database_per_tenant", control_database_url="postgresql://control"
+        )
+    )
+
+
 def test_hardened_failure_handlers_never_drop_or_purge():
     import ast
     import inspect
