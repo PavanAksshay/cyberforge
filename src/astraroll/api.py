@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
+from astraroll.analytics.routes import router as analytics_router
 from astraroll.db import get_session_factory
 from astraroll.models import Order, Tenant
 from astraroll.orders import (
@@ -26,6 +27,7 @@ from astraroll.schemas import (
 )
 
 app = FastAPI(title="AstraRoll V1", version="0.1.0")
+app.include_router(analytics_router)
 
 
 def session_dependency():

@@ -14,6 +14,7 @@ src/astraroll/
   api.py                    FastAPI routes
   relay.py                  PostgreSQL outbox -> Redis Streams
   seed.py                   bounded, repeatable synthetic input
+  analytics/                query contracts, authorization boundary, reader protocol, routes
 alembic/versions/0001_producer.py  # preserved history
 alembic/versions/0002_producer_contract.py
 tests/                      validation + PostgreSQL/Redis integration tests
@@ -24,6 +25,44 @@ compose.yaml, Dockerfile, requirements.lock
 Read [the database/event contract](docs/contracts.md) before implementing B's
 consumers, rollups, corrections or caching. Those modules are not included here.
 Developer A services have no dependency on B's modules.
+
+## Analytics query APIs
+
+The API exposes `GET /analytics/summary`, `/analytics/trends`,
+`/analytics/top-products`, and `/analytics/status-breakdown`. All require explicit
+tenant UUID, currency and an exact UTC `[start, end)` range. Trends support day
+buckets and hour buckets when the installed reader has hourly coverage. Product
+limits are 1..10. Amounts are Decimal strings; counts include cancelled orders,
+while sales include placed/shipped orders only, attributed to creation time and
+the latest accepted amount/product state.
+
+Read [the analytics API and Developer B handoff](docs/analytics.md) for exact
+schemas, date/grain restrictions, empty results, metric semantics and persistence
+requirements. No B aggregate models or migrations are duplicated. Physical table
+fields, currency-safe grouping and stored coverage remain unresolved, so no real
+PostgreSQL aggregate reader is connected and no raw-order scan is used as fallback.
+A late fetch found B's pure aggregation contracts at `dev-b@525b79d`: their
+contribution semantics match, but currency is absent from the current key and
+snapshot, and durable table/readiness/checkpoint contracts are still unpublished.
+
+**Authentication is not integrated and security is not complete.** Analytics
+requires a verified principal through a fail-closed dependency: missing bearer
+credentials return 401; an unverified bearer returns 503 while the verifier is
+absent. A tenant UUID alone never authenticates. After a real verifier is installed,
+unauthorized tenant membership returns 403, and an absent/unready aggregate reader
+returns 503. The successful test fake is never installed in the application.
+
+```powershell
+# Contract/route tests need neither PostgreSQL nor Redis:
+./.venv/Scripts/python -m pytest tests/test_analytics.py -q
+# Inspect all four request/response contracts in http://localhost:8000/docs
+```
+
+This phase passed **143 tests**: 83 analytics contract/route tests with SQL access
+trapped, plus all 60 producer tests with real portable PostgreSQL 16.6/Redis
+5.0.14.1 integration enabled. Ruff, formatting and Compose config checks passed.
+Real aggregate persistence and real identity verification remain untested because
+their integrations are not present. Docker containers were not run in this phase.
 
 ## Frozen contract and upgrades
 

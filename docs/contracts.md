@@ -218,8 +218,10 @@ relay workers may deliver versions out of order. Either buffer gaps, or reconcil
 a stored per-order projection against the highest-version full `after` snapshot:
 subtract the previously projected state, add the new state, and ignore older/equal
 versions in the same transaction. Blindly applying `after - before` while skipping
-older versions can lose changes. B chooses aggregate contribution/bucket semantics;
-all states, product IDs, currencies and creation/update timestamps are supplied.
+older versions can lose changes. The analytics query-facing contribution/bucket
+requirements are now described in [analytics.md](analytics.md); B's agreement and
+physical persistence contract must be reviewed before connecting a real reader.
+All states, product IDs, currencies and creation/update timestamps are supplied.
 
 ## API surface
 
@@ -237,3 +239,15 @@ all states, product IDs, currencies and creation/update timestamps are supplied.
 V1 has no authentication/RLS; tenant UUIDs are not credentials. Compose binds
 ports to localhost. Readiness checks PostgreSQL only, so writes can continue
 while Redis is unavailable and outbox events accumulate.
+
+## Analytics query phase
+
+Four Developer A routes now exist under `/analytics`: summary, trends,
+top-products and status-breakdown. Their typed contracts, exact time/currency
+semantics, authorization boundary and logical requirements for B's persistence are
+in [analytics.md](analytics.md). B's subsequently published pure contracts at
+`dev-b@525b79d` were reviewed read-only: contribution semantics align, but currency
+and durable persistence contracts still need resolution. No B models or migrations
+are created or changed, and the default reader returns unavailable rather than
+successful fabricated analytics. Authentication is not integrated; analytics
+fails closed, and tenant UUIDs remain identifiers rather than credentials.
