@@ -7,6 +7,9 @@ x-app: &app
     ORDER_STREAM: ${ORDER_STREAM:-astraroll:orders:v1}
     RELAY_BATCH_SIZE: ${RELAY_BATCH_SIZE:-100}
     RELAY_POLL_SECONDS: ${RELAY_POLL_SECONDS:-0.5}
+    ANALYTICS_BACKEND: ${ANALYTICS_BACKEND:-unavailable}
+    ANALYTICS_COVERAGE_PROVIDER: ${ANALYTICS_COVERAGE_PROVIDER:-}
+    ANALYTICS_API_KEYS_JSON: ${ANALYTICS_API_KEYS_JSON:-[]}
   depends_on:
     postgres: {condition: service_healthy}
     redis: {condition: service_healthy}

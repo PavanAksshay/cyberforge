@@ -15,7 +15,7 @@ from pydantic import (
 from astraroll.schemas import Currency, Status
 
 Interval = Literal["hour", "day"]
-METRIC_SEMANTICS = "created_at_current_state_v1"
+METRIC_SEMANTICS = "created_at_shipped_sales_v2"
 MAX_WINDOW = timedelta(days=366)
 Count = Annotated[int, Field(strict=True, ge=0)]
 Money = Annotated[Decimal, Field(strict=True, ge=0, decimal_places=2, allow_inf_nan=False)]
@@ -74,6 +74,7 @@ class Freshness(Contract):
     # Supplied by a durable reader snapshot, never synthesized from request time.
     checkpoint: str | None = Field(default=None, min_length=1)
     last_processed_at: AwareDatetime | None = None
+    tenant_revision: Annotated[int, Field(strict=True, ge=0)] | None = None
 
     @field_validator("last_processed_at")
     @classmethod
@@ -99,9 +100,9 @@ class StatusMetrics(SummaryMetrics):
     status: Status
 
     @model_validator(mode="after")
-    def cancelled_sales_are_excluded(self):
-        if self.status == "cancelled" and self.sales_amount != 0:
-            raise ValueError("Cancelled orders contribute zero sales")
+    def non_shipped_sales_are_excluded(self):
+        if self.status in ("placed", "cancelled") and self.sales_amount != 0:
+            raise ValueError("Placed and cancelled orders contribute zero recognized sales")
         return self
 
 
@@ -110,7 +111,7 @@ class AnalyticsResponse(Contract):
     start: AwareDatetime
     end: AwareDatetime
     currency: Currency
-    metric_semantics: Literal["created_at_current_state_v1"] = METRIC_SEMANTICS
+    metric_semantics: Literal["created_at_shipped_sales_v2"] = METRIC_SEMANTICS
     freshness: Freshness | None = None
 
 

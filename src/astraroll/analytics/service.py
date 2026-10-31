@@ -59,9 +59,15 @@ def shape_trends(query: TrendsQuery, rows: list[TrendMetrics]) -> list[TrendMetr
 def shape_products(rows: list[ProductMetrics], limit: int) -> list[ProductMetrics]:
     if len({row.product_id for row in rows}) != len(rows):
         raise AnalyticsUnavailable("Reader returned duplicate product groups")
-    return sorted(rows, key=lambda row: (row.sales_amount.copy_negate(), row.product_id.int))[
-        :limit
-    ]
+    eligible = (row for row in rows if row.sales_amount > 0)
+    return sorted(
+        eligible,
+        key=lambda row: (
+            row.sales_amount.copy_negate(),
+            -row.total_order_count,
+            row.product_id.int,
+        ),
+    )[:limit]
 
 
 def shape_statuses(rows: list[StatusMetrics]) -> list[StatusMetrics]:

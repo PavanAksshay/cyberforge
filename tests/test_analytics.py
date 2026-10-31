@@ -97,8 +97,8 @@ def view(reader, scope):
         ],
         statuses=[
             StatusMetrics(status="cancelled", total_order_count=1, sales_amount=Decimal("0.00")),
-            StatusMetrics(status="shipped", total_order_count=1, sales_amount=Decimal("20.00")),
-            StatusMetrics(status="placed", total_order_count=2, sales_amount=Decimal("10.50")),
+            StatusMetrics(status="shipped", total_order_count=1, sales_amount=Decimal("30.50")),
+            StatusMetrics(status="placed", total_order_count=2, sales_amount=Decimal("0.00")),
         ],
     )
     reader.views[(UUID(scope["tenant_id"]), "USD", START, END)] = value
@@ -113,7 +113,7 @@ def test_routes_and_response_schemas(analytics_client, scope, reader, view, endp
     assert result.tenant_id == UUID(scope["tenant_id"])
     assert result.start == START and result.end == END
     assert result.currency == "USD"
-    assert result.metric_semantics == "created_at_current_state_v1"
+    assert result.metric_semantics == "created_at_shipped_sales_v2"
     assert result.freshness is None
     assert len(reader.calls) == 1
     assert reader.calls[0][1].tenant_id == result.tenant_id
@@ -280,9 +280,11 @@ def test_reader_money_cannot_be_float_or_cancelled_sales():
         SummaryMetrics(total_order_count=1, sales_amount=1.23)
     with pytest.raises(ValidationError):
         StatusMetrics(status="cancelled", total_order_count=1, sales_amount=Decimal("1.00"))
+    with pytest.raises(ValidationError):
+        StatusMetrics(status="placed", total_order_count=1, sales_amount=Decimal("1.00"))
 
 
-def test_counts_include_cancelled_but_sales_exclude_them(analytics_client, scope, reader, view):
+def test_counts_include_all_statuses_but_sales_only_shipped(analytics_client, scope, reader, view):
     summary = analytics_client.get("/analytics/summary", params=scope).json()
     statuses = analytics_client.get("/analytics/status-breakdown", params=scope).json()["statuses"]
     assert [row["status"] for row in statuses] == ["placed", "shipped", "cancelled"]
@@ -359,6 +361,7 @@ def test_freshness_is_only_passed_from_reader(analytics_client, scope, reader, v
         assert body["freshness"] == {
             "checkpoint": "durable-test-checkpoint-7",
             "last_processed_at": "2026-10-01T00:00:00Z",
+            "tenant_revision": None,
         }
 
 

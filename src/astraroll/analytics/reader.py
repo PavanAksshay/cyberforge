@@ -55,7 +55,8 @@ class AnalyticsReader(Protocol):
     def top_products(self, query: TopProductsQuery) -> ReadResult[list[ProductMetrics]]:
         """Return the true global top N (or a complete candidate set), including ties.
 
-        Apply sales DESC, product UUID ASC before SQL LIMIT. API reordering cannot
+        Exclude zero sales; apply sales DESC, count DESC, UUID ASC before SQL LIMIT.
+        API reordering cannot
         repair a candidate set that omitted a winning product at the cutoff.
         """
         ...
@@ -83,5 +84,11 @@ class UnavailableAnalyticsReader:
 
 
 def get_analytics_reader() -> AnalyticsReader:
-    # No schema guessing and no raw-order scans while Developer B's contract is unpublished.
+    from astraroll.config import get_settings
+
+    if get_settings().analytics_backend == "postgres":
+        # Optional integration imports stay off the default application startup path.
+        from astraroll.analytics.postgres import configured_reader
+
+        return configured_reader()
     return UnavailableAnalyticsReader()

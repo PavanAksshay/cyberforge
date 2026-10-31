@@ -14,7 +14,7 @@ src/astraroll/
   api.py                    FastAPI routes
   relay.py                  PostgreSQL outbox -> Redis Streams
   seed.py                   bounded, repeatable synthetic input
-  analytics/                query contracts, authorization boundary, reader protocol, routes
+  analytics/                query contracts, API-key auth, optional PostgreSQL bridge and routes
 alembic/versions/0001_producer.py  # preserved history
 alembic/versions/0002_producer_contract.py
 tests/                      validation + PostgreSQL/Redis integration tests
@@ -28,41 +28,42 @@ Developer A services have no dependency on B's modules.
 
 ## Analytics query APIs
 
-The API exposes `GET /analytics/summary`, `/analytics/trends`,
-`/analytics/top-products`, and `/analytics/status-breakdown`. All require explicit
-tenant UUID, currency and an exact UTC `[start, end)` range. Trends support day
-buckets and hour buckets when the installed reader has hourly coverage. Product
-limits are 1..10. Amounts are Decimal strings; counts include cancelled orders,
-while sales include placed/shipped orders only, attributed to creation time and
-the latest accepted amount/product state.
+Four GET routes are implemented: `/analytics/summary`, `/analytics/trends`,
+`/analytics/top-products`, `/analytics/status-breakdown`. Every request requires
+an authorized tenant UUID, currency and an exact UTC `[start, end)` window.
 
-Read [the analytics API and Developer B handoff](docs/analytics.md) for exact
-schemas, date/grain restrictions, empty results, metric semantics and persistence
-requirements. No B aggregate models or migrations are duplicated. Physical table
-fields, currency-safe grouping and stored coverage remain unresolved, so no real
-PostgreSQL aggregate reader is connected and no raw-order scan is used as fallback.
-A late fetch found B's pure aggregation contracts at `dev-b@525b79d`: their
-contribution semantics match, but currency is absent from the current key and
-snapshot, and durable table/readiness/checkpoint contracts are still unpublished.
+The owner-approved metric contract is **created_at_shipped_sales_v2**: every order
+counts once; only shipped orders recognize sales. Top products include positive
+sales only, ranked by sales DESC, order count DESC, UUID ASC. Counts and corrections
+stay in original creation-time buckets. Producer event schema 2 is unchanged.
 
-**Authentication is not integrated and security is not complete.** Analytics
-requires a verified principal through a fail-closed dependency: missing bearer
-credentials return 401; an unverified bearer returns 503 while the verifier is
-absent. A tenant UUID alone never authenticates. After a real verifier is installed,
-unauthorized tenant membership returns 403, and an absent/unready aggregate reader
-returns 503. The successful test fake is never installed in the application.
+A's optional `PostgresAnalyticsAdapter` wraps B's reviewed reader at `dev-b@36a0aeb`,
+using a read-only REPEATABLE READ transaction for coverage, metrics and actual
+revision metadata. No B models/migrations or raw-order scans are duplicated.
+**A durable coverage provider is still required from B**; the default remains
+503/unavailable rather than inventing zero results or bootstrap completion.
+
+Expiring opaque API keys now verify analytics identities and trusted tenant
+memberships. Unknown/expired keys return 401, other tenants 403, and missing/bad
+server registry 503. Producer routes remain unauthenticated; this is not a complete
+application security system. No allow-all principal or test coverage provider is
+installed by default.
 
 ```powershell
-# Contract/route tests need neither PostgreSQL nor Redis:
-./.venv/Scripts/python -m pytest tests/test_analytics.py -q
-# Inspect all four request/response contracts in http://localhost:8000/docs
+./.venv/Scripts/python -m astraroll.analytics.issue_key --subject demo --tenant YOUR-TENANT-UUID --hours 24
+# Store only the printed digest record in the server ANALYTICS_API_KEYS_JSON array.
+# The issued secret belongs in the client Authorization: Bearer header, never git.
+./.venv/Scripts/python -m pytest tests/test_analytics.py tests/test_analytics_auth.py -q
 ```
 
-This phase passed **143 tests**: 83 analytics contract/route tests with SQL access
-trapped, plus all 60 producer tests with real portable PostgreSQL 16.6/Redis
-5.0.14.1 integration enabled. Ruff, formatting and Compose config checks passed.
-Real aggregate persistence and real identity verification remain untested because
-their integrations are not present. Docker containers were not run in this phase.
+See [analytics setup, coverage interface and combined-test commands](docs/analytics.md).
+The combined test harness enables certified test scopes only after processing its
+known inputs; that does not solve B's missing production coverage metadata. The reviewed legacy snapshot passes 242 combined tests with three known expected
+failures. Latest B `7909075` fixes those defects but restores the old metric/ranking
+contract: A rejects it with 503 until B honors the owner's shipped-only v2 decisions.
+Latest-combined verification passes 245 tests with seven explicit contract-blocked
+scenarios; A-only passes 169 with two combined-module skips. Docker containers were
+not run; portable PostgreSQL 16.6 and Redis 7.4.3 are used for integration checks.
 
 ## Frozen contract and upgrades
 
@@ -193,7 +194,8 @@ The relay retries failures without marking events delivered and supports gracefu
 SIGINT/SIGTERM shutdown. Do not trim the stream, reset markers, downgrade migrations,
 or remove volumes without approval and coordination with Developer B.
 
-This V1 is a localhost hackathon service with no authentication. `.env.example`
+This V1 is a localhost hackathon service. Producer routes remain unauthenticated;
+analytics uses the expiring API-key mechanism described above. `.env.example`
 contains development placeholders; `.env`, virtual environments and bulk datasets
 are ignored. POST creates are not request-idempotent. Multiple relays can publish
 out of order, and duplicates are expected: B must implement the idempotency/version

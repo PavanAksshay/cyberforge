@@ -236,7 +236,7 @@ All states, product IDs, currencies and creation/update timestamps are supplied.
 | POST | `/tenants/{tenant_id}/orders/{id}/cancel` | expected_version; same terminal/version rules |
 | GET | `/health/live`, `/health/ready` | process liveness / DB connectivity |
 
-V1 has no authentication/RLS; tenant UUIDs are not credentials. Compose binds
+Producer routes have no authentication/RLS; tenant UUIDs are not credentials. Compose binds
 ports to localhost. Readiness checks PostgreSQL only, so writes can continue
 while Redis is unavailable and outbox events accumulate.
 
@@ -246,8 +246,16 @@ Four Developer A routes now exist under `/analytics`: summary, trends,
 top-products and status-breakdown. Their typed contracts, exact time/currency
 semantics, authorization boundary and logical requirements for B's persistence are
 in [analytics.md](analytics.md). B's subsequently published pure contracts at
-`dev-b@525b79d` were reviewed read-only: contribution semantics align, but currency
-and durable persistence contracts still need resolution. No B models or migrations
-are created or changed, and the default reader returns unavailable rather than
-successful fabricated analytics. Authentication is not integrated; analytics
-fails closed, and tenant UUIDs remain identifiers rather than credentials.
+`dev-b@36a0aeb` were reviewed read-only: currency-partitioned durable tables and a
+schema-2 adapter now exist. The owner approved shipped-only sales and positive-sales
+product ranking (sales DESC, count DESC, UUID ASC), identified as
+`created_at_shipped_sales_v2`. No B files/models/migrations are created or changed
+on dev-a. A supplies an optional reader bridge and expiring API-key verification;
+valid credentials still cannot bypass the missing durable coverage provider.
+Producer routes remain unauthenticated; tenant UUIDs remain identifiers, not credentials.
+
+Latest integration review: B `7909075` fixes the three previously identified
+processing/recovery defects but advertises the superseded analytics semantics.
+The owner's approved `created_at_shipped_sales_v2` decision remains authoritative;
+A rejects incompatible advertised contracts. Durable coverage still requires B's
+provider. See the exact verification ledger in [analytics.md](analytics.md).
