@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from astraroll.models import Order, OutboxEvent, Tenant
-from astraroll.schemas import OrderCreate, OrderEvent, OrderRead, OrderUpdate
+from astraroll.schemas import EVENT_SCHEMA_VERSION, OrderCreate, OrderEvent, OrderRead, OrderUpdate
 
 
 class NotFound(Exception):
@@ -36,6 +36,7 @@ def find_order(session: Session, tenant_id: UUID, order_id: UUID, *, lock=False)
 def record_event(session: Session, order: Order, event_type: str, before: OrderRead | None):
     session.flush()
     event = OrderEvent(
+        schema_version=EVENT_SCHEMA_VERSION,
         event_id=uuid4(),
         event_type=event_type,
         tenant_id=order.tenant_id,
@@ -52,7 +53,7 @@ def record_event(session: Session, order: Order, event_type: str, before: OrderR
             order_id=order.id,
             order_version=order.version,
             event_type=event_type,
-            schema_version=1,
+            schema_version=event.schema_version,
             payload=event.model_dump(mode="json"),
             occurred_at=order.updated_at,
         )
@@ -66,9 +67,10 @@ def create_order(session: Session, tenant_id: UUID, data: OrderCreate) -> Order:
     order = Order(
         id=uuid4(),
         tenant_id=tenant_id,
+        product_id=data.product_id,
         amount=data.amount,
         currency=data.currency,
-        status="created",
+        status="placed",
         version=1,
         created_at=now,
         updated_at=now,
@@ -88,8 +90,8 @@ def mutate_order(
     order = find_order(session, tenant_id, order_id, lock=True)
     if order.version != expected_version:
         raise Conflict(f"Version conflict: current version is {order.version}")
-    if order.status == "cancelled":
-        raise Conflict("Cancelled orders are terminal")
+    if order.status != "placed":
+        raise Conflict(f"{order.status.capitalize()} orders are terminal")
     before = OrderRead.model_validate(order)
     if update is None:
         order.status = "cancelled"
@@ -97,9 +99,11 @@ def mutate_order(
     else:
         if update.amount is not None:
             order.amount = update.amount
+        if update.product_id is not None:
+            order.product_id = update.product_id
         if update.status is not None:
             order.status = update.status
-        event_type = "order.updated"
+        event_type = "order.cancelled" if order.status == "cancelled" else "order.updated"
     order.version += 1
     order.updated_at = datetime.now(UTC)
     record_event(session, order, event_type, before)

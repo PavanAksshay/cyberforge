@@ -1,0 +1,31 @@
+{
+  "schema_version": 2,
+  "event_id": "a8e9fb1e-1379-460d-ab62-d4263f111116",
+  "event_type": "order.updated",
+  "tenant_id": "5aa5848f-cd4f-46b4-87cd-eb241341e152",
+  "order_id": "1bf45b1f-663f-423c-825e-89b0abac464b",
+  "order_version": 2,
+  "occurred_at": "2026-10-31T08:00:00Z",
+  "before": {
+    "id": "1bf45b1f-663f-423c-825e-89b0abac464b",
+    "tenant_id": "5aa5848f-cd4f-46b4-87cd-eb241341e152",
+    "product_id": "47b53ec8-c26c-45d3-8503-76f809b55952",
+    "amount": "10.00",
+    "currency": "USD",
+    "status": "placed",
+    "version": 1,
+    "created_at": "2026-10-31T07:00:00Z",
+    "updated_at": "2026-10-31T07:00:00Z"
+  },
+  "after": {
+    "id": "1bf45b1f-663f-423c-825e-89b0abac464b",
+    "tenant_id": "5aa5848f-cd4f-46b4-87cd-eb241341e152",
+    "product_id": "1b7cc4a5-89a3-4b8b-9555-de706b025414",
+    "amount": "12.50",
+    "currency": "USD",
+    "status": "shipped",
+    "version": 2,
+    "created_at": "2026-10-31T07:00:00Z",
+    "updated_at": "2026-10-31T08:00:00Z"
+  }
+}
