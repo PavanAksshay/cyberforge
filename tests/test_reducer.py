@@ -15,7 +15,8 @@ Verifies:
 - End-to-end multi-step order lifecycle.
 """
 
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime
+
 import pytest
 
 from astraroll.aggregation.contracts import (
@@ -31,20 +32,18 @@ from astraroll.aggregation.contracts import (
 from astraroll.aggregation.exceptions import (
     ImmutableFieldViolationError,
     InvalidEventError,
-    InvalidSnapshotError,
     OutOfOrderEventError,
     TenantMismatchError,
 )
 from astraroll.aggregation.reducer import (
     AggregationReducer,
-    ReductionResult,
     reduce_event,
 )
 
 TENANT_ID = "tenant-prod-1"
 OTHER_TENANT_ID = "tenant-prod-2"
 ORDER_ID = "ord-999"
-CREATED_AT = datetime(2026, 10, 31, 10, 15, 0, tzinfo=timezone.utc)
+CREATED_AT = datetime(2026, 10, 31, 10, 15, 0, tzinfo=UTC)
 
 
 def create_test_event(
@@ -91,11 +90,11 @@ class TestPureReduceEvent:
         assert result.new_state.current_version == 1
         assert result.new_state.last_event_id == "evt-1"
 
-        # 6 aggregate dimensions; placed order contributes 1 count and 0 sales
+        # 6 aggregate dimensions; placed order contributes 1 count and 10000 sales
         assert len(result.deltas) == 6
         for delta in result.deltas.values():
             assert delta.order_count == 1
-            assert delta.sales_cents == 0
+            assert delta.sales_cents == 10000
 
     def test_updating_amount_reverses_old_amount(self):
         event_v1 = create_test_event("evt-1", 1, amount_cents=10000, status=OrderStatus.SHIPPED)
@@ -114,11 +113,15 @@ class TestPureReduceEvent:
             assert delta.sales_cents == 5000
 
     def test_changing_product_updates_both_product_buckets(self):
-        event_v1 = create_test_event("evt-1", 1, product_id="PROD-A", amount_cents=10000, status=OrderStatus.SHIPPED)
+        event_v1 = create_test_event(
+            "evt-1", 1, product_id="PROD-A", amount_cents=10000, status=OrderStatus.SHIPPED
+        )
         res_v1 = reduce_event(event_v1, current_state=None)
 
         # Version 2: product changed to PROD-B
-        event_v2 = create_test_event("evt-2", 2, product_id="PROD-B", amount_cents=10000, status=OrderStatus.SHIPPED)
+        event_v2 = create_test_event(
+            "evt-2", 2, product_id="PROD-B", amount_cents=10000, status=OrderStatus.SHIPPED
+        )
         res_v2 = reduce_event(event_v2, current_state=res_v1.new_state)
 
         assert res_v2.applied is True
@@ -127,14 +130,14 @@ class TestPureReduceEvent:
             tenant_id=TENANT_ID,
             window=AggregationWindow.HOURLY,
             aggregate_type=AggregateType.PRODUCT,
-            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=timezone.utc),
+            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=UTC),
             dimension_value="PROD-A",
         )
         h_prod_b = AggregationKey(
             tenant_id=TENANT_ID,
             window=AggregationWindow.HOURLY,
             aggregate_type=AggregateType.PRODUCT,
-            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=timezone.utc),
+            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=UTC),
             dimension_value="PROD-B",
         )
 
@@ -156,20 +159,20 @@ class TestPureReduceEvent:
             tenant_id=TENANT_ID,
             window=AggregationWindow.HOURLY,
             aggregate_type=AggregateType.STATUS,
-            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=timezone.utc),
+            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=UTC),
             dimension_value="placed",
         )
         h_shipped = AggregationKey(
             tenant_id=TENANT_ID,
             window=AggregationWindow.HOURLY,
             aggregate_type=AggregateType.STATUS,
-            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=timezone.utc),
+            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=UTC),
             dimension_value="shipped",
         )
 
-        # placed had 0 sales
+        # placed had 10000 sales
         assert res_v2.deltas[h_placed].order_count == -1
-        assert res_v2.deltas[h_placed].sales_cents == 0
+        assert res_v2.deltas[h_placed].sales_cents == -10000
         # shipped has 10000 sales
         assert res_v2.deltas[h_shipped].order_count == 1
         assert res_v2.deltas[h_shipped].sales_cents == 10000
@@ -188,7 +191,7 @@ class TestPureReduceEvent:
             tenant_id=TENANT_ID,
             window=AggregationWindow.HOURLY,
             aggregate_type=AggregateType.SUMMARY,
-            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=timezone.utc),
+            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=UTC),
         )
         # Summary order_count delta must be 0 (order is not removed), sales delta must be -10000
         assert res_v2.deltas[h_summary].order_count == 0
@@ -250,7 +253,7 @@ class TestPureReduceEvent:
             reduce_event(event_v1_late, current_state=state_v2, strict_ordering=True)
 
     def test_missing_previous_projection_state_handles_cleanly(self):
-        """When an event arrives without existing projection state, it is projected as a new state."""
+        """When an event arrives without prior projection state, it is projected cleanly."""
         event_v2 = create_test_event("evt-2", 2, amount_cents=8000)
         result = reduce_event(event_v2, current_state=None)
 
@@ -308,7 +311,9 @@ class TestAggregationReducerEngine:
         reducer = AggregationReducer()
 
         # Step 1: Create Order 1 (v1: placed, $100, PROD-A)
-        evt_1 = create_test_event("e1", 1, product_id="PROD-A", amount_cents=10000, status=OrderStatus.PLACED)
+        evt_1 = create_test_event(
+            "e1", 1, product_id="PROD-A", amount_cents=10000, status=OrderStatus.PLACED
+        )
         res_1 = reducer.process_event(evt_1)
         assert res_1.applied is True
 
@@ -316,38 +321,46 @@ class TestAggregationReducerEngine:
             tenant_id=TENANT_ID,
             window=AggregationWindow.HOURLY,
             aggregate_type=AggregateType.SUMMARY,
-            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=timezone.utc),
+            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=UTC),
         )
         h_placed_k = AggregationKey(
             tenant_id=TENANT_ID,
             window=AggregationWindow.HOURLY,
             aggregate_type=AggregateType.STATUS,
-            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=timezone.utc),
+            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=UTC),
             dimension_value="placed",
         )
         h_prod_a_k = AggregationKey(
             tenant_id=TENANT_ID,
             window=AggregationWindow.HOURLY,
             aggregate_type=AggregateType.PRODUCT,
-            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=timezone.utc),
+            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=UTC),
             dimension_value="PROD-A",
         )
 
-        # Placed orders contribute 0 sales
-        assert reducer.get_aggregate(h_summary_k) == AggregateDelta(order_count=1, sales_cents=0)
-        assert reducer.get_aggregate(h_placed_k) == AggregateDelta(order_count=1, sales_cents=0)
-        assert reducer.get_aggregate(h_prod_a_k) == AggregateDelta(order_count=1, sales_cents=0)
+        # Placed orders contribute 10000 sales
+        assert reducer.get_aggregate(h_summary_k) == AggregateDelta(
+            order_count=1, sales_cents=10000
+        )
+        assert reducer.get_aggregate(h_placed_k) == AggregateDelta(order_count=1, sales_cents=10000)
+        assert reducer.get_aggregate(h_prod_a_k) == AggregateDelta(order_count=1, sales_cents=10000)
 
         # Step 2: Update Amount to $150 (v2: placed, $150, PROD-A)
-        evt_2 = create_test_event("e2", 2, product_id="PROD-A", amount_cents=15000, status=OrderStatus.PLACED)
+        evt_2 = create_test_event(
+            "e2", 2, product_id="PROD-A", amount_cents=15000, status=OrderStatus.PLACED
+        )
         res_2 = reducer.process_event(evt_2)
         assert res_2.applied is True
-        assert reducer.get_aggregate(h_summary_k) == AggregateDelta(order_count=1, sales_cents=0)
-        assert reducer.get_aggregate(h_placed_k) == AggregateDelta(order_count=1, sales_cents=0)
-        assert reducer.get_aggregate(h_prod_a_k) == AggregateDelta(order_count=1, sales_cents=0)
+        assert reducer.get_aggregate(h_summary_k) == AggregateDelta(
+            order_count=1, sales_cents=15000
+        )
+        assert reducer.get_aggregate(h_placed_k) == AggregateDelta(order_count=1, sales_cents=15000)
+        assert reducer.get_aggregate(h_prod_a_k) == AggregateDelta(order_count=1, sales_cents=15000)
 
         # Step 3: Change Product to PROD-B (v3: placed, $150, PROD-B)
-        evt_3 = create_test_event("e3", 3, product_id="PROD-B", amount_cents=15000, status=OrderStatus.PLACED)
+        evt_3 = create_test_event(
+            "e3", 3, product_id="PROD-B", amount_cents=15000, status=OrderStatus.PLACED
+        )
         res_3 = reducer.process_event(evt_3)
         assert res_3.applied is True
 
@@ -355,18 +368,22 @@ class TestAggregationReducerEngine:
             tenant_id=TENANT_ID,
             window=AggregationWindow.HOURLY,
             aggregate_type=AggregateType.PRODUCT,
-            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=timezone.utc),
+            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=UTC),
             dimension_value="PROD-B",
         )
         # PROD-A is now 0 count, 0 sales
         assert reducer.get_aggregate(h_prod_a_k) == AggregateDelta(order_count=0, sales_cents=0)
-        # PROD-B has 1 count, 0 sales
-        assert reducer.get_aggregate(h_prod_b_k) == AggregateDelta(order_count=1, sales_cents=0)
-        # Summary is unchanged
-        assert reducer.get_aggregate(h_summary_k) == AggregateDelta(order_count=1, sales_cents=0)
+        # PROD-B has 1 count, 15000 sales
+        assert reducer.get_aggregate(h_prod_b_k) == AggregateDelta(order_count=1, sales_cents=15000)
+        # Summary is 1 count, 15000 sales
+        assert reducer.get_aggregate(h_summary_k) == AggregateDelta(
+            order_count=1, sales_cents=15000
+        )
 
         # Step 4: Status change to SHIPPED (v4: shipped, $150, PROD-B)
-        evt_4 = create_test_event("e4", 4, product_id="PROD-B", amount_cents=15000, status=OrderStatus.SHIPPED)
+        evt_4 = create_test_event(
+            "e4", 4, product_id="PROD-B", amount_cents=15000, status=OrderStatus.SHIPPED
+        )
         res_4 = reducer.process_event(evt_4)
         assert res_4.applied is True
 
@@ -374,33 +391,43 @@ class TestAggregationReducerEngine:
             tenant_id=TENANT_ID,
             window=AggregationWindow.HOURLY,
             aggregate_type=AggregateType.STATUS,
-            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=timezone.utc),
+            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=UTC),
             dimension_value="shipped",
         )
         # 'placed' is now 0 count, 0 sales
         assert reducer.get_aggregate(h_placed_k) == AggregateDelta(order_count=0, sales_cents=0)
         # 'shipped' has 1 count, 15000 sales
-        assert reducer.get_aggregate(h_shipped_k) == AggregateDelta(order_count=1, sales_cents=15000)
+        assert reducer.get_aggregate(h_shipped_k) == AggregateDelta(
+            order_count=1, sales_cents=15000
+        )
         # PROD-B has 1 count, 15000 sales
         assert reducer.get_aggregate(h_prod_b_k) == AggregateDelta(order_count=1, sales_cents=15000)
         # Summary has 1 count, 15000 sales
-        assert reducer.get_aggregate(h_summary_k) == AggregateDelta(order_count=1, sales_cents=15000)
+        assert reducer.get_aggregate(h_summary_k) == AggregateDelta(
+            order_count=1, sales_cents=15000
+        )
 
         # Step 5: Duplicate event delivery (e4 delivered again)
         res_4_dup = reducer.process_event(evt_4)
         assert res_4_dup.applied is False
         assert res_4_dup.is_duplicate is True
         # Cumulative aggregates MUST NOT change
-        assert reducer.get_aggregate(h_summary_k) == AggregateDelta(order_count=1, sales_cents=15000)
+        assert reducer.get_aggregate(h_summary_k) == AggregateDelta(
+            order_count=1, sales_cents=15000
+        )
 
         # Step 6: Out-of-order event delivery (e2 arriving late)
         res_stale = reducer.process_event(evt_2)
         assert res_stale.applied is False
         # Cumulative aggregates MUST NOT change
-        assert reducer.get_aggregate(h_summary_k) == AggregateDelta(order_count=1, sales_cents=15000)
+        assert reducer.get_aggregate(h_summary_k) == AggregateDelta(
+            order_count=1, sales_cents=15000
+        )
 
         # Step 7: Cancellation (v5: cancelled, $150, PROD-B)
-        evt_5 = create_test_event("e5", 5, product_id="PROD-B", amount_cents=15000, status=OrderStatus.CANCELLED)
+        evt_5 = create_test_event(
+            "e5", 5, product_id="PROD-B", amount_cents=15000, status=OrderStatus.CANCELLED
+        )
         res_5 = reducer.process_event(evt_5)
         assert res_5.applied is True
 
@@ -408,7 +435,7 @@ class TestAggregationReducerEngine:
             tenant_id=TENANT_ID,
             window=AggregationWindow.HOURLY,
             aggregate_type=AggregateType.STATUS,
-            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=timezone.utc),
+            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=UTC),
             dimension_value="cancelled",
         )
         # Summary: order_count MUST REMAIN 1, sales MUST BE 0!
@@ -425,28 +452,36 @@ class TestAggregationReducerEngine:
         reducer = AggregationReducer()
 
         # Tenant 1 order
-        evt_t1 = create_test_event("evt-t1", 1, tenant_id="tenant-1", amount_cents=5000, status=OrderStatus.SHIPPED)
+        evt_t1 = create_test_event(
+            "evt-t1", 1, tenant_id="tenant-1", amount_cents=5000, status=OrderStatus.SHIPPED
+        )
         reducer.process_event(evt_t1)
 
         # Tenant 2 order
-        evt_t2 = create_test_event("evt-t2", 1, tenant_id="tenant-2", amount_cents=8000, status=OrderStatus.SHIPPED)
+        evt_t2 = create_test_event(
+            "evt-t2", 1, tenant_id="tenant-2", amount_cents=8000, status=OrderStatus.SHIPPED
+        )
         reducer.process_event(evt_t2)
 
         h_summary_t1 = AggregationKey(
             tenant_id="tenant-1",
             window=AggregationWindow.HOURLY,
             aggregate_type=AggregateType.SUMMARY,
-            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=timezone.utc),
+            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=UTC),
         )
         h_summary_t2 = AggregationKey(
             tenant_id="tenant-2",
             window=AggregationWindow.HOURLY,
             aggregate_type=AggregateType.SUMMARY,
-            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=timezone.utc),
+            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=UTC),
         )
 
-        assert reducer.get_aggregate(h_summary_t1) == AggregateDelta(order_count=1, sales_cents=5000)
-        assert reducer.get_aggregate(h_summary_t2) == AggregateDelta(order_count=1, sales_cents=8000)
+        assert reducer.get_aggregate(h_summary_t1) == AggregateDelta(
+            order_count=1, sales_cents=5000
+        )
+        assert reducer.get_aggregate(h_summary_t2) == AggregateDelta(
+            order_count=1, sales_cents=8000
+        )
 
         # Projections are segregated
         assert reducer.get_projection("tenant-1", ORDER_ID) is not None
@@ -459,7 +494,7 @@ class TestAggregationReducerEngine:
             reducer.process_event(None)  # type: ignore[arg-type]
 
     def test_order_event_deserialization_with_order_alias(self):
-        """Verify Redis Streams payload formatted with 'order' instead of 'snapshot' deserializes properly."""
+        """Verify Redis Streams payload formatted with 'order' alias deserializes properly."""
         payload = {
             "event_id": "evt-json-1",
             "tenant_id": "tenant-xyz",
@@ -496,6 +531,6 @@ class TestAggregationReducerEngine:
             tenant_id=TENANT_ID,
             window=AggregationWindow.HOURLY,
             aggregate_type=AggregateType.SUMMARY,
-            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=timezone.utc),
+            bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=UTC),
         )
         assert reducer.get_aggregate(h_summary) == AggregateDelta(order_count=1, sales_cents=0)

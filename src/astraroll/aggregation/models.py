@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Dict, Optional
+from typing import Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
@@ -38,7 +38,10 @@ class HourlySummaryAggregate(Base):
     __tablename__ = "hourly_summary_aggregates"
     __table_args__ = (
         CheckConstraint("order_count >= 0", name="ck_hourly_summary_order_count"),
-        CheckConstraint("sales_amount >= 0 AND sales_amount <> 'NaN'::numeric", name="ck_hourly_summary_sales_amount"),
+        CheckConstraint(
+            "sales_amount >= 0 AND sales_amount <> 'NaN'::numeric",
+            name="ck_hourly_summary_sales_amount",
+        ),
         CheckConstraint("currency ~ '^[A-Z]{3}$'", name="ck_hourly_summary_currency"),
         Index("ix_hourly_summary_lookup", "tenant_id", "currency", "bucket_start"),
     )
@@ -47,8 +50,12 @@ class HourlySummaryAggregate(Base):
     currency: Mapped[str] = mapped_column(String(3), primary_key=True)
     bucket_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True)
     order_count: Mapped[int] = mapped_column(BigInteger, default=0, nullable=False)
-    sales_amount: Mapped[Decimal] = mapped_column(Numeric(18, 2), default=Decimal("0.00"), nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+    sales_amount: Mapped[Decimal] = mapped_column(
+        Numeric(18, 2), default=Decimal("0.00"), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False
+    )
 
 
 class DailySummaryAggregate(Base):
@@ -57,7 +64,10 @@ class DailySummaryAggregate(Base):
     __tablename__ = "daily_summary_aggregates"
     __table_args__ = (
         CheckConstraint("order_count >= 0", name="ck_daily_summary_order_count"),
-        CheckConstraint("sales_amount >= 0 AND sales_amount <> 'NaN'::numeric", name="ck_daily_summary_sales_amount"),
+        CheckConstraint(
+            "sales_amount >= 0 AND sales_amount <> 'NaN'::numeric",
+            name="ck_daily_summary_sales_amount",
+        ),
         CheckConstraint("currency ~ '^[A-Z]{3}$'", name="ck_daily_summary_currency"),
         Index("ix_daily_summary_lookup", "tenant_id", "currency", "bucket_start"),
     )
@@ -66,8 +76,12 @@ class DailySummaryAggregate(Base):
     currency: Mapped[str] = mapped_column(String(3), primary_key=True)
     bucket_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True)
     order_count: Mapped[int] = mapped_column(BigInteger, default=0, nullable=False)
-    sales_amount: Mapped[Decimal] = mapped_column(Numeric(18, 2), default=Decimal("0.00"), nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+    sales_amount: Mapped[Decimal] = mapped_column(
+        Numeric(18, 2), default=Decimal("0.00"), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False
+    )
 
 
 class HourlyStatusAggregate(Base):
@@ -76,9 +90,14 @@ class HourlyStatusAggregate(Base):
     __tablename__ = "hourly_status_aggregates"
     __table_args__ = (
         CheckConstraint("order_count >= 0", name="ck_hourly_status_order_count"),
-        CheckConstraint("sales_amount >= 0 AND sales_amount <> 'NaN'::numeric", name="ck_hourly_status_sales_amount"),
+        CheckConstraint(
+            "sales_amount >= 0 AND sales_amount <> 'NaN'::numeric",
+            name="ck_hourly_status_sales_amount",
+        ),
         CheckConstraint("currency ~ '^[A-Z]{3}$'", name="ck_hourly_status_currency"),
-        CheckConstraint("status IN ('placed', 'shipped', 'cancelled')", name="ck_hourly_status_status"),
+        CheckConstraint(
+            "status IN ('placed', 'shipped', 'cancelled')", name="ck_hourly_status_status"
+        ),
         Index("ix_hourly_status_lookup", "tenant_id", "currency", "bucket_start", "status"),
     )
 
@@ -87,8 +106,12 @@ class HourlyStatusAggregate(Base):
     status: Mapped[str] = mapped_column(String(16), primary_key=True)
     bucket_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True)
     order_count: Mapped[int] = mapped_column(BigInteger, default=0, nullable=False)
-    sales_amount: Mapped[Decimal] = mapped_column(Numeric(18, 2), default=Decimal("0.00"), nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+    sales_amount: Mapped[Decimal] = mapped_column(
+        Numeric(18, 2), default=Decimal("0.00"), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False
+    )
 
 
 class DailyStatusAggregate(Base):
@@ -97,9 +120,14 @@ class DailyStatusAggregate(Base):
     __tablename__ = "daily_status_aggregates"
     __table_args__ = (
         CheckConstraint("order_count >= 0", name="ck_daily_status_order_count"),
-        CheckConstraint("sales_amount >= 0 AND sales_amount <> 'NaN'::numeric", name="ck_daily_status_sales_amount"),
+        CheckConstraint(
+            "sales_amount >= 0 AND sales_amount <> 'NaN'::numeric",
+            name="ck_daily_status_sales_amount",
+        ),
         CheckConstraint("currency ~ '^[A-Z]{3}$'", name="ck_daily_status_currency"),
-        CheckConstraint("status IN ('placed', 'shipped', 'cancelled')", name="ck_daily_status_status"),
+        CheckConstraint(
+            "status IN ('placed', 'shipped', 'cancelled')", name="ck_daily_status_status"
+        ),
         Index("ix_daily_status_lookup", "tenant_id", "currency", "bucket_start", "status"),
     )
 
@@ -108,8 +136,12 @@ class DailyStatusAggregate(Base):
     status: Mapped[str] = mapped_column(String(16), primary_key=True)
     bucket_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True)
     order_count: Mapped[int] = mapped_column(BigInteger, default=0, nullable=False)
-    sales_amount: Mapped[Decimal] = mapped_column(Numeric(18, 2), default=Decimal("0.00"), nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+    sales_amount: Mapped[Decimal] = mapped_column(
+        Numeric(18, 2), default=Decimal("0.00"), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False
+    )
 
 
 class HourlyProductAggregate(Base):
@@ -118,10 +150,20 @@ class HourlyProductAggregate(Base):
     __tablename__ = "hourly_product_aggregates"
     __table_args__ = (
         CheckConstraint("order_count >= 0", name="ck_hourly_product_order_count"),
-        CheckConstraint("sales_amount >= 0 AND sales_amount <> 'NaN'::numeric", name="ck_hourly_product_sales_amount"),
+        CheckConstraint(
+            "sales_amount >= 0 AND sales_amount <> 'NaN'::numeric",
+            name="ck_hourly_product_sales_amount",
+        ),
         CheckConstraint("currency ~ '^[A-Z]{3}$'", name="ck_hourly_product_currency"),
         Index("ix_hourly_product_lookup", "tenant_id", "currency", "bucket_start", "product_id"),
-        Index("ix_hourly_product_sales", "tenant_id", "currency", "bucket_start", "sales_amount", "order_count"),
+        Index(
+            "ix_hourly_product_sales",
+            "tenant_id",
+            "currency",
+            "bucket_start",
+            "sales_amount",
+            "order_count",
+        ),
     )
 
     tenant_id: Mapped[UUID] = mapped_column(primary_key=True)
@@ -129,8 +171,12 @@ class HourlyProductAggregate(Base):
     product_id: Mapped[UUID] = mapped_column(primary_key=True)
     bucket_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True)
     order_count: Mapped[int] = mapped_column(BigInteger, default=0, nullable=False)
-    sales_amount: Mapped[Decimal] = mapped_column(Numeric(18, 2), default=Decimal("0.00"), nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+    sales_amount: Mapped[Decimal] = mapped_column(
+        Numeric(18, 2), default=Decimal("0.00"), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False
+    )
 
 
 class DailyProductAggregate(Base):
@@ -139,10 +185,20 @@ class DailyProductAggregate(Base):
     __tablename__ = "daily_product_aggregates"
     __table_args__ = (
         CheckConstraint("order_count >= 0", name="ck_daily_product_order_count"),
-        CheckConstraint("sales_amount >= 0 AND sales_amount <> 'NaN'::numeric", name="ck_daily_product_sales_amount"),
+        CheckConstraint(
+            "sales_amount >= 0 AND sales_amount <> 'NaN'::numeric",
+            name="ck_daily_product_sales_amount",
+        ),
         CheckConstraint("currency ~ '^[A-Z]{3}$'", name="ck_daily_product_currency"),
         Index("ix_daily_product_lookup", "tenant_id", "currency", "bucket_start", "product_id"),
-        Index("ix_daily_product_sales", "tenant_id", "currency", "bucket_start", "sales_amount", "order_count"),
+        Index(
+            "ix_daily_product_sales",
+            "tenant_id",
+            "currency",
+            "bucket_start",
+            "sales_amount",
+            "order_count",
+        ),
     )
 
     tenant_id: Mapped[UUID] = mapped_column(primary_key=True)
@@ -150,8 +206,12 @@ class DailyProductAggregate(Base):
     product_id: Mapped[UUID] = mapped_column(primary_key=True)
     bucket_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), primary_key=True)
     order_count: Mapped[int] = mapped_column(BigInteger, default=0, nullable=False)
-    sales_amount: Mapped[Decimal] = mapped_column(Numeric(18, 2), default=Decimal("0.00"), nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)
+    sales_amount: Mapped[Decimal] = mapped_column(
+        Numeric(18, 2), default=Decimal("0.00"), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False
+    )
 
 
 class OrderProjection(Base):
@@ -165,8 +225,8 @@ class OrderProjection(Base):
     tenant_id: Mapped[UUID] = mapped_column(primary_key=True)
     order_id: Mapped[UUID] = mapped_column(primary_key=True)
     last_applied_version: Mapped[int] = mapped_column(BigInteger, default=0, nullable=False)
-    canonical_snapshot: Mapped[Dict[str, Any]] = mapped_column(JSONB, nullable=False)
-    last_event_id: Mapped[Optional[UUID]] = mapped_column(nullable=True)
+    canonical_snapshot: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    last_event_id: Mapped[UUID | None] = mapped_column(nullable=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
@@ -174,15 +234,15 @@ class ProcessedEvent(Base):
     """Durable record of processed event IDs for exact once deduplication."""
 
     __tablename__ = "processed_events"
-    __table_args__ = (
-        Index("ix_processed_events_order", "tenant_id", "order_id", "order_version"),
-    )
+    __table_args__ = (Index("ix_processed_events_order", "tenant_id", "order_id", "order_version"),)
 
     event_id: Mapped[UUID] = mapped_column(primary_key=True)
     tenant_id: Mapped[UUID] = mapped_column(nullable=False)
     order_id: Mapped[UUID] = mapped_column(nullable=False)
     order_version: Mapped[int] = mapped_column(BigInteger, nullable=False)
-    processed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now(), nullable=False)
+    processed_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=func.now(), nullable=False
+    )
 
 
 class EventQuarantine(Base):
@@ -199,19 +259,23 @@ class EventQuarantine(Base):
     stream_id: Mapped[str] = mapped_column(String(64), nullable=False)
     raw_payload: Mapped[str] = mapped_column(Text, nullable=False)
     reason: Mapped[str] = mapped_column(Text, nullable=False)
-    quarantined_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=func.now(), nullable=False)
-    event_id: Mapped[Optional[UUID]] = mapped_column(nullable=True)
-    schema_version: Mapped[Optional[int]] = mapped_column(nullable=True)
-    tenant_id: Mapped[Optional[UUID]] = mapped_column(nullable=True)
-    order_id: Mapped[Optional[UUID]] = mapped_column(nullable=True)
+    quarantined_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=func.now(), nullable=False
+    )
+    event_id: Mapped[UUID | None] = mapped_column(nullable=True)
+    schema_version: Mapped[int | None] = mapped_column(nullable=True)
+    tenant_id: Mapped[UUID | None] = mapped_column(nullable=True)
+    order_id: Mapped[UUID | None] = mapped_column(nullable=True)
 
 
 class TenantProcessingState(Base):
-    """Tenant-level processing revision and last successful apply timestamp for freshness tracking."""
+    """Tenant processing revision and last successful apply timestamp for freshness tracking."""
 
     __tablename__ = "tenant_processing_state"
 
     tenant_id: Mapped[UUID] = mapped_column(primary_key=True)
     revision: Mapped[int] = mapped_column(BigInteger, default=0, nullable=False)
-    last_successful_apply_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    last_successful_stream_id: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    last_successful_apply_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_successful_stream_id: Mapped[str | None] = mapped_column(String(64), nullable=True)

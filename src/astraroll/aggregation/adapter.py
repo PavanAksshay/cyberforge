@@ -12,11 +12,11 @@ Enforces:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime, timezone
-from decimal import Decimal, InvalidOperation
 import json
-from typing import Any, Dict, Optional, Union
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from decimal import Decimal, InvalidOperation
+from typing import Any
 from uuid import UUID
 
 from astraroll.aggregation.contracts import (
@@ -33,19 +33,19 @@ class AdaptedMessage:
     stream_id: str
     stream_name: str
     raw_payload: str
-    event: Optional[OrderEvent] = None
-    quarantine_reason: Optional[str] = None
-    event_id: Optional[UUID] = None
-    schema_version: Optional[int] = None
-    tenant_id: Optional[UUID] = None
-    order_id: Optional[UUID] = None
+    event: OrderEvent | None = None
+    quarantine_reason: str | None = None
+    event_id: UUID | None = None
+    schema_version: int | None = None
+    tenant_id: UUID | None = None
+    order_id: UUID | None = None
 
     @property
     def should_quarantine(self) -> bool:
         return self.quarantine_reason is not None
 
 
-def _parse_uuid(val: Any) -> Optional[UUID]:
+def _parse_uuid(val: Any) -> UUID | None:
     if val is None:
         return None
     try:
@@ -57,19 +57,19 @@ def _parse_uuid(val: Any) -> Optional[UUID]:
 def _parse_datetime(val: Any) -> datetime:
     if isinstance(val, datetime):
         if val.tzinfo is None:
-            return val.replace(tzinfo=timezone.utc)
-        return val.astimezone(timezone.utc)
+            return val.replace(tzinfo=UTC)
+        return val.astimezone(UTC)
     if isinstance(val, str):
         # Fromisoformat handles trailing Z in Python 3.11+
         s = val.replace("Z", "+00:00")
         dt = datetime.fromisoformat(s)
         if dt.tzinfo is None:
-            return dt.replace(tzinfo=timezone.utc)
-        return dt.astimezone(timezone.utc)
+            return dt.replace(tzinfo=UTC)
+        return dt.astimezone(UTC)
     raise ValueError(f"Cannot parse datetime from {type(val).__name__}: {val}")
 
 
-def parse_order_snapshot(data: Dict[str, Any]) -> OrderSnapshot:
+def parse_order_snapshot(data: dict[str, Any]) -> OrderSnapshot:
     """Convert raw dictionary snapshot into domain OrderSnapshot."""
     product_id_str = str(data.get("product_id") or "").strip()
     if not product_id_str:
@@ -88,10 +88,24 @@ def parse_order_snapshot(data: Dict[str, Any]) -> OrderSnapshot:
     except (InvalidOperation, TypeError) as exc:
         raise ValueError(f"Invalid decimal amount: {raw_amount}") from exc
 
+    if not dec_amount.is_finite() or dec_amount.is_nan():
+        raise ValueError("amount must be a finite decimal number")
+
     if dec_amount < 0:
         raise ValueError(f"amount cannot be negative: {dec_amount}")
 
-    amount_cents = int((dec_amount * Decimal(100)).to_integral_exact())
+    # Reject amounts with more than 2 decimal places (e.g. "12.345")
+    if dec_amount.as_tuple().exponent < -2:
+        raise ValueError(f"amount exceeds 2 decimal places: {raw_amount}")
+
+    if len(dec_amount.as_tuple().digits) > 18:
+        raise ValueError("amount exceeds maximum precision of 18 digits")
+
+    cents_val = dec_amount * Decimal(100)
+    if cents_val != cents_val.to_integral_value():
+        raise ValueError(f"amount has fractional cents: {raw_amount}")
+
+    amount_cents = int(cents_val)
 
     currency_str = str(data.get("currency") or "").strip().upper()
     if len(currency_str) != 3 or not currency_str.isalpha():
@@ -123,7 +137,7 @@ def parse_order_snapshot(data: Dict[str, Any]) -> OrderSnapshot:
 
 def adapt_stream_message(
     stream_id: str,
-    payload_raw: Union[str, bytes],
+    payload_raw: str | bytes,
     stream_name: str = "astraroll:orders:v1",
 ) -> AdaptedMessage:
     """Parse and validate a Redis Streams event message.
@@ -163,17 +177,20 @@ def adapt_stream_message(
 
     # Extract metadata fields for quarantine indexing
     event_id = _parse_uuid(data.get("event_id"))
-    schema_version = data.get("schema_version") if isinstance(data.get("schema_version"), int) else None
+    schema_version = (
+        data.get("schema_version") if isinstance(data.get("schema_version"), int) else None
+    )
     tenant_id = _parse_uuid(data.get("tenant_id"))
     order_id = _parse_uuid(data.get("order_id"))
 
     # Envelope validation: must be schema_version 2
     if data.get("schema_version") != 2:
+        reason = f"Unsupported schema_version: {data.get('schema_version')} (expected 2)"
         return AdaptedMessage(
             stream_id=stream_id,
             stream_name=stream_name,
             raw_payload=payload_str,
-            quarantine_reason=f"Unsupported schema_version: {data.get('schema_version')} (expected 2)",
+            quarantine_reason=reason,
             event_id=event_id,
             schema_version=schema_version,
             tenant_id=tenant_id,
@@ -276,7 +293,7 @@ def adapt_stream_message(
             order_id=order_id,
         )
 
-    before_snapshot: Optional[OrderSnapshot] = None
+    before_snapshot: OrderSnapshot | None = None
     before_data = data.get("before")
     if before_data is not None:
         if not isinstance(before_data, dict):

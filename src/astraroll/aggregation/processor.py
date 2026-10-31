@@ -13,7 +13,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from decimal import Decimal
-from typing import Any, Dict, Optional
 from uuid import UUID
 
 from sqlalchemy import select
@@ -27,6 +26,7 @@ from astraroll.aggregation.contracts import (
     OrderStatus,
 )
 from astraroll.aggregation.contribution import compute_contribution_delta
+from astraroll.aggregation.exceptions import CorruptedProjectionError
 from astraroll.aggregation.repository import AggregateRepository
 from astraroll.models import Order
 
@@ -38,12 +38,12 @@ class ProcessResult:
     applied: bool
     is_duplicate: bool = False
     is_out_of_order: bool = False
-    event_id: Optional[str] = None
-    order_id: Optional[str] = None
-    tenant_id: Optional[str] = None
-    tenant_revision: Optional[int] = None
-    deltas: Dict[AggregationKey, AggregateDelta] = field(default_factory=dict)
-    error_message: Optional[str] = None
+    event_id: str | None = None
+    order_id: str | None = None
+    tenant_id: str | None = None
+    tenant_revision: int | None = None
+    deltas: dict[AggregationKey, AggregateDelta] = field(default_factory=dict)
+    error_message: str | None = None
 
 
 class OrderEventProcessor:
@@ -56,7 +56,7 @@ class OrderEventProcessor:
     def process_event(
         self,
         event: OrderEvent,
-        stream_id: Optional[str] = None,
+        stream_id: str | None = None,
     ) -> ProcessResult:
         """Process a validated OrderEvent in a transactional boundary.
 
@@ -131,12 +131,19 @@ class OrderEventProcessor:
             target_version = event.order_version
 
         # 5. Extract previous projection snapshot if present
-        old_snapshot: Optional[OrderSnapshot] = None
-        if projection.last_applied_version > 0 and projection.canonical_snapshot:
+        old_snapshot: OrderSnapshot | None = None
+        if projection.last_applied_version > 0:
+            if not projection.canonical_snapshot:
+                raise CorruptedProjectionError(
+                    f"Projection for order {order_uuid} has version "
+                    f"{projection.last_applied_version} but canonical_snapshot is missing"
+                )
             try:
                 old_snapshot = OrderSnapshot.model_validate(projection.canonical_snapshot)
-            except Exception:
-                old_snapshot = None
+            except Exception as exc:
+                raise CorruptedProjectionError(
+                    f"Projection for order {order_uuid} has corrupted canonical_snapshot: {exc}"
+                ) from exc
 
         # 6. Calculate differential deltas
         deltas = compute_contribution_delta(

@@ -3,8 +3,6 @@
 import json
 from uuid import uuid4
 
-import pytest
-
 from astraroll.aggregation.adapter import adapt_stream_message
 from astraroll.aggregation.contracts import OrderStatus
 
@@ -121,3 +119,13 @@ def test_invalid_status_is_quarantined():
 
     assert res.should_quarantine is True
     assert "Invalid order status" in res.quarantine_reason
+
+
+def test_fractional_cents_amount_is_quarantined():
+    payload = create_valid_v2_payload()
+    # Amount with 3 decimal places must be quarantined, not rounded
+    payload["after"]["amount"] = "12.345"
+    res = adapt_stream_message("8-0", json.dumps(payload))
+
+    assert res.should_quarantine is True
+    assert "exceeds 2 decimal places" in res.quarantine_reason

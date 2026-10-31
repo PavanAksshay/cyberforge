@@ -1,2 +1,1 @@
 """AstraRoll Aggregation Engine Tests."""
-

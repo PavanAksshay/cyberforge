@@ -50,7 +50,7 @@ def test_consumer_processes_stream_message_and_xacks(factory, redis_client):
             "updated_at": "2026-10-31T14:00:00Z",
         },
     }
-    msg_id = redis_client.xadd(stream_name, {"event": json.dumps(payload)})
+    redis_client.xadd(stream_name, {"event": json.dumps(payload)})
 
     consumer = AggregationConsumer(
         session_factory=factory,
@@ -121,8 +121,6 @@ def test_consumer_quarantines_invalid_message_and_xacks(factory, redis_client):
 
     # Quarantine record exists in DB
     with factory() as session:
-        q = session.scalar(
-            select(EventQuarantine).where(EventQuarantine.event_id == event_id)
-        )
+        q = session.scalar(select(EventQuarantine).where(EventQuarantine.event_id == event_id))
         assert q is not None
         assert "Unsupported schema_version: 1" in q.reason

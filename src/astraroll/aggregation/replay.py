@@ -11,10 +11,9 @@ stream is completely safe and guarantees convergence after stream loss or corrup
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timezone
 import json
 import logging
-from typing import Optional
+from datetime import UTC, datetime
 from uuid import UUID
 
 from redis import Redis
@@ -32,9 +31,9 @@ def replay_outbox_events(
     session_factory: sessionmaker[Session],
     redis_client: Redis,
     stream_name: str = "astraroll:orders:v1",
-    tenant_id: Optional[UUID] = None,
-    from_ts: Optional[datetime] = None,
-    to_ts: Optional[datetime] = None,
+    tenant_id: UUID | None = None,
+    from_ts: datetime | None = None,
+    to_ts: datetime | None = None,
     batch_size: int = 100,
     dry_run: bool = False,
 ) -> int:
@@ -79,27 +78,41 @@ def replay_outbox_events(
 def main() -> None:
     """CLI entrypoint for astraroll-replay-outbox."""
     parser = argparse.ArgumentParser(description="Replay outbox events into Redis Streams")
-    parser.add_argument("--stream", type=str, default="astraroll:orders:v1", help="Target Redis stream")
-    parser.add_argument("--tenant-id", type=str, default=None, help="Optional filter by tenant UUID")
-    parser.add_argument("--from-ts", type=str, default=None, help="Optional ISO datetime start boundary")
-    parser.add_argument("--to-ts", type=str, default=None, help="Optional ISO datetime end boundary")
+    parser.add_argument(
+        "--stream", type=str, default="astraroll:orders:v1", help="Target Redis stream"
+    )
+    parser.add_argument(
+        "--tenant-id", type=str, default=None, help="Optional filter by tenant UUID"
+    )
+    parser.add_argument(
+        "--from-ts", type=str, default=None, help="Optional ISO datetime start boundary"
+    )
+    parser.add_argument(
+        "--to-ts", type=str, default=None, help="Optional ISO datetime end boundary"
+    )
     parser.add_argument("--batch-size", type=int, default=100, help="Batch query size")
-    parser.add_argument("--dry-run", action="store_true", help="Scan and count without publishing to Redis")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="Scan and count without publishing to Redis"
+    )
     args = parser.parse_args()
 
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+    )
     settings = get_settings()
 
     tenant_uuid = UUID(args.tenant_id) if args.tenant_id else None
     from_dt = datetime.fromisoformat(args.from_ts) if args.from_ts else None
     if from_dt and from_dt.tzinfo is None:
-        from_dt = from_dt.replace(tzinfo=timezone.utc)
+        from_dt = from_dt.replace(tzinfo=UTC)
     to_dt = datetime.fromisoformat(args.to_ts) if args.to_ts else None
     if to_dt and to_dt.tzinfo is None:
-        to_dt = to_dt.replace(tzinfo=timezone.utc)
+        to_dt = to_dt.replace(tzinfo=UTC)
 
     session_factory = get_session_factory()
-    with Redis.from_url(settings.redis_url, socket_timeout=5, socket_connect_timeout=5) as redis_client:
+    with Redis.from_url(
+        settings.redis_url, socket_timeout=5, socket_connect_timeout=5
+    ) as redis_client:
         replay_outbox_events(
             session_factory=session_factory,
             redis_client=redis_client,

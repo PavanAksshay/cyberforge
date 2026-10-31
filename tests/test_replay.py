@@ -1,14 +1,12 @@
 """Integration tests for Outbox Disaster Replay with live Redis and PostgreSQL."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import select
 
 from astraroll.aggregation.consumer import AggregationConsumer
-from astraroll.aggregation.models import HourlySummaryAggregate
 from astraroll.aggregation.reader import PostgresAnalyticsReader
 from astraroll.aggregation.replay import replay_outbox_events
 from astraroll.models import Order, OutboxEvent, Tenant
@@ -23,7 +21,7 @@ def test_outbox_disaster_replay_and_idempotence(factory, redis_client):
     stream_name = f"test:replay:stream:{uuid4().hex}"
     group_name = f"test:replay:group:{uuid4().hex}"
 
-    now_utc = datetime(2026, 10, 31, 10, 0, 0, tzinfo=timezone.utc)
+    now_utc = datetime(2026, 10, 31, 10, 0, 0, tzinfo=UTC)
 
     # 1. Insert order and 2 outbox events in PostgreSQL (v1: placed $50, v2: shipped $50)
     with factory.begin() as session:
@@ -149,8 +147,8 @@ def test_outbox_disaster_replay_and_idempotence(factory, redis_client):
         summary = reader.get_summary(
             tenant_id=tenant_id,
             currency="USD",
-            from_ts=datetime(2026, 10, 31, 10, 0, 0, tzinfo=timezone.utc),
-            to_ts=datetime(2026, 10, 31, 11, 0, 0, tzinfo=timezone.utc),
+            from_ts=datetime(2026, 10, 31, 10, 0, 0, tzinfo=UTC),
+            to_ts=datetime(2026, 10, 31, 11, 0, 0, tzinfo=UTC),
         )
         assert summary.total_orders == 1
         assert summary.total_sales == Decimal("50.00")
@@ -175,8 +173,8 @@ def test_outbox_disaster_replay_and_idempotence(factory, redis_client):
         summary_after_replay = reader.get_summary(
             tenant_id=tenant_id,
             currency="USD",
-            from_ts=datetime(2026, 10, 31, 10, 0, 0, tzinfo=timezone.utc),
-            to_ts=datetime(2026, 10, 31, 11, 0, 0, tzinfo=timezone.utc),
+            from_ts=datetime(2026, 10, 31, 10, 0, 0, tzinfo=UTC),
+            to_ts=datetime(2026, 10, 31, 11, 0, 0, tzinfo=UTC),
         )
         # TOTALS MUST REMAIN IDENTICAL!
         assert summary_after_replay.total_orders == 1

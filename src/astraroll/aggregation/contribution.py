@@ -24,8 +24,7 @@ Frozen Business Semantics:
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Dict, Optional, Tuple
+from datetime import UTC, datetime
 
 from astraroll.aggregation.contracts import (
     AggregateDelta,
@@ -43,8 +42,8 @@ def normalize_to_utc(dt: datetime) -> datetime:
     if not isinstance(dt, datetime):
         raise InvalidSnapshotError(f"Expected datetime, got {type(dt).__name__}")
     if dt.tzinfo is None:
-        return dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc)
+        return dt.replace(tzinfo=UTC)
+    return dt.astimezone(UTC)
 
 
 def get_hourly_bucket_start(dt: datetime) -> datetime:
@@ -60,19 +59,19 @@ def get_daily_bucket_start(dt: datetime) -> datetime:
 
 
 def calculate_sales_contribution(snapshot: OrderSnapshot) -> int:
-    """Calculate sales cents contributed by the snapshot based on frozen status semantics.
+    """Calculate sales cents contributed by the snapshot based on shared analytics semantics.
 
-    - shipped orders contribute their full amount_cents.
-    - placed and cancelled orders contribute 0 cents (placed is unfulfilled; cancelled is zero).
+    - placed and shipped orders contribute their full amount_cents.
+    - cancelled orders contribute 0 cents (cancellation reverses sales).
     """
-    if snapshot.status == OrderStatus.SHIPPED:
+    if snapshot.status in (OrderStatus.PLACED, OrderStatus.SHIPPED):
         return snapshot.amount_cents
     return 0
 
 
 def calculate_hourly_summary_contribution(
     snapshot: OrderSnapshot, tenant_id: str
-) -> Tuple[AggregationKey, AggregateDelta]:
+) -> tuple[AggregationKey, AggregateDelta]:
     """Calculate an order's positive contribution to the hourly summary aggregate.
 
     Attributed to the immutable created_at hour bucket and partitioned by currency.
@@ -94,7 +93,7 @@ def calculate_hourly_summary_contribution(
 
 def calculate_daily_summary_contribution(
     snapshot: OrderSnapshot, tenant_id: str
-) -> Tuple[AggregationKey, AggregateDelta]:
+) -> tuple[AggregationKey, AggregateDelta]:
     """Calculate an order's positive contribution to the daily summary aggregate.
 
     Attributed to the immutable created_at day bucket and partitioned by currency.
@@ -116,7 +115,7 @@ def calculate_daily_summary_contribution(
 
 def calculate_hourly_status_contribution(
     snapshot: OrderSnapshot, tenant_id: str
-) -> Tuple[AggregationKey, AggregateDelta]:
+) -> tuple[AggregationKey, AggregateDelta]:
     """Calculate an order's positive contribution to the hourly status aggregate.
 
     Attributed to the immutable created_at hour bucket, currency, and snapshot.status.
@@ -138,7 +137,7 @@ def calculate_hourly_status_contribution(
 
 def calculate_daily_status_contribution(
     snapshot: OrderSnapshot, tenant_id: str
-) -> Tuple[AggregationKey, AggregateDelta]:
+) -> tuple[AggregationKey, AggregateDelta]:
     """Calculate an order's positive contribution to the daily status aggregate.
 
     Attributed to the immutable created_at day bucket, currency, and snapshot.status.
@@ -160,7 +159,7 @@ def calculate_daily_status_contribution(
 
 def calculate_hourly_product_contribution(
     snapshot: OrderSnapshot, tenant_id: str
-) -> Tuple[AggregationKey, AggregateDelta]:
+) -> tuple[AggregationKey, AggregateDelta]:
     """Calculate an order's positive contribution to the hourly product aggregate.
 
     Attributed to the immutable created_at hour bucket, currency, and snapshot.product_id.
@@ -182,7 +181,7 @@ def calculate_hourly_product_contribution(
 
 def calculate_daily_product_contribution(
     snapshot: OrderSnapshot, tenant_id: str
-) -> Tuple[AggregationKey, AggregateDelta]:
+) -> tuple[AggregationKey, AggregateDelta]:
     """Calculate an order's positive contribution to the daily product aggregate.
 
     Attributed to the immutable created_at day bucket, currency, and snapshot.product_id.
@@ -204,7 +203,7 @@ def calculate_daily_product_contribution(
 
 def calculate_order_contribution(
     snapshot: OrderSnapshot, tenant_id: str
-) -> Dict[AggregationKey, AggregateDelta]:
+) -> dict[AggregationKey, AggregateDelta]:
     """Calculate all positive contributions across the 6 aggregate dimensions for an order snapshot.
 
     1. Hourly summary
@@ -238,7 +237,7 @@ def calculate_order_contribution(
 
 def calculate_negative_contribution(
     snapshot: OrderSnapshot, tenant_id: str
-) -> Dict[AggregationKey, AggregateDelta]:
+) -> dict[AggregationKey, AggregateDelta]:
     """Calculate exact negative contribution (negation) of an order snapshot.
 
     Reverses order counts and sales amounts previously contributed by this snapshot.
@@ -248,10 +247,10 @@ def calculate_negative_contribution(
 
 
 def compute_contribution_delta(
-    old_snapshot: Optional[OrderSnapshot],
-    new_snapshot: Optional[OrderSnapshot],
+    old_snapshot: OrderSnapshot | None,
+    new_snapshot: OrderSnapshot | None,
     tenant_id: str,
-) -> Dict[AggregationKey, AggregateDelta]:
+) -> dict[AggregationKey, AggregateDelta]:
     """Compute the net incremental delta between an old order state and new order state.
 
     - First-time order (old_snapshot is None): returns positive contribution of new_snapshot.
@@ -298,7 +297,7 @@ def compute_contribution_delta(
     neg_contrib = calculate_negative_contribution(old_snapshot, t_id)
     pos_contrib = calculate_order_contribution(new_snapshot, t_id)
 
-    merged: Dict[AggregationKey, AggregateDelta] = dict(neg_contrib)
+    merged: dict[AggregationKey, AggregateDelta] = dict(neg_contrib)
     for key, pos_delta in pos_contrib.items():
         if key in merged:
             merged[key] = merged[key] + pos_delta

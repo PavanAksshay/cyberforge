@@ -30,13 +30,23 @@ class DuplicateEventError(AggregationError):
 
 
 class OutOfOrderEventError(AggregationError):
-    """Raised when an older order version arrives after a newer version has already been processed."""
+    """Raised when an older order version arrives after a newer version was processed."""
 
     pass
 
 
 class MissingProjectionStateError(AggregationError):
-    """Raised when an update operation cannot proceed because the required prior projection state is missing."""
+    """Raised when an update operation cannot proceed because prior projection state is missing."""
+
+    pass
+
+
+class CorruptedProjectionError(AggregationError):
+    """Raised when an existing projection state has corrupted or missing canonical snapshot.
+
+    Never fallback to treating an existing projection as missing, as doing so
+    would cause existing orders to be double-counted in aggregates.
+    """
 
     pass
 
@@ -45,14 +55,14 @@ class ImmutableFieldViolationError(AggregationError):
     """Raised when an order update violates an immutable field constraint.
 
     Immutable fields include: created_at, order_id, tenant_id.
-    All incremental aggregations must attribute updates to the original immutable created_at timestamp.
+    All incremental aggregations must attribute updates to the original immutable
+    created_at timestamp.
     """
 
     pass
 
 
 class TenantMismatchError(AggregationError):
-    """Raised when tenant_id in an event, snapshot, or projection state does not match the expected tenant."""
+    """Raised when tenant_id in event or snapshot does not match the expected tenant."""
 
     pass
-

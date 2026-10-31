@@ -6,21 +6,16 @@ aggregate accumulation for AstraRoll V1.
 
 from __future__ import annotations
 
-from typing import Dict, Optional, Set, Tuple
-
 from pydantic import BaseModel, ConfigDict
 
 from astraroll.aggregation.contracts import (
     AggregateDelta,
-    AggregateType,
     AggregationKey,
-    AggregationWindow,
     OrderEvent,
     OrderProjectionState,
 )
 from astraroll.aggregation.contribution import compute_contribution_delta
 from astraroll.aggregation.exceptions import (
-    DuplicateEventError,
     ImmutableFieldViolationError,
     InvalidEventError,
     OutOfOrderEventError,
@@ -36,23 +31,23 @@ class ReductionResult(BaseModel):
     applied: bool
     is_duplicate: bool = False
     is_out_of_order: bool = False
-    reason: Optional[str] = None
+    reason: str | None = None
     event_id: str
     tenant_id: str
     order_id: str
     order_version: int
-    deltas: Dict[AggregationKey, AggregateDelta] = {}
-    previous_state: Optional[OrderProjectionState] = None
-    new_state: Optional[OrderProjectionState] = None
+    deltas: dict[AggregationKey, AggregateDelta] = {}
+    previous_state: OrderProjectionState | None = None
+    new_state: OrderProjectionState | None = None
 
-    def non_zero_deltas(self) -> Dict[AggregationKey, AggregateDelta]:
+    def non_zero_deltas(self) -> dict[AggregationKey, AggregateDelta]:
         """Return only the deltas where either order_count != 0 or sales_cents != 0."""
         return {k: v for k, v in self.deltas.items() if not v.is_zero()}
 
 
 def reduce_event(
     event: OrderEvent,
-    current_state: Optional[OrderProjectionState] = None,
+    current_state: OrderProjectionState | None = None,
     strict_ordering: bool = False,
 ) -> ReductionResult:
     """Pure reduction function that transitions order state and calculates incremental deltas.
@@ -67,7 +62,9 @@ def reduce_event(
     - Never mutates input snapshot or event.
     """
     if event is None or not isinstance(event, OrderEvent):
-        raise InvalidEventError(f"Invalid event input: expected OrderEvent, got {type(event).__name__}")
+        raise InvalidEventError(
+            f"Invalid event input: expected OrderEvent, got {type(event).__name__}"
+        )
 
     # Guard against multi-tenant mixing and order_id mismatch
     if current_state is not None:
@@ -179,16 +176,18 @@ class AggregationReducer:
     def __init__(self, strict_ordering: bool = False) -> None:
         self.strict_ordering = strict_ordering
         # (tenant_id, order_id) -> OrderProjectionState
-        self._projections: Dict[Tuple[str, str], OrderProjectionState] = {}
+        self._projections: dict[tuple[str, str], OrderProjectionState] = {}
         # Seen event IDs for global idempotency per worker
-        self._seen_event_ids: Set[str] = set()
+        self._seen_event_ids: set[str] = set()
         # AggregationKey -> AggregateDelta (accumulated values)
-        self._aggregates: Dict[AggregationKey, AggregateDelta] = {}
+        self._aggregates: dict[AggregationKey, AggregateDelta] = {}
 
     def process_event(self, event: OrderEvent) -> ReductionResult:
         """Process an event idempotently and update accumulated aggregates."""
         if event is None or not isinstance(event, OrderEvent):
-            raise InvalidEventError(f"Invalid event: expected OrderEvent, got {type(event).__name__}")
+            raise InvalidEventError(
+                f"Invalid event: expected OrderEvent, got {type(event).__name__}"
+            )
 
         if event.event_id in self._seen_event_ids:
             return ReductionResult(
@@ -219,12 +218,14 @@ class AggregationReducer:
 
             # Apply deltas to cumulative aggregates
             for key, delta in result.deltas.items():
-                current_agg = self._aggregates.get(key, AggregateDelta(order_count=0, sales_cents=0))
+                current_agg = self._aggregates.get(
+                    key, AggregateDelta(order_count=0, sales_cents=0)
+                )
                 self._aggregates[key] = current_agg + delta
 
         return result
 
-    def get_projection(self, tenant_id: str, order_id: str) -> Optional[OrderProjectionState]:
+    def get_projection(self, tenant_id: str, order_id: str) -> OrderProjectionState | None:
         """Retrieve current order projection state for a tenant."""
         return self._projections.get((tenant_id, order_id))
 
@@ -232,10 +233,11 @@ class AggregationReducer:
         """Retrieve current accumulated aggregate for a specific key."""
         return self._aggregates.get(key, AggregateDelta(order_count=0, sales_cents=0))
 
-    def get_aggregates_for_tenant(self, tenant_id: str) -> Dict[AggregationKey, AggregateDelta]:
+    def get_aggregates_for_tenant(self, tenant_id: str) -> dict[AggregationKey, AggregateDelta]:
         """Retrieve all non-zero aggregates for a given tenant."""
         return {
-            k: v for k, v in self._aggregates.items()
+            k: v
+            for k, v in self._aggregates.items()
             if k.tenant_id == tenant_id and not v.is_zero()
         }
 
@@ -244,4 +246,3 @@ class AggregationReducer:
         self._projections.clear()
         self._seen_event_ids.clear()
         self._aggregates.clear()
-

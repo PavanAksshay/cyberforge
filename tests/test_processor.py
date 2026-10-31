@@ -1,8 +1,8 @@
 """Integration tests for OrderEventProcessor against PostgreSQL."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from sqlalchemy import select
@@ -12,16 +12,16 @@ from astraroll.aggregation.contracts import (
     OrderSnapshot,
     OrderStatus,
 )
+from astraroll.aggregation.exceptions import CorruptedProjectionError
 from astraroll.aggregation.models import (
     HourlyProductAggregate,
     HourlyStatusAggregate,
     HourlySummaryAggregate,
     OrderProjection,
     ProcessedEvent,
-    TenantProcessingState,
 )
 from astraroll.aggregation.processor import OrderEventProcessor
-from astraroll.models import Order, Tenant
+from astraroll.models import Tenant
 
 pytestmark = pytest.mark.integration
 
@@ -32,7 +32,7 @@ def test_order_event_processor_lifecycle(factory):
     product_id = uuid4()
     event_1_id = uuid4()
     event_2_id = uuid4()
-    now_utc = datetime(2026, 10, 31, 12, 0, 0, tzinfo=timezone.utc)
+    now_utc = datetime(2026, 10, 31, 12, 0, 0, tzinfo=UTC)
 
     with factory.begin() as session:
         session.add(Tenant(id=tenant_id, name="Test Tenant"))
@@ -79,7 +79,7 @@ def test_order_event_processor_lifecycle(factory):
         assert proc_evt is not None
         assert proc_evt.order_version == 1
 
-        # Check summary aggregate (placed contributes 0 sales!)
+        # Check summary aggregate (placed contributes $100.00 sales)
         summary = session.scalar(
             select(HourlySummaryAggregate).where(
                 HourlySummaryAggregate.tenant_id == tenant_id,
@@ -89,7 +89,7 @@ def test_order_event_processor_lifecycle(factory):
         )
         assert summary is not None
         assert summary.order_count == 1
-        assert summary.sales_amount == Decimal("0.00")
+        assert summary.sales_amount == Decimal("100.00")
 
         # Check status aggregate
         placed_status = session.scalar(
@@ -102,7 +102,7 @@ def test_order_event_processor_lifecycle(factory):
         )
         assert placed_status is not None
         assert placed_status.order_count == 1
-        assert placed_status.sales_amount == Decimal("0.00")
+        assert placed_status.sales_amount == Decimal("100.00")
 
     # Step 2: Process v2 'shipped' ($100.00)
     with factory() as session:
@@ -195,4 +195,85 @@ def test_order_event_processor_lifecycle(factory):
         session.commit()
 
         assert res_stale.applied is False
-        assert res_stale.is_out_of_order is False  # Already in processed_events -> duplicate check fires first
+        assert (
+            res_stale.is_out_of_order is False
+        )  # Already in processed_events -> duplicate check fires first
+
+
+def test_corrupted_projection_snapshot_raises_error_and_does_not_double_count(factory):
+    tenant_id = uuid4()
+    order_id = uuid4()
+    product_id = uuid4()
+    now_utc = datetime(2026, 10, 31, 12, 0, 0, tzinfo=UTC)
+
+    with factory.begin() as session:
+        session.add(Tenant(id=tenant_id, name="Corrupted Projection Tenant"))
+
+    # Apply v1 successfully
+    with factory() as session:
+        processor = OrderEventProcessor(session)
+        evt_1 = OrderEvent(
+            event_id=str(uuid4()),
+            tenant_id=str(tenant_id),
+            order_id=str(order_id),
+            order_version=1,
+            event_type="order.created",
+            occurred_at=now_utc,
+            snapshot=OrderSnapshot(
+                product_id=str(product_id),
+                amount_cents=10000,
+                currency="USD",
+                status=OrderStatus.PLACED,
+                created_at=now_utc,
+                updated_at=now_utc,
+                order_id=str(order_id),
+                tenant_id=str(tenant_id),
+            ),
+        )
+        processor.process_event(evt_1, stream_id="1-0")
+        session.commit()
+
+    # Manually corrupt the canonical_snapshot in order_projection
+    with factory.begin() as session:
+        proj = session.get(OrderProjection, (tenant_id, order_id))
+        assert proj is not None
+        # Corrupt the snapshot payload to invalid format
+        proj.canonical_snapshot = {"corrupted": "bad_data_missing_fields"}
+
+    # Attempt to process v2
+    with factory() as session:
+        processor = OrderEventProcessor(session)
+        evt_2 = OrderEvent(
+            event_id=str(uuid4()),
+            tenant_id=str(tenant_id),
+            order_id=str(order_id),
+            order_version=2,
+            event_type="order.updated",
+            occurred_at=now_utc,
+            snapshot=OrderSnapshot(
+                product_id=str(product_id),
+                amount_cents=12000,
+                currency="USD",
+                status=OrderStatus.SHIPPED,
+                created_at=now_utc,
+                updated_at=now_utc,
+                order_id=str(order_id),
+                tenant_id=str(tenant_id),
+            ),
+        )
+        with pytest.raises(CorruptedProjectionError, match="corrupted canonical_snapshot"):
+            processor.process_event(evt_2, stream_id="2-0")
+        session.rollback()
+
+    # Verify that order count did NOT double to 2
+    with factory() as session:
+        summary = session.scalar(
+            select(HourlySummaryAggregate).where(
+                HourlySummaryAggregate.tenant_id == tenant_id,
+                HourlySummaryAggregate.currency == "USD",
+            )
+        )
+        assert summary is not None
+        # Must still be exactly 1 order, never double counted!
+        assert summary.order_count == 1
+        assert summary.sales_amount == Decimal("100.00")

@@ -16,9 +16,9 @@ from __future__ import annotations
 import argparse
 import logging
 import signal
-from threading import Event
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from threading import Event
+from typing import Any
 from uuid import uuid4
 
 from redis import Redis
@@ -46,7 +46,7 @@ class AggregationConsumer:
         redis_client: Redis,
         stream_name: str = DEFAULT_STREAM,
         group_name: str = DEFAULT_GROUP,
-        consumer_name: Optional[str] = None,
+        consumer_name: str | None = None,
         batch_size: int = 50,
         block_ms: int = 1000,
         min_idle_claim_ms: int = 30000,
@@ -60,6 +60,7 @@ class AggregationConsumer:
         self.block_ms = block_ms
         self.min_idle_claim_ms = min_idle_claim_ms
         self.last_claim_ts: float = 0.0
+        self.claim_cursor: str = "0-0"
 
     def init_group(self) -> None:
         """Create consumer group if it does not already exist, starting at '0-0'."""
@@ -70,19 +71,27 @@ class AggregationConsumer:
                 id="0-0",
                 mkstream=True,
             )
-            log.info("Created consumer group '%s' on stream '%s' at 0-0", self.group_name, self.stream_name)
+            log.info(
+                "Created consumer group '%s' on stream '%s' at 0-0",
+                self.group_name,
+                self.stream_name,
+            )
         except ResponseError as exc:
             if "BUSYGROUP" in str(exc):
                 log.debug("Consumer group '%s' already exists", self.group_name)
             else:
                 raise
 
-    def process_message(self, stream_id_raw: Any, fields: Dict[Any, Any]) -> bool:
+    def process_message(self, stream_id_raw: Any, fields: dict[Any, Any]) -> bool:
         """Process a single Redis Streams message.
 
         Returns True if processing/quarantine succeeded and message was acknowledged.
         """
-        stream_id = stream_id_raw.decode("utf-8") if isinstance(stream_id_raw, bytes) else str(stream_id_raw)
+        stream_id = (
+            stream_id_raw.decode("utf-8")
+            if isinstance(stream_id_raw, bytes)
+            else str(stream_id_raw)
+        )
 
         # Look for field 'event'
         payload_raw = fields.get(b"event") or fields.get("event")
@@ -132,7 +141,12 @@ class AggregationConsumer:
                 session.commit()
             except Exception as exc:
                 session.rollback()
-                log.exception("Failed to process event %s (stream_id %s): %s", adapted.event.event_id, stream_id, exc)
+                log.exception(
+                    "Failed to process event %s (stream_id %s): %s",
+                    adapted.event.event_id,
+                    stream_id,
+                    exc,
+                )
                 raise
 
         # Strictly acknowledge message AFTER database transaction commits
@@ -145,10 +159,15 @@ class AggregationConsumer:
         )
         return True
 
-    def run_claim_cycle(self) -> int:
-        """Autoclaim abandoned messages that have been idle longer than min_idle_claim_ms."""
+    def run_claim_cycle(self, force: bool = False) -> int:
+        """Autoclaim abandoned messages that have been idle longer than min_idle_claim_ms.
+
+        Uses progressive claim_cursor so full batches of pending messages are systematically
+        processed without starvation or infinite looping on the head of the PEL.
+        """
         now = time.monotonic()
-        if now - self.last_claim_ts < 5.0:  # Run claim check at most once every 5 seconds
+        # Throttle claim checks in background loop
+        if not force and (now - self.last_claim_ts < 5.0):
             return 0
         self.last_claim_ts = now
 
@@ -160,15 +179,25 @@ class AggregationConsumer:
                 groupname=self.group_name,
                 consumername=self.consumer_name,
                 min_idle_time=self.min_idle_claim_ms,
-                start_id="0-0",
+                start_id=self.claim_cursor,
                 count=self.batch_size,
             )
+            if isinstance(res, (list, tuple)) and len(res) > 0:
+                next_c = res[0]
+                self.claim_cursor = (
+                    next_c.decode("utf-8") if isinstance(next_c, bytes) else str(next_c)
+                )
+
             messages = res[1] if isinstance(res, (list, tuple)) and len(res) > 1 else []
             for stream_id, fields in messages:
                 if self.process_message(stream_id, fields):
                     claimed_count += 1
             if claimed_count > 0:
-                log.info("Recovered and processed %d abandoned messages via XAUTOCLAIM", claimed_count)
+                log.info(
+                    "Recovered and processed %d abandoned messages via XAUTOCLAIM (cursor: %s)",
+                    claimed_count,
+                    self.claim_cursor,
+                )
         except Exception as exc:
             log.warning("XAUTOCLAIM cycle error: %s", exc)
 
@@ -208,7 +237,9 @@ class AggregationConsumer:
     def run_loop(self, stop_event: Event) -> None:
         """Continuous execution loop until stop_event is set."""
         self.init_group()
-        log.info("AggregationConsumer '%s' running on stream '%s'", self.consumer_name, self.stream_name)
+        log.info(
+            "AggregationConsumer '%s' running on stream '%s'", self.consumer_name, self.stream_name
+        )
 
         while not stop_event.is_set():
             try:
@@ -232,7 +263,9 @@ def main() -> None:
     parser.add_argument("--batch-size", type=int, default=50, help="Batch size per read")
     args = parser.parse_args()
 
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+    )
     settings = get_settings()
 
     stop = Event()
@@ -240,7 +273,9 @@ def main() -> None:
         signal.signal(sig, lambda *_: stop.set())
 
     session_factory = get_session_factory()
-    with Redis.from_url(settings.redis_url, socket_timeout=5, socket_connect_timeout=5) as redis_client:
+    with Redis.from_url(
+        settings.redis_url, socket_timeout=5, socket_connect_timeout=5
+    ) as redis_client:
         consumer = AggregationConsumer(
             session_factory=session_factory,
             redis_client=redis_client,
