@@ -250,18 +250,37 @@ export MAX_ACTIVE_TENANT_POOLS=25
 
 ### 10.3 Tenant Migration (V1 Shared -> V2 Dedicated)
 ```bash
-# Migrate an existing tenant from shared database to dedicated database with strict parity verification
+# 1. Trial migration of a single tenant with bounded batches (default 5,000)
+python -m astraroll.v2.cli migrate-tenant --tenant-id "<uuid>" --batch-size 5000
+
+# 2. Resuming an interrupted migration from checkpoint
 python -m astraroll.v2.cli migrate-tenant --tenant-id "<uuid>"
 
-# Migrate and optionally purge source records from shared DB once parity is confirmed
-python -m astraroll.v2.cli migrate-tenant --tenant-id "<uuid>" --purge-source
+# 3. Safe source purging ONLY after 100% verified cutover and atomic backup
+python -m astraroll.v2.cli migrate-tenant --tenant-id "<uuid>" --purge-source --confirm-purge "<uuid>"
 ```
 
-### 10.4 Health Check & Graceful Shutdown
-- `/health/ready` validates control plane connectivity and actively probes a provisioned tenant database.
+### 10.4 Multi-Dimensional Parity Verification & Diagnostics
+```bash
+# Verify multi-dimensional parity (orders, statuses, amounts, outbox, rollups, coverage)
+python -m astraroll.v2.cli verify-parity --tenant-id "<uuid>"
+
+# Inspect tenant registry record, durable checkpoint, and physical database status
+python -m astraroll.v2.cli diagnose-tenant --tenant-id "<uuid>"
+```
+
+### 10.5 Developer A Handoff & Trial Run Guidelines
+1. **Safety Guarantee**: Unsafe automatic `DROP DATABASE WITH (FORCE)` is eliminated. If parity fails, the target database is preserved in `QUARANTINED` status and source data is never touched.
+2. **Preexisting Database Protection**: Any preexisting database on the cluster whose ownership cannot be proven will be preserved unharmed (`ValueError`).
+3. **Bounded Memory**: Keyset pagination streams records in chunks of 5,000 to maintain predictable peak storage during 10K–100K tenant order transfers.
+4. **Historical Event Deduplication**: Historical outbox events already materialized in rollups are marked as published so `MultiTenantRelay` does not re-stream them.
+5. **Alembic Coordination**: Keep tenant databases on `0004_coverage_precision`. Control plane tables (`control_*`) are excluded from tenant data-plane migrations.
+
+### 10.6 Health Check & Graceful Shutdown
+- `/health/ready` validates control plane connectivity and actively probes an active tenant database.
 - FastAPI `lifespan` automatically executes clean connection pool disposal (`get_tenant_engine_manager().close_all()`) on SIGTERM / application exit.
 
-### 10.5 Safe Rollback Procedure
+### 10.7 Safe Rollback Procedure
 1. If issues occur in database-per-tenant mode, set `DEPLOYMENT_MODE="shared"` in environment / `.env`.
 2. Restart the API and worker processes.
 3. The system immediately reverts to the shared V1 schema and database without dropping or altering any tenant databases.
