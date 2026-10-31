@@ -47,7 +47,9 @@ async def lifespan(app: FastAPI):
     if settings.deployment_mode == "database_per_tenant":
         from astraroll.v2.runtime import get_tenant_engine_manager
 
-        get_tenant_engine_manager().close_all()
+        cache_info = getattr(get_tenant_engine_manager, "cache_info", None)
+        if cache_info is None or cache_info().currsize:
+            get_tenant_engine_manager().close_all()
 
 
 app = FastAPI(title="AstraRoll", version="0.2.0", lifespan=lifespan)

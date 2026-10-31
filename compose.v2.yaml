@@ -11,7 +11,7 @@ services:
     environment: *v2-env
   relay:
     environment: *v2-env
-    command: ["python", "-m", "astraroll.v2.workers", "relay"]
+    command: ["python", "-m", "astraroll.v2.workers", "relay", "--tenant-id", "${V2_RELAY_TENANT_ID:-}"]
   consumer:
     environment: *v2-env
     command: ["python", "-m", "astraroll.v2.workers", "consumer"]

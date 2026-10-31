@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 from redis import Redis
 from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine, make_url
+from sqlalchemy.exc import SQLAlchemyError
 
 from astraroll.analytics.coverage import unavailable_coverage
 from astraroll.config import get_settings
@@ -18,7 +19,11 @@ from astraroll.v2.consumer import MultiTenantAggregationConsumer
 from astraroll.v2.provisioning import TenantProvisioner
 from astraroll.v2.registry import ControlRegistry
 from astraroll.v2.relay import MultiTenantRelay
-from astraroll.v2.router import TenantDatabaseResolver, TenantEngineManager
+from astraroll.v2.router import (
+    TenantDatabaseResolver,
+    TenantDatabaseUnavailable,
+    TenantEngineManager,
+)
 
 if TYPE_CHECKING:
     pass
@@ -61,8 +66,12 @@ def get_tenant_resolver() -> TenantDatabaseResolver:
 def get_tenant_engine_manager() -> TenantEngineManager:
     """Acquire the TenantEngineManager managing dynamic connection pools."""
     settings = get_settings()
+    try:
+        resolver = get_tenant_resolver()
+    except SQLAlchemyError as exc:
+        raise TenantDatabaseUnavailable("Tenant registry is unavailable") from exc
     return TenantEngineManager(
-        resolver=get_tenant_resolver(),
+        resolver=resolver,
         max_active_pools=settings.max_active_tenant_pools,
         pool_size=settings.tenant_pool_size,
         max_overflow=settings.tenant_pool_max_overflow,

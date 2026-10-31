@@ -27,7 +27,7 @@ from astraroll.v2.subset_migration import writable_engine
 from astraroll.workload import END, START
 
 
-def execute(plan, output, samples=200, run_live=False):
+def execute(plan, output, samples=200, run_live=False, release=False):
     settings = get_settings()
     control_url = settings.control_database_url
     if not control_url:
@@ -35,7 +35,12 @@ def execute(plan, output, samples=200, run_live=False):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=False)
     report = {"phase": "verifying", "baseline": "b452d31da56cc7942f6efcaf500f5d8eac7f41e5"}
-    report["parity"] = verify_plan(settings.database_url, control_url, plan)
+    if release:
+        from astraroll.v2.release_audit import audit
+
+        report["parity"] = audit(control_url, output / "current-target-audit.json")
+    else:
+        report["parity"] = verify_plan(settings.database_url, control_url, plan)
     tokens = [secrets.token_urlsafe(32) for _ in range(3)]
     records = [
         {
@@ -148,9 +153,14 @@ def execute(plan, output, samples=200, run_live=False):
                 os.environ.pop("BENCHMARK_BEARER_TOKEN", None)
             if run_live:
                 with Redis.from_url(settings.redis_url, socket_timeout=30) as redis:
-                    report["live"] = live_probe(
-                        manager, redis, client, UUID(first["tenant_id"]), params
-                    )
+                    if release:
+                        from astraroll.v2.release_cycle import run_cycle
+
+                        report["live"] = run_cycle(manager, redis, client, plan, env, output)
+                    else:
+                        report["live"] = live_probe(
+                            manager, redis, client, UUID(first["tenant_id"]), params
+                        )
                 report["post_live_measurement"] = measure_api(
                     control_url, plan, url, tokens[0], samples, 4
                 )
@@ -171,10 +181,15 @@ def main():
     parser.add_argument("--limit", type=int, default=100)
     parser.add_argument("--samples", type=int, default=200)
     parser.add_argument("--live", action="store_true")
+    parser.add_argument(
+        "--release",
+        action="store_true",
+        help="Verify current target state after legitimate V2 live updates",
+    )
     args = parser.parse_args()
     plan = json.loads(Path(args.manifest).read_text())
     plan["tenants"] = plan["tenants"][: args.limit]
-    execute(plan, args.output, args.samples, args.live)
+    execute(plan, args.output, args.samples, args.live, args.release)
     print("Verified real HTTP execution:", args.output)
 
 
