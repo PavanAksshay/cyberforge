@@ -154,11 +154,12 @@ def tenant_create(data: TenantCreate, db: DB):
     if settings.deployment_mode == "database_per_tenant":
         from uuid import uuid4
 
-        from astraroll.v2.runtime import get_tenant_provisioner
+        from astraroll.v2.runtime import get_tenant_engine_manager, get_tenant_provisioner
 
         tenant_id = uuid4()
         record = get_tenant_provisioner().provision_tenant(tenant_id, data.name)
-        return TenantRead(id=record.tenant_id, name=record.name)
+        with get_tenant_engine_manager().session(record.tenant_id) as tenant_db:
+            return TenantRead.model_validate(tenant_db.get(Tenant, record.tenant_id))
 
     with db.begin():
         tenant = Tenant(name=data.name)

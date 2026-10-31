@@ -5,15 +5,18 @@ from __future__ import annotations
 import logging
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import UTC, datetime
+from threading import Lock
 from typing import TYPE_CHECKING
 from uuid import UUID
 
+from alembic.config import Config
+from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session
 
+from alembic import command
 from astraroll.aggregation.models import TenantProcessingState
-from astraroll.db import Base
 from astraroll.models import Tenant
 from astraroll.v2.registry import ControlRegistry, TenantRegistryRecord, TenantStatus
 
@@ -21,6 +24,7 @@ if TYPE_CHECKING:
     pass
 
 log = logging.getLogger(__name__)
+schema_migration_lock = Lock()  # Alembic's module-level operation proxies are process-global.
 
 
 def make_tenant_db_name(tenant_id: UUID, prefix: str = "astraroll_t_") -> str:
@@ -82,8 +86,12 @@ class TenantProvisioner:
             connect_args={"options": "-c timezone=UTC"},
         )
         try:
-            # Create all domain and aggregate tables from current metadata (up to 0004)
-            Base.metadata.create_all(engine)
+            # Apply and record the actual migration graph, never fabricate a revision.
+            with engine.begin() as connection:
+                config = Config("alembic.ini")
+                config.attributes["connection"] = connection
+                with schema_migration_lock:
+                    command.upgrade(config, "head")
 
             # Seed initial tenant metadata and processing state in the tenant's own DB
             with Session(engine) as session:
@@ -159,7 +167,9 @@ class TenantProvisioner:
             record = self.registry.update_status(
                 tenant_id,
                 TenantStatus.ACTIVE,
-                schema_version="0004_coverage_precision",
+                schema_version=ScriptDirectory.from_config(
+                    Config("alembic.ini")
+                ).get_current_head(),
                 mark_verified=True,
             )
             log.info("Tenant %s (%s) successfully provisioned in active state", tenant_id, name)

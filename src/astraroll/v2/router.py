@@ -5,13 +5,14 @@ from __future__ import annotations
 import logging
 import threading
 import time
+import weakref
 from collections import OrderedDict
 from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine, make_url
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session, sessionmaker
@@ -119,13 +120,17 @@ class TenantEngineManager:
         pool_size: int = 2,
         max_overflow: int = 2,
         pool_timeout: float = 10.0,
+        max_dormant_engines: int = 128,
     ):
         self.resolver = resolver
         self.max_active_pools = max_active_pools
         self.pool_size = pool_size
         self.max_overflow = max_overflow
         self.pool_timeout = pool_timeout
+        self.max_dormant_engines = max_dormant_engines
         self._engines: OrderedDict[UUID, Engine] = OrderedDict()
+        self._dormant_engines: OrderedDict[UUID, Engine] = OrderedDict()
+        self._inactive_engines = weakref.WeakSet()
         self._lock = threading.Lock()
 
     @property
@@ -175,22 +180,45 @@ class TenantEngineManager:
 
                     if len(self._engines) >= self.max_active_pools:
                         evicted_id, to_dispose = self._engines.popitem(last=False)
+                        self._inactive_engines.add(to_dispose)
                         log.debug("LRU evicted engine pool for tenant %s", evicted_id)
 
-                    engine = create_engine(
-                        target_url,
-                        pool_size=self.pool_size,
-                        max_overflow=self.max_overflow,
-                        pool_timeout=self.pool_timeout,
-                        pool_recycle=1800,
-                        pool_pre_ping=True,
-                        connect_args={"options": "-c timezone=UTC"},
-                    )
+                    engine = self._dormant_engines.pop(tenant_id, None)
+                    if engine is None or engine.url != make_url(target_url):
+                        engine = create_engine(
+                            target_url,
+                            pool_size=self.pool_size,
+                            max_overflow=self.max_overflow,
+                            pool_timeout=self.pool_timeout,
+                            pool_recycle=1800,
+                            pool_pre_ping=True,
+                            connect_args={"options": "-c timezone=UTC"},
+                        )
+                        engine_ref = weakref.ref(engine)
+
+                        def close_passive_connection(dbapi_connection, record, ref=engine_ref):
+                            with self._lock:
+                                inactive = ref() in self._inactive_engines
+                            if inactive:
+                                # A caller may return a connection after LRU eviction.
+                                # Keep metadata, never a late-returned idle connection.
+                                record.invalidate()
+
+                        event.listen(engine, "checkin", close_passive_connection)
+                    self._inactive_engines.discard(engine)
                     self._engines[tenant_id] = engine
 
                 if to_dispose is not None:
                     try:
                         to_dispose.dispose()
+                        # Retain initialized dialect metadata, never idle connections.
+                        # Publish only after disposal, and only if no racing caller
+                        # already recreated this tenant's active pool.
+                        with self._lock:
+                            if evicted_id not in self._engines and self.max_dormant_engines > 0:
+                                self._dormant_engines[evicted_id] = to_dispose
+                                while len(self._dormant_engines) > self.max_dormant_engines:
+                                    self._dormant_engines.popitem(last=False)
                     except Exception as exc:
                         log.warning("Error disposing evicted engine: %s", exc)
 
@@ -241,6 +269,9 @@ class TenantEngineManager:
         engine = None
         with self._lock:
             engine = self._engines.pop(tenant_id, None)
+            dormant = self._dormant_engines.pop(tenant_id, None)
+        if dormant:
+            dormant.dispose()
         if engine:
             try:
                 engine.dispose()
@@ -251,8 +282,9 @@ class TenantEngineManager:
     def close_all(self) -> None:
         """Dispose all open engine connection pools."""
         with self._lock:
-            engines = list(self._engines.values())
+            engines = list(self._engines.values()) + list(self._dormant_engines.values())
             self._engines.clear()
+            self._dormant_engines.clear()
         for eng in engines:
             try:
                 eng.dispose()

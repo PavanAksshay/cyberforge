@@ -95,7 +95,13 @@ def reconcile(factory, tenant_id):
 @router.get("/metrics")
 def metrics(tenant_id: UUID):
     """On-demand diagnostics, capped at 5 seconds of PostgreSQL execution per query."""
-    with get_session_factory().begin() as session:
+    if get_settings().deployment_mode == "database_per_tenant":
+        from astraroll.v2.runtime import get_tenant_engine_manager
+
+        factory = get_tenant_engine_manager().get_session_factory(tenant_id)
+    else:
+        factory = get_session_factory()
+    with factory.begin() as session:
         session.execute(text("SET LOCAL statement_timeout='5s'"))
         backlog = (
             session.execute(

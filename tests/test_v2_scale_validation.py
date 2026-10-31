@@ -186,6 +186,10 @@ def test_live_recovery_with_real_bearer_and_cross_tenant_denial(
         def close_all(self):
             pass
 
+        def get_session_factory(self, selected, **kwargs):
+            assert UUID(str(selected)) == tenant
+            return factory
+
     import json
     from datetime import UTC, datetime, timedelta
 
@@ -203,7 +207,14 @@ def test_live_recovery_with_real_bearer_and_cross_tenant_denial(
                     "subject": "scale-test",
                     "tenant_ids": [str(tenant)],
                     "expires_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
-                }
+                },
+                {
+                    "key_sha256": hashlib.sha256((token + "-admin").encode()).hexdigest(),
+                    "subject": "ops-test-admin",
+                    "tenant_ids": [],
+                    "is_admin": True,
+                    "expires_at": (datetime.now(UTC) + timedelta(hours=1)).isoformat(),
+                },
             ]
         ),
     )
@@ -236,6 +247,15 @@ def test_live_recovery_with_real_bearer_and_cross_tenant_denial(
             result = live_probe(manager, redis_client, client, tenant, params)
             assert result["live_events"] == 2
             assert "deduplicated" in result["recovery"]
+            metrics = client.get("/ops/metrics", params={"tenant_id": str(tenant)})
+            assert metrics.status_code == 403
+            metrics = client.get(
+                "/ops/metrics",
+                params={"tenant_id": str(tenant)},
+                headers={"Authorization": f"Bearer {token}-admin"},
+            )
+            assert metrics.status_code == 200, metrics.text
+            assert metrics.json()["tenant_id"] == str(tenant)
             with engine.connect() as c:
                 for currency in ("USD", "EUR"):
                     oracle_params = {
