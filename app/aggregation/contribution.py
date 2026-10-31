@@ -282,3 +282,4 @@ def compute_contribution_delta(
             merged[key] = pos_delta
 
     return merged
+

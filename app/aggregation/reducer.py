@@ -244,3 +244,4 @@ class AggregationReducer:
         self._projections.clear()
         self._seen_event_ids.clear()
         self._aggregates.clear()
+

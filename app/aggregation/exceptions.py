@@ -55,3 +55,4 @@ class TenantMismatchError(AggregationError):
     """Raised when tenant_id in an event, snapshot, or projection state does not match the expected tenant."""
 
     pass
+
