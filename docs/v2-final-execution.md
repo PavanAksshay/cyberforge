@@ -147,3 +147,29 @@ After the final exact zero-bucket/HTTP schema checks, all seven new harness test
 passed again. Ruff check and format check pass (99 Python files). Alembic heads
 reports only 0005_tenant_access_paths. Docker Compose configuration validation passes.
 No production V2 endpoint latency is reported from these small test fixtures.
+
+## Completed full source selection
+
+The read-only scan completed successfully: **1,000,000 selected orders across 100
+tenants, exactly 10,000 each**, with **1,733,742 matching outbox events** and zero
+generated historical orders. All original source tenants still contain 100k orders.
+Snapshot timestamp: 2026-10-31 22:37:38 IST; MVCC identifier: 15754:15754:.
+The scan finished in approximately eleven minutes; no source write was performed.
+
+Compact measured per-tenant counts, status/currency totals, cutoffs and digests are
+published in [selection report](v2-source-selection.json). No raw order/event rows
+or credentials are included. Full local manifest SHA-256:
+78b1ee4a88b9573ec840ef52020fdb65cc79f7ad48ad65d78d9aadefaeadb55c.
+
+After the scan: D: free 130,414,784,512 bytes, C: free 14,688,075,776 bytes,
+available physical RAM 3,067,432,960 bytes and Windows commit 7,752,679,424 bytes.
+WAL directory: 4,294,967,296 bytes. max_wal_size=4GB is a checkpoint target, not
+a hard disk cap; disk headroom must still be monitored during migration.
+max_connections=100, superuser_reserved_connections=3; there was one active client
+(the inventory probe), no other client session. Durability remains fully enabled.
+These are point-in-time observations, not peak measurements or future guarantees.
+
+Implementation milestone: **8561e79**, pushed to origin/codex/v2-final-backend.
+The published Pavan baseline remains 10051cf at the final fetch. V2 migration,
+physical database routing checks, 100-database latency and live visibility remain
+pending only the reviewed safety fix plus subsequent actual execution.
