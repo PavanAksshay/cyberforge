@@ -10,14 +10,16 @@ from uuid import UUID, uuid4
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, select, text
+from sqlalchemy.orm import sessionmaker
 
 from astraroll.aggregation.models import (
     HourlySummaryAggregate,
+    TenantProcessingState,
 )
 from astraroll.analytics.contracts import AnalyticsQuery
 from astraroll.api import app
 from astraroll.config import get_settings
-from astraroll.models import Order
+from astraroll.models import Order, Tenant
 from astraroll.orders import create_order, mutate_order
 from astraroll.schemas import OrderCreate, OrderUpdate
 from astraroll.v2.adapter import MultiTenantPostgresAnalyticsAdapter
@@ -50,7 +52,11 @@ def control_registry(base_db_url):
     engine = create_engine(base_db_url, pool_pre_ping=True)
     registry = ControlRegistry(engine)
     registry.init_schema()
+    with engine.begin() as conn:
+        conn.execute(text("DELETE FROM control_tenant_registry"))
     yield registry
+    with engine.begin() as conn:
+        conn.execute(text("DELETE FROM control_tenant_registry"))
     engine.dispose()
 
 
@@ -645,9 +651,9 @@ def test_v2_scale_up_to_100_databases_connection_budget(control_registry, base_d
     """Verify TenantEngineManager manages 100 tenant databases within bounded pool limits."""
 
     class MockScaleResolver(TenantDatabaseResolver):
-        def resolve(self, tenant_id: UUID) -> tuple[str, str]:
+        def resolve(self, tenant_id: UUID, allow_inactive: bool = False) -> tuple[str, str]:
             record = self.registry.get_tenant(tenant_id)
-            if not record or record.status != TenantStatus.ACTIVE.value:
+            if not record or (not allow_inactive and record.status != TenantStatus.ACTIVE.value):
                 raise TenantNotFoundError(f"Tenant {tenant_id} not active")
             return record.database_name, self.base_url.render_as_string(hide_password=False)
 
@@ -683,3 +689,130 @@ def test_v2_scale_up_to_100_databases_connection_budget(control_registry, base_d
         mgr.close_all()
         for t_id in tenant_ids:
             control_registry.update_status(t_id, TenantStatus.DECOMMISSIONED)
+
+
+# =========================================================================
+# Phase 11: V1 to V2 Tenant Migration & Parity Verification Tests
+# =========================================================================
+def test_v1_to_v2_tenant_migration_with_parity(control_registry, provisioner, base_db_url):
+    """Test full zero-loss migration of an active tenant from V1 shared DB to dedicated V2 DB."""
+    from astraroll.v2.migration import TenantMigrator
+
+    shared_engine = create_engine(base_db_url, pool_pre_ping=True)
+    shared_factory = sessionmaker(shared_engine, expire_on_commit=False)
+
+    resolver = TenantDatabaseResolver(control_registry, base_db_url)
+    engine_mgr = TenantEngineManager(resolver, max_active_pools=5)
+
+    migrator = TenantMigrator(
+        shared_session_factory=shared_factory,
+        control_registry=control_registry,
+        provisioner=provisioner,
+        engine_manager=engine_mgr,
+    )
+
+    t_id = uuid4()
+    p_id = uuid4()
+
+    try:
+        # 1. Seed tenant in shared database with orders and rollups
+        with shared_factory() as sess:
+            with sess.begin():
+                sess.add(Tenant(id=t_id, name="Migration Source Tenant"))
+                sess.add(TenantProcessingState(tenant_id=t_id, revision=3))
+                # 3 shipped orders ($30, $40, $50) = $120
+                for i, amt in enumerate(["30.00", "40.00", "50.00"]):
+                    o = create_order(
+                        sess, t_id, OrderCreate(product_id=p_id, amount=amt, currency="USD")
+                    )
+                    mutate_order(
+                        sess, t_id, o.id, 1, OrderUpdate(expected_version=1, status="shipped")
+                    )
+
+                # Add summary rollup in shared database
+                sess.add(
+                    HourlySummaryAggregate(
+                        tenant_id=t_id,
+                        currency="USD",
+                        bucket_start=START,
+                        order_count=3,
+                        sales_amount=Decimal("120.00"),
+                    )
+                )
+
+        # 2. Execute migration
+        result = migrator.migrate_tenant(t_id, purge_source_after=False)
+        assert result.verified is True
+        assert result.orders_migrated == 3
+        assert result.total_sales_amount == Decimal("120.00")
+        assert result.duration_seconds > 0
+
+        # 3. Verify target dedicated database has identical records
+        with engine_mgr.session(t_id) as target_sess:
+            orders = target_sess.scalars(
+                select(Order).where(Order.tenant_id == t_id).order_by(Order.created_at)
+            ).all()
+            assert len(orders) == 3
+            assert sum(o.amount for o in orders) == Decimal("120.00")
+
+            summary = target_sess.scalar(
+                select(HourlySummaryAggregate).where(HourlySummaryAggregate.tenant_id == t_id)
+            )
+            assert summary is not None
+            assert summary.order_count == 3
+            assert summary.sales_amount == Decimal("120.00")
+
+            st = target_sess.get(TenantProcessingState, t_id)
+            assert st is not None
+            assert st.revision == 3
+
+        # 4. Verify control registry is updated and ACTIVE
+        rec = control_registry.get_tenant(t_id)
+        assert rec is not None
+        assert rec.status == TenantStatus.ACTIVE.value
+        assert rec.is_active()
+
+    finally:
+        engine_mgr.close_all()
+        provisioner.deprovision_tenant(t_id, drop_database=True)
+        shared_engine.dispose()
+
+
+# =========================================================================
+# Phase 12: V2 Health Check & Graceful Shutdown Lifecycle Tests
+# =========================================================================
+def test_v2_health_ready_and_graceful_shutdown(
+    monkeypatch, control_registry, provisioner, base_db_url
+):
+    """Test /health/ready validates control & tenant DB, and lifespan executes shutdown."""
+    monkeypatch.setenv("DEPLOYMENT_MODE", "database_per_tenant")
+    get_settings.cache_clear()
+
+    from astraroll.v2.runtime import get_tenant_engine_manager
+
+    t_id = uuid4()
+
+    try:
+        # 1. Health check when control plane is available, no active tenants
+        with TestClient(app) as client:
+            resp = client.get("/health/ready")
+            assert resp.status_code == 200
+            assert resp.json() == {"status": "ok"}
+
+            # 2. Provision an active tenant and verify /health/ready checks both control & tenant
+            provisioner.provision_tenant(t_id, "Health Check Tenant")
+            resp = client.get("/health/ready")
+            assert resp.status_code == 200
+            assert resp.json() == {"status": "ok"}
+
+            # Touch tenant engine
+            mgr = get_tenant_engine_manager()
+            mgr.get_engine(t_id)
+            assert mgr.active_pool_count >= 1
+
+        # 3. Context exit triggers lifespan shutdown which closes all tenant pools
+        assert mgr.active_pool_count == 0
+
+    finally:
+        provisioner.deprovision_tenant(t_id, drop_database=True)
+        get_settings.cache_clear()

@@ -63,17 +63,21 @@ class TenantDatabaseResolver:
             else:
                 self._cache.pop(tenant_id, None)
 
-    def resolve(self, tenant_id: UUID) -> tuple[str, str]:
+    def resolve(
+        self,
+        tenant_id: UUID,
+        allow_inactive: bool = False,
+    ) -> tuple[str, str]:
         """Resolve tenant_id to (database_name, database_url).
 
-        Fails closed if tenant is missing or not active.
+        Fails closed if tenant is missing or not active (unless allow_inactive=True).
         """
         now = time.monotonic()
         with self._lock:
             cached = self._cache.get(tenant_id)
             if cached and (now - cached[2] < self.cache_ttl):
                 db_name, status, _ = cached
-                if status != TenantStatus.ACTIVE.value:
+                if not allow_inactive and status != TenantStatus.ACTIVE.value:
                     raise TenantInactiveError(
                         f"Tenant {tenant_id} is in '{status}' state (not active)"
                     )
@@ -90,7 +94,7 @@ class TenantDatabaseResolver:
         with self._lock:
             self._cache[tenant_id] = (record.database_name, record.status, now)
 
-        if record.status != TenantStatus.ACTIVE.value:
+        if not allow_inactive and record.status != TenantStatus.ACTIVE.value:
             raise TenantInactiveError(
                 f"Tenant {tenant_id} is in '{record.status}' state (not active)"
             )
@@ -129,56 +133,93 @@ class TenantEngineManager:
         with self._lock:
             return len(self._engines)
 
-    def get_engine(self, tenant_id: UUID) -> Engine:
-        """Retrieve an Engine for tenant, applying LRU eviction if budget is exceeded."""
+    def get_engine(
+        self,
+        tenant_id: UUID,
+        allow_inactive: bool = False,
+        max_retries: int = 3,
+        backoff_base: float = 0.05,
+    ) -> Engine:
+        """Retrieve an Engine for tenant, applying LRU eviction if budget is exceeded.
+
+        Includes connection retry with exponential backoff for resilience under connection spikes.
+        """
         with self._lock:
             if tenant_id in self._engines:
                 self._engines.move_to_end(tenant_id)
                 return self._engines[tenant_id]
 
-        # Resolve tenant database URL (outside lock to avoid contention)
-        _, target_url = self.resolver.resolve(tenant_id)
-
-        # Evict least-recently-used engine if pool budget exceeded
-        to_dispose: Engine | None = None
-        with self._lock:
-            # Recheck after resolving URL
-            if tenant_id in self._engines:
-                self._engines.move_to_end(tenant_id)
-                return self._engines[tenant_id]
-
-            if len(self._engines) >= self.max_active_pools:
-                evicted_id, to_dispose = self._engines.popitem(last=False)
-                log.debug("LRU evicted engine pool for tenant %s", evicted_id)
-
-            engine = create_engine(
-                target_url,
-                pool_size=self.pool_size,
-                max_overflow=self.max_overflow,
-                pool_timeout=self.pool_timeout,
-                pool_recycle=1800,
-                pool_pre_ping=True,
-                connect_args={"options": "-c timezone=UTC"},
-            )
-            self._engines[tenant_id] = engine
-
-        if to_dispose is not None:
+        last_exc: Exception | None = None
+        for attempt in range(max_retries):
             try:
-                to_dispose.dispose()
-            except Exception as exc:
-                log.warning("Error disposing evicted engine: %s", exc)
+                # Resolve tenant database URL (outside lock to avoid contention)
+                try:
+                    _, target_url = self.resolver.resolve(tenant_id, allow_inactive=allow_inactive)
+                except TypeError:
+                    _, target_url = self.resolver.resolve(tenant_id)
 
-        return engine
+                # Evict least-recently-used engine if pool budget exceeded
+                to_dispose: Engine | None = None
+                with self._lock:
+                    # Recheck after resolving URL
+                    if tenant_id in self._engines:
+                        self._engines.move_to_end(tenant_id)
+                        return self._engines[tenant_id]
 
-    def get_session_factory(self, tenant_id: UUID) -> sessionmaker[Session]:
+                    if len(self._engines) >= self.max_active_pools:
+                        evicted_id, to_dispose = self._engines.popitem(last=False)
+                        log.debug("LRU evicted engine pool for tenant %s", evicted_id)
+
+                    engine = create_engine(
+                        target_url,
+                        pool_size=self.pool_size,
+                        max_overflow=self.max_overflow,
+                        pool_timeout=self.pool_timeout,
+                        pool_recycle=1800,
+                        pool_pre_ping=True,
+                        connect_args={"options": "-c timezone=UTC"},
+                    )
+                    self._engines[tenant_id] = engine
+
+                if to_dispose is not None:
+                    try:
+                        to_dispose.dispose()
+                    except Exception as exc:
+                        log.warning("Error disposing evicted engine: %s", exc)
+
+                return engine
+            except (OperationalError, SQLAlchemyError) as exc:
+                last_exc = exc
+                if attempt < max_retries - 1:
+                    sleep_time = backoff_base * (2**attempt)
+                    log.warning(
+                        "Transient error acquiring engine for tenant %s (attempt %d/%d), "
+                        "retrying in %.2fs: %s",
+                        tenant_id,
+                        attempt + 1,
+                        max_retries,
+                        sleep_time,
+                        exc,
+                    )
+                    time.sleep(sleep_time)
+                else:
+                    break
+
+        if last_exc:
+            raise last_exc
+        raise TenantDatabaseUnavailable(f"Unable to obtain database engine for tenant {tenant_id}")
+
+    def get_session_factory(
+        self, tenant_id: UUID, allow_inactive: bool = False
+    ) -> sessionmaker[Session]:
         """Produce a sessionmaker bound to the tenant's dedicated database engine."""
-        engine = self.get_engine(tenant_id)
+        engine = self.get_engine(tenant_id, allow_inactive=allow_inactive)
         return sessionmaker(engine, expire_on_commit=False)
 
     @contextmanager
-    def session(self, tenant_id: UUID) -> Iterator[Session]:
+    def session(self, tenant_id: UUID, allow_inactive: bool = False) -> Iterator[Session]:
         """Scoped session context manager with automatic rollback on error."""
-        engine = self.get_engine(tenant_id)
+        engine = self.get_engine(tenant_id, allow_inactive=allow_inactive)
         try:
             with Session(engine) as sess:
                 yield sess

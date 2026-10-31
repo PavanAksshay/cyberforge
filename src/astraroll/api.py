@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from time import perf_counter
 from typing import Annotated
 from uuid import UUID
@@ -33,7 +34,18 @@ from astraroll.schemas import (
     TenantRead,
 )
 
-app = FastAPI(title="AstraRoll V1", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    yield
+    settings = get_settings()
+    if settings.deployment_mode == "database_per_tenant":
+        from astraroll.v2.runtime import get_tenant_engine_manager
+
+        get_tenant_engine_manager().close_all()
+
+
+app = FastAPI(title="AstraRoll", version="0.2.0", lifespan=lifespan)
 app.include_router(analytics_router)
 app.include_router(operations_router)
 
@@ -80,13 +92,30 @@ def live():
 def ready(db: DB):
     settings = get_settings()
     if settings.deployment_mode == "database_per_tenant":
-        from astraroll.v2.runtime import get_control_engine
+        from astraroll.v2.runtime import (
+            get_control_engine,
+            get_control_registry,
+            get_tenant_engine_manager,
+        )
 
         try:
             with get_control_engine().connect() as conn:
                 conn.execute(text("SELECT 1"))
         except Exception:
             return JSONResponse(status_code=503, content={"status": "control database unavailable"})
+
+        # Validate active tenant database availability if active tenants exist
+        try:
+            registry = get_control_registry()
+            active_tenants = registry.list_active_tenants()
+            if active_tenants:
+                sample_tenant = active_tenants[0]
+                mgr = get_tenant_engine_manager()
+                with mgr.session(sample_tenant.tenant_id) as sess:
+                    sess.execute(text("SELECT 1"))
+        except Exception:
+            return JSONResponse(status_code=503, content={"status": "tenant database unavailable"})
+
         return {"status": "ok"}
     try:
         db.execute(text("SELECT 1"))

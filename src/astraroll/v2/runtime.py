@@ -114,6 +114,19 @@ def get_multi_tenant_relay(redis_client: Redis | None = None) -> MultiTenantRela
     )
 
 
+def get_tenant_migrator():
+    """Acquire the TenantMigrator utility."""
+    from astraroll.db import get_session_factory
+    from astraroll.v2.migration import TenantMigrator
+
+    return TenantMigrator(
+        shared_session_factory=get_session_factory(),
+        control_registry=get_control_registry(),
+        provisioner=get_tenant_provisioner(),
+        engine_manager=get_tenant_engine_manager(),
+    )
+
+
 def get_multi_tenant_consumer(
     redis_client: Redis | None = None,
     consumer_name: str | None = None,

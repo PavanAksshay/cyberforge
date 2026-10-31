@@ -40,6 +40,17 @@ def main():
     )
     scale_parser.add_argument("--workers", type=int, default=5, help="Concurrent worker count")
 
+    # Migrate tenant command
+    mig_parser = subparsers.add_parser(
+        "migrate-tenant", help="Migrate an existing tenant from V1 shared DB to dedicated V2 DB"
+    )
+    mig_parser.add_argument("--tenant-id", type=UUID, required=True, help="Tenant UUID")
+    mig_parser.add_argument(
+        "--purge-source",
+        action="store_true",
+        help="Purge source records from shared DB after successful parity check",
+    )
+
     args = parser.parse_args()
 
     if args.command == "provision":
@@ -71,6 +82,21 @@ def main():
         print(f"Bulk provisioning {args.count} tenants with {args.workers} workers...")
         records = provisioner.provision_tenants_concurrently(tenants, max_workers=args.workers)
         print(f"Successfully provisioned {len(records)} tenant databases.")
+
+    elif args.command == "migrate-tenant":
+        from astraroll.v2.runtime import get_tenant_migrator
+
+        migrator = get_tenant_migrator()
+        print(f"Starting V1 -> V2 migration for tenant {args.tenant_id}...")
+        res = migrator.migrate_tenant(args.tenant_id, purge_source_after=args.purge_source)
+        print(
+            f"Successfully migrated tenant {res.tenant_id} to database {res.database_name}!\n"
+            f"- Orders: {res.orders_migrated}\n"
+            f"- Outbox Events: {res.outbox_migrated}\n"
+            f"- Total Sales: {res.total_sales_amount}\n"
+            f"- Duration: {res.duration_seconds:.2f}s\n"
+            f"- Parity Verified: {res.verified}"
+        )
 
 
 if __name__ == "__main__":
