@@ -9,7 +9,7 @@ target_metadata = Base.metadata
 
 
 def include_object(object, name, type_, reflected, compare_to):
-    if type_ == "table" and name.startswith("control_"):
+    if type_ == "table" and (name.startswith("control_") or name == "subset_copy_checkpoint"):
         return False
     return True
 

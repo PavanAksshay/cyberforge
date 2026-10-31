@@ -1,0 +1,1067 @@
+{
+  "v1_orders": 10000000,
+  "v1_outbox": 17333300,
+  "v1_tenants": 100,
+  "v1_min_per_tenant": 100000,
+  "v1_max_per_tenant": 100000,
+  "resources": {
+    "at": "2026-10-31T18:28:46.564319+00:00",
+    "physical_available_bytes": 3949805568,
+    "system_commit_available_bytes": 5003206656,
+    "host_cpu_percent": 16.7,
+    "drives": {
+      "C:/": {
+        "total": 266231681024,
+        "used": 251648790528,
+        "free": 14582890496,
+        "percent": 94.5
+      },
+      "D:/": {
+        "total": 244107440128,
+        "used": 108683698176,
+        "free": 135423741952,
+        "percent": 44.5
+      }
+    },
+    "connections": [
+      {
+        "datname": null,
+        "state": null,
+        "connections": 5
+      },
+      {
+        "datname": "postgres",
+        "state": "active",
+        "connections": 1
+      }
+    ],
+    "settings": {
+      "checkpoint_timeout": "900",
+      "fsync": "on",
+      "full_page_writes": "on",
+      "max_connections": "100",
+      "max_wal_size": "4096",
+      "shared_buffers": "16384",
+      "superuser_reserved_connections": "3",
+      "synchronous_commit": "on",
+      "wal_compression": "lz4"
+    },
+    "wal": {
+      "wal_records": 126438461,
+      "wal_fpi": 6271889,
+      "wal_bytes": "55372687558",
+      "wal_buffers_full": 1406911,
+      "wal_write": 1473960,
+      "wal_sync": 0,
+      "wal_write_time": 0.0,
+      "wal_sync_time": 0.0,
+      "stats_reset": "2026-10-31T12:40:14.237405+00:00"
+    },
+    "wal_directory_bytes": "3539992576"
+  },
+  "targets": [
+    {
+      "tenant_id": "0457061c-db4d-553e-9b3c-ba32ec9e5f57",
+      "database": "v2bench_78b1ee4a_0457061cdb4d553e9b3cba32ec9e5f57",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17373,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 50057699
+    },
+    {
+      "tenant_id": "0a5f419c-450d-56d0-aea5-f6a5b6a11a29",
+      "database": "v2bench_78b1ee4a_0a5f419c450d56d0aea5f6a5b6a11a29",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17389,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42226147
+    },
+    {
+      "tenant_id": "0a97cff7-69ea-5e6f-adec-33681b041eed",
+      "database": "v2bench_78b1ee4a_0a97cff769ea5e6fadec33681b041eed",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17280,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 41898467
+    },
+    {
+      "tenant_id": "0cb398ed-3c9a-5524-8dd6-3eff835c3a71",
+      "database": "v2bench_78b1ee4a_0cb398ed3c9a55248dd63eff835c3a71",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17334,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42037731
+    },
+    {
+      "tenant_id": "0f3acb72-4566-5bfe-8568-0df70c33a4d0",
+      "database": "v2bench_78b1ee4a_0f3acb7245665bfe85680df70c33a4d0",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17287,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 41931235
+    },
+    {
+      "tenant_id": "11bc94ca-f0d3-5d2f-a2dc-2941d97af464",
+      "database": "v2bench_78b1ee4a_11bc94caf0d35d2fa2dc2941d97af464",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17332,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42103267
+    },
+    {
+      "tenant_id": "139175ec-ca6f-59e9-a4e0-e9d91f6c71db",
+      "database": "v2bench_78b1ee4a_139175ecca6f59e9a4e0e9d91f6c71db",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17336,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42004963
+    },
+    {
+      "tenant_id": "13d873fa-e941-55dd-afa9-9fddbb2004e5",
+      "database": "v2bench_78b1ee4a_13d873fae94155ddafa99fddbb2004e5",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17319,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42078691
+    },
+    {
+      "tenant_id": "15065bac-f1ea-5073-a60c-be8759a8d198",
+      "database": "v2bench_78b1ee4a_15065bacf1ea5073a60cbe8759a8d198",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17348,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42070499
+    },
+    {
+      "tenant_id": "163340ff-db4f-5ef5-a7e9-987f69495907",
+      "database": "v2bench_78b1ee4a_163340ffdb4f5ef5a7e9987f69495907",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17353,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42127843
+    },
+    {
+      "tenant_id": "167cd95c-8df1-5d3f-bf8d-7dd56c1be201",
+      "database": "v2bench_78b1ee4a_167cd95c8df15d3fbf8d7dd56c1be201",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17315,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42021347
+    },
+    {
+      "tenant_id": "191c42be-fc19-534a-be0d-010069a7596d",
+      "database": "v2bench_78b1ee4a_191c42befc19534abe0d010069a7596d",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17303,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42045923
+    },
+    {
+      "tenant_id": "1d3c76f5-82ef-5dcf-a6fa-a2d937591318",
+      "database": "v2bench_78b1ee4a_1d3c76f582ef5dcfa6faa2d937591318",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17287,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42062307
+    },
+    {
+      "tenant_id": "1eb4465b-fd99-5140-9eb8-f590088b4f07",
+      "database": "v2bench_78b1ee4a_1eb4465bfd9951409eb8f590088b4f07",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17305,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42045923
+    },
+    {
+      "tenant_id": "1f7d8833-987a-5949-8e32-ccb4863e2483",
+      "database": "v2bench_78b1ee4a_1f7d8833987a59498e32ccb4863e2483",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17310,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42045923
+    },
+    {
+      "tenant_id": "21955e5a-743b-5f52-b1a6-56ac17442bb6",
+      "database": "v2bench_78b1ee4a_21955e5a743b5f52b1a656ac17442bb6",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17345,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42095075
+    },
+    {
+      "tenant_id": "2340f11a-ebbe-53a1-8607-a6c32c64c74f",
+      "database": "v2bench_78b1ee4a_2340f11aebbe53a18607a6c32c64c74f",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17418,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42209763
+    },
+    {
+      "tenant_id": "26bedd08-8ae0-5f44-a09f-63fd1e8226d0",
+      "database": "v2bench_78b1ee4a_26bedd088ae05f44a09f63fd1e8226d0",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17386,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42111459
+    },
+    {
+      "tenant_id": "27b0ae93-65ad-5e12-bb21-bd06d338ce37",
+      "database": "v2bench_78b1ee4a_27b0ae9365ad5e12bb21bd06d338ce37",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17403,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42193379
+    },
+    {
+      "tenant_id": "2a0a4cad-e611-5f81-9c7f-1a1f2f4ececb",
+      "database": "v2bench_78b1ee4a_2a0a4cade6115f819c7f1a1f2f4ececb",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17368,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42111459
+    },
+    {
+      "tenant_id": "2aa2914b-fe11-517a-8271-aee944e5aecb",
+      "database": "v2bench_78b1ee4a_2aa2914bfe11517a8271aee944e5aecb",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17364,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42144227
+    },
+    {
+      "tenant_id": "2c1af2d1-d217-5b75-afe9-b5123daeef63",
+      "database": "v2bench_78b1ee4a_2c1af2d1d2175b75afe9b5123daeef63",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17404,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42144227
+    },
+    {
+      "tenant_id": "2c8d5c82-e440-5368-9b73-21b2e567c4f1",
+      "database": "v2bench_78b1ee4a_2c8d5c82e44053689b7321b2e567c4f1",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17346,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 41947619
+    },
+    {
+      "tenant_id": "2d2aee37-a214-5ad9-82d2-2771904472b7",
+      "database": "v2bench_78b1ee4a_2d2aee37a2145ad982d22771904472b7",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17247,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 41906659
+    },
+    {
+      "tenant_id": "2d6a653f-cc20-5086-9c22-33760a871cde",
+      "database": "v2bench_78b1ee4a_2d6a653fcc2050869c2233760a871cde",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17334,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42004963
+    },
+    {
+      "tenant_id": "2fcc3b08-e9d7-5b81-b19f-259637947e99",
+      "database": "v2bench_78b1ee4a_2fcc3b08e9d75b81b19f259637947e99",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17285,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42013155
+    },
+    {
+      "tenant_id": "339751a5-2001-57ce-a2fe-4e2a1b0c46e8",
+      "database": "v2bench_78b1ee4a_339751a5200157cea2fe4e2a1b0c46e8",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17344,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42029539
+    },
+    {
+      "tenant_id": "3963b8e0-cba6-5449-b314-57d9c4b1ef57",
+      "database": "v2bench_78b1ee4a_3963b8e0cba65449b31457d9c4b1ef57",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17316,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42029539
+    },
+    {
+      "tenant_id": "3c49f71a-086d-51ed-92b0-f8550e20b206",
+      "database": "v2bench_78b1ee4a_3c49f71a086d51ed92b0f8550e20b206",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17254,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 41947619
+    },
+    {
+      "tenant_id": "3f37125b-6206-5ccb-9864-86f6264b8b2a",
+      "database": "v2bench_78b1ee4a_3f37125b62065ccb986486f6264b8b2a",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17290,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42021347
+    },
+    {
+      "tenant_id": "44756501-bf51-5dbf-881b-02895b329d1a",
+      "database": "v2bench_78b1ee4a_44756501bf515dbf881b02895b329d1a",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17453,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42168803
+    },
+    {
+      "tenant_id": "460bd96c-7b0d-5786-a721-e62217c1e3e3",
+      "database": "v2bench_78b1ee4a_460bd96c7b0d5786a721e62217c1e3e3",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17362,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42103267
+    },
+    {
+      "tenant_id": "468d91ce-258c-58fd-923d-fce7f1c16094",
+      "database": "v2bench_78b1ee4a_468d91ce258c58fd923dfce7f1c16094",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17320,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42103267
+    },
+    {
+      "tenant_id": "4cfa14c3-85a4-5c58-949b-80d243abe0ca",
+      "database": "v2bench_78b1ee4a_4cfa14c385a45c58949b80d243abe0ca",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17323,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42029539
+    },
+    {
+      "tenant_id": "4f060a24-4120-5aae-b783-440f7ae81e77",
+      "database": "v2bench_78b1ee4a_4f060a2441205aaeb783440f7ae81e77",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17314,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42086883
+    },
+    {
+      "tenant_id": "4ff2c885-0746-5d7f-970e-69696c138fb9",
+      "database": "v2bench_78b1ee4a_4ff2c88507465d7f970e69696c138fb9",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17336,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42078691
+    },
+    {
+      "tenant_id": "5295ac39-c989-5084-a723-75a81b0859bd",
+      "database": "v2bench_78b1ee4a_5295ac39c9895084a72375a81b0859bd",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17328,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 41980387
+    },
+    {
+      "tenant_id": "53351722-b98e-5b5a-bcb2-00b39d2eaa81",
+      "database": "v2bench_78b1ee4a_53351722b98e5b5abcb200b39d2eaa81",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17338,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42103267
+    },
+    {
+      "tenant_id": "5ceba82b-c3c8-5b4e-b364-993c55b8122a",
+      "database": "v2bench_78b1ee4a_5ceba82bc3c85b4eb364993c55b8122a",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17313,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 41996771
+    },
+    {
+      "tenant_id": "5fe10171-634d-55de-bb1e-06c35e77699f",
+      "database": "v2bench_78b1ee4a_5fe10171634d55debb1e06c35e77699f",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17302,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 41996771
+    },
+    {
+      "tenant_id": "62abe6b5-f37b-56cd-902c-41de81b4bff1",
+      "database": "v2bench_78b1ee4a_62abe6b5f37b56cd902c41de81b4bff1",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17283,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 41906659
+    },
+    {
+      "tenant_id": "65b2978a-eaa1-58d5-b9a4-5e9c07448938",
+      "database": "v2bench_78b1ee4a_65b2978aeaa158d5b9a45e9c07448938",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17259,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 41988579
+    },
+    {
+      "tenant_id": "67dfff80-b36c-58cd-b4f1-9694f82e4ae0",
+      "database": "v2bench_78b1ee4a_67dfff80b36c58cdb4f19694f82e4ae0",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17381,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42176995
+    },
+    {
+      "tenant_id": "6885b234-7fd7-521f-a644-27dc31f8a39a",
+      "database": "v2bench_78b1ee4a_6885b2347fd7521fa64427dc31f8a39a",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17337,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42021347
+    },
+    {
+      "tenant_id": "69f7be45-da05-52a4-ba8f-cfd175dfd971",
+      "database": "v2bench_78b1ee4a_69f7be45da0552a4ba8fcfd175dfd971",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17282,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42054115
+    },
+    {
+      "tenant_id": "6a243788-9d9e-5a75-9c15-fbf48342a8b4",
+      "database": "v2bench_78b1ee4a_6a2437889d9e5a759c15fbf48342a8b4",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17360,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 41972195
+    },
+    {
+      "tenant_id": "6b774053-b99d-5c86-9741-fbd696bf899f",
+      "database": "v2bench_78b1ee4a_6b774053b99d5c869741fbd696bf899f",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17328,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42013155
+    },
+    {
+      "tenant_id": "6e556ce0-74aa-5377-8ab6-9d74166199c5",
+      "database": "v2bench_78b1ee4a_6e556ce074aa53778ab69d74166199c5",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17425,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42234339
+    },
+    {
+      "tenant_id": "6e5ab0be-732e-52e8-a7fc-4bdcf0b64a2b",
+      "database": "v2bench_78b1ee4a_6e5ab0be732e52e8a7fc4bdcf0b64a2b",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17269,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 41939427
+    },
+    {
+      "tenant_id": "6fe744da-93c1-5e09-bcdd-b2132d0c7f4c",
+      "database": "v2bench_78b1ee4a_6fe744da93c15e09bcddb2132d0c7f4c",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17312,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42193379
+    },
+    {
+      "tenant_id": "7353644a-d49c-5d30-93de-beb26f86e1dc",
+      "database": "v2bench_78b1ee4a_7353644ad49c5d3093debeb26f86e1dc",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17435,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42217955
+    },
+    {
+      "tenant_id": "743272c3-b519-5405-be3e-9bcb65a6280e",
+      "database": "v2bench_78b1ee4a_743272c3b5195405be3e9bcb65a6280e",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17318,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42045923
+    },
+    {
+      "tenant_id": "78473cbb-5c5d-57e5-bcc5-1698e68e542f",
+      "database": "v2bench_78b1ee4a_78473cbb5c5d57e5bcc51698e68e542f",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17428,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42201571
+    },
+    {
+      "tenant_id": "7afbdc6f-79a1-5f8a-b0fc-7dcbf395cd2c",
+      "database": "v2bench_78b1ee4a_7afbdc6f79a15f8ab0fc7dcbf395cd2c",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17351,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42119651
+    },
+    {
+      "tenant_id": "7cbd4151-1a82-5ef8-9ed3-4b267911c78d",
+      "database": "v2bench_78b1ee4a_7cbd41511a825ef89ed34b267911c78d",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17309,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 41964003
+    },
+    {
+      "tenant_id": "7e2fcc9d-cd8a-5c51-8585-9dbee43e177f",
+      "database": "v2bench_78b1ee4a_7e2fcc9dcd8a5c5185859dbee43e177f",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17335,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42045923
+    },
+    {
+      "tenant_id": "7f27c8ac-bd27-5556-8e0b-08631ca63599",
+      "database": "v2bench_78b1ee4a_7f27c8acbd2755568e0b08631ca63599",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17294,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 41964003
+    },
+    {
+      "tenant_id": "7ffd96dc-871e-5ef1-805b-f79108372a88",
+      "database": "v2bench_78b1ee4a_7ffd96dc871e5ef1805bf79108372a88",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17342,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42021347
+    },
+    {
+      "tenant_id": "8c7937a1-1a2e-5689-9739-d897c2f688f6",
+      "database": "v2bench_78b1ee4a_8c7937a11a2e56899739d897c2f688f6",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17302,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42037731
+    },
+    {
+      "tenant_id": "8f217015-9a6d-5ff1-b2a9-3b595e435278",
+      "database": "v2bench_78b1ee4a_8f2170159a6d5ff1b2a93b595e435278",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17350,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42078691
+    },
+    {
+      "tenant_id": "8f9e369c-58af-5f15-a293-2bae65df502c",
+      "database": "v2bench_78b1ee4a_8f9e369c58af5f15a2932bae65df502c",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17359,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42078691
+    },
+    {
+      "tenant_id": "910491fa-ce8e-57a9-87f4-a7fcaf3868f8",
+      "database": "v2bench_78b1ee4a_910491face8e57a987f4a7fcaf3868f8",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17393,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42086883
+    },
+    {
+      "tenant_id": "9137e93c-a521-5c9e-8f7a-f3b117c7c259",
+      "database": "v2bench_78b1ee4a_9137e93ca5215c9e8f7af3b117c7c259",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17389,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42078691
+    },
+    {
+      "tenant_id": "9722f10f-77dc-5b39-8776-a4859d8c29d8",
+      "database": "v2bench_78b1ee4a_9722f10f77dc5b398776a4859d8c29d8",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17252,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42021347
+    },
+    {
+      "tenant_id": "a175b465-1f3b-592c-bc24-f362816e2418",
+      "database": "v2bench_78b1ee4a_a175b4651f3b592cbc24f362816e2418",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17271,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 41931235
+    },
+    {
+      "tenant_id": "a23a0385-a7f7-5687-b534-bfcb73463657",
+      "database": "v2bench_78b1ee4a_a23a0385a7f75687b534bfcb73463657",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17346,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42029539
+    },
+    {
+      "tenant_id": "a277fd9b-f2f5-5024-884f-aa8a0d1e6ffa",
+      "database": "v2bench_78b1ee4a_a277fd9bf2f55024884faa8a0d1e6ffa",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17396,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42103267
+    },
+    {
+      "tenant_id": "a3396452-09c0-5f25-8de8-a4dcf8883a86",
+      "database": "v2bench_78b1ee4a_a339645209c05f258de8a4dcf8883a86",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17318,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42004963
+    },
+    {
+      "tenant_id": "a340bccb-4716-5b53-a663-6b270f33de30",
+      "database": "v2bench_78b1ee4a_a340bccb47165b53a6636b270f33de30",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17336,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42119651
+    },
+    {
+      "tenant_id": "a3c7841e-dee6-53f0-b13c-fd7745b6245d",
+      "database": "v2bench_78b1ee4a_a3c7841edee653f0b13cfd7745b6245d",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17329,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42021347
+    },
+    {
+      "tenant_id": "a76c0923-ce46-5dee-a72e-dffeb5d72231",
+      "database": "v2bench_78b1ee4a_a76c0923ce465deea72edffeb5d72231",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17329,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42136035
+    },
+    {
+      "tenant_id": "a8de88ba-10f6-5fb4-ac53-60bdb48b78f2",
+      "database": "v2bench_78b1ee4a_a8de88ba10f65fb4ac5360bdb48b78f2",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17356,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42185187
+    },
+    {
+      "tenant_id": "ac7fd980-fcee-524e-9f89-591913799e87",
+      "database": "v2bench_78b1ee4a_ac7fd980fcee524e9f89591913799e87",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17313,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42029539
+    },
+    {
+      "tenant_id": "aef3c77c-5e39-5f8d-9788-d1aea0ee2f2d",
+      "database": "v2bench_78b1ee4a_aef3c77c5e395f8d9788d1aea0ee2f2d",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17411,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42152419
+    },
+    {
+      "tenant_id": "af8c972b-ac9e-5877-8072-04e6f30df7ce",
+      "database": "v2bench_78b1ee4a_af8c972bac9e5877807204e6f30df7ce",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17318,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42037731
+    },
+    {
+      "tenant_id": "b0655ca7-1ed0-5b53-ab1d-671ac5159f7c",
+      "database": "v2bench_78b1ee4a_b0655ca71ed05b53ab1d671ac5159f7c",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17355,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42004963
+    },
+    {
+      "tenant_id": "bd324714-e359-5e27-8f8b-3fd1839b91f5",
+      "database": "v2bench_78b1ee4a_bd324714e3595e278f8b3fd1839b91f5",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17290,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42021347
+    },
+    {
+      "tenant_id": "be2ab0ab-b6b4-50e6-8550-b2363b12b79f",
+      "database": "v2bench_78b1ee4a_be2ab0abb6b450e68550b2363b12b79f",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17408,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42045923
+    },
+    {
+      "tenant_id": "c13b449c-e4ea-5261-9a1e-4c175f1e842d",
+      "database": "v2bench_78b1ee4a_c13b449ce4ea52619a1e4c175f1e842d",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17380,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42045923
+    },
+    {
+      "tenant_id": "c1e27c27-fa9c-5ff4-80d9-4a5a130fb45f",
+      "database": "v2bench_78b1ee4a_c1e27c27fa9c5ff480d94a5a130fb45f",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17313,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 41972195
+    },
+    {
+      "tenant_id": "c20602c7-978f-5075-9d32-60022237ffb5",
+      "database": "v2bench_78b1ee4a_c20602c7978f50759d3260022237ffb5",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17269,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 41923043
+    },
+    {
+      "tenant_id": "c2a15d63-322c-5bb0-8cf9-5d17632ca6f4",
+      "database": "v2bench_78b1ee4a_c2a15d63322c5bb08cf95d17632ca6f4",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17311,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 41964003
+    },
+    {
+      "tenant_id": "c2ec2480-1cd8-55b4-bf42-f6f8b4bf931b",
+      "database": "v2bench_78b1ee4a_c2ec24801cd855b4bf42f6f8b4bf931b",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17354,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42086883
+    },
+    {
+      "tenant_id": "c53352cb-6828-55b3-91b0-03c679051bcb",
+      "database": "v2bench_78b1ee4a_c53352cb682855b391b003c679051bcb",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17334,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42111459
+    },
+    {
+      "tenant_id": "c9a96cd0-0efe-5cca-8870-8f3c025b214a",
+      "database": "v2bench_78b1ee4a_c9a96cd00efe5cca88708f3c025b214a",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17310,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42070499
+    },
+    {
+      "tenant_id": "cadfd283-7a1d-592f-be46-3694420be1a4",
+      "database": "v2bench_78b1ee4a_cadfd2837a1d592fbe463694420be1a4",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17270,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 41996771
+    },
+    {
+      "tenant_id": "ccd9dd9c-f166-5e71-b162-9fd30b0e1164",
+      "database": "v2bench_78b1ee4a_ccd9dd9cf1665e71b1629fd30b0e1164",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17389,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42168803
+    },
+    {
+      "tenant_id": "ce515b09-8229-5231-8f44-7845afef819d",
+      "database": "v2bench_78b1ee4a_ce515b09822952318f447845afef819d",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17286,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 41980387
+    },
+    {
+      "tenant_id": "d5089a83-9dbe-518e-b889-9a41c7fcb765",
+      "database": "v2bench_78b1ee4a_d5089a839dbe518eb8899a41c7fcb765",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17312,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42086883
+    },
+    {
+      "tenant_id": "d5e3d790-f1b6-5bda-becb-1ce3372c304d",
+      "database": "v2bench_78b1ee4a_d5e3d790f1b65bdabecb1ce3372c304d",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17397,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42111459
+    },
+    {
+      "tenant_id": "da6796f9-d2ea-5b3f-b448-eddd173a4e26",
+      "database": "v2bench_78b1ee4a_da6796f9d2ea5b3fb448eddd173a4e26",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17344,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42070499
+    },
+    {
+      "tenant_id": "e0a9a8c0-8619-5bfe-ba5d-cbdc8da7889d",
+      "database": "v2bench_78b1ee4a_e0a9a8c086195bfeba5dcbdc8da7889d",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17368,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42062307
+    },
+    {
+      "tenant_id": "e1c74745-9ac3-578b-8eee-b5e16ec48ac5",
+      "database": "v2bench_78b1ee4a_e1c747459ac3578b8eeeb5e16ec48ac5",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17396,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42103267
+    },
+    {
+      "tenant_id": "e6b2806b-ff61-5717-94d4-1fda46d31e4e",
+      "database": "v2bench_78b1ee4a_e6b2806bff61571794d41fda46d31e4e",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17285,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42004963
+    },
+    {
+      "tenant_id": "ee4efcf5-6556-5e54-8527-44efa824b3a0",
+      "database": "v2bench_78b1ee4a_ee4efcf565565e54852744efa824b3a0",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17328,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42086883
+    },
+    {
+      "tenant_id": "f3a4fe77-8341-5ff1-8b79-95144f273c17",
+      "database": "v2bench_78b1ee4a_f3a4fe7783415ff18b7995144f273c17",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17353,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42078691
+    },
+    {
+      "tenant_id": "f3e18878-b78c-54f7-ad44-716c8b0ad397",
+      "database": "v2bench_78b1ee4a_f3e18878b78c54f7ad44716c8b0ad397",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17319,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 41996771
+    },
+    {
+      "tenant_id": "f8a59c6c-d463-5a0a-95dc-9ef5fae75d52",
+      "database": "v2bench_78b1ee4a_f8a59c6cd4635a0a95dc9ef5fae75d52",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17406,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42176995
+    },
+    {
+      "tenant_id": "fa3ae9fb-54e9-5aa4-a1fc-4bd9304d7a4b",
+      "database": "v2bench_78b1ee4a_fa3ae9fb54e95aa4a1fc4bd9304d7a4b",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17400,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42111459
+    },
+    {
+      "tenant_id": "ff1d5d71-08c4-56ad-a848-2df83d9c0c51",
+      "database": "v2bench_78b1ee4a_ff1d5d7108c456ada8482df83d9c0c51",
+      "status": "active",
+      "orders": 10000,
+      "outbox": 17387,
+      "projections": 10000,
+      "tenant_rows": 1,
+      "database_bytes": 42111459
+    }
+  ],
+  "v2_orders": 1000000,
+  "v2_outbox": 1733744,
+  "v2_database_bytes": 4213922988
+}

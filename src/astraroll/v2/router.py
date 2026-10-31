@@ -144,6 +144,13 @@ class TenantEngineManager:
 
         Includes connection retry with exponential backoff for resilience under connection spikes.
         """
+        tenant_id = UUID(str(tenant_id))
+        # Status checks also apply to cached pools; do not serve a failed cutover.
+        self.resolver.invalidate(tenant_id)
+        try:
+            self.resolver.resolve(tenant_id, allow_inactive=allow_inactive)
+        except SQLAlchemyError as exc:
+            raise TenantDatabaseUnavailable("Tenant registry is unavailable") from exc
         with self._lock:
             if tenant_id in self._engines:
                 self._engines.move_to_end(tenant_id)

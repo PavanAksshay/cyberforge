@@ -134,3 +134,12 @@ is provided. Database/Redis credentials and OS access remain trusted. Rebuild cu
 serializes a tenant's writers/consumer and can block a hot tenant; staging is bounded,
 but final oracle/grouping cost grows with its source. Within-batch round-robin dispatch reduces cold-tenant delay when its messages are
 in the read reply; the shared stream still does not guarantee global tenant fairness. No Kafka, Kubernetes or ML is used.
+
+## V2 measured execution
+
+See [V2 preparation and safety handoff](docs/v2-final-execution.md) for source selection,
+read-only SQL verification, authenticated latency, interference and recovery probes.
+
+The safety fix is now integrated. See [actual V2 execution](docs/v2-measured-execution.md)
+and [per-target migration evidence](docs/v2-migration-evidence.json) for the verified
+100-database, million-order cohort and subsequent measured backend results.
