@@ -14,9 +14,11 @@ Guarantees:
 from __future__ import annotations
 
 import argparse
+import json
 import logging
 import signal
 import time
+from collections import deque
 from threading import Event
 from typing import Any
 from uuid import uuid4
@@ -38,6 +40,29 @@ DEFAULT_STREAM = "astraroll:orders:v1"
 DEFAULT_GROUP = "astraroll:aggregators"
 
 
+def fair_messages(messages):
+    """Round-robin tenant work within one bounded Redis read/claim reply.
+
+    Preserves each tenant's delivery order and every message, including invalid
+    payloads (which still pass through durable quarantine). This does not guarantee
+    fairness for messages beyond the current read-ahead window.
+    """
+    tenants = {}
+    for stream_id, fields in messages:
+        try:
+            raw = fields.get(b"event") or fields.get("event")
+            tenant = str(json.loads(raw)["tenant_id"])
+        except (ValueError, TypeError, KeyError, RecursionError):
+            tenant = "invalid"
+        tenants.setdefault(tenant, deque()).append((stream_id, fields))
+    active = deque(tenants.values())
+    while active:
+        queue = active.popleft()
+        yield queue.popleft()
+        if queue:
+            active.append(queue)
+
+
 class AggregationConsumer:
     """Worker that reads orders from Redis Streams and applies rollups into PostgreSQL."""
 
@@ -51,6 +76,7 @@ class AggregationConsumer:
         batch_size: int = 50,
         block_ms: int = 1000,
         min_idle_claim_ms: int = 30000,
+        fair_dispatch: bool = True,
     ):
         self.session_factory = session_factory
         self.redis = redis_client
@@ -62,6 +88,7 @@ class AggregationConsumer:
         self.batch_size = batch_size
         self.block_ms = block_ms
         self.min_idle_claim_ms = min_idle_claim_ms
+        self.fair_dispatch = fair_dispatch
         self.last_claim_ts: float = 0.0
         self.claim_cursor: str = "0-0"
 
@@ -192,7 +219,7 @@ class AggregationConsumer:
                 )
 
             messages = res[1] if isinstance(res, (list, tuple)) and len(res) > 1 else []
-            for stream_id, fields in messages:
+            for stream_id, fields in fair_messages(messages) if self.fair_dispatch else messages:
                 if self.process_message(stream_id, fields):
                     claimed_count += 1
             if claimed_count > 0:
@@ -233,7 +260,7 @@ class AggregationConsumer:
 
         processed_count = 0
         for stream_key, messages in streams_res:
-            for stream_id, fields in messages:
+            for stream_id, fields in fair_messages(messages) if self.fair_dispatch else messages:
                 if self.process_message(stream_id, fields):
                     processed_count += 1
 
@@ -271,6 +298,7 @@ def main() -> None:
     parser.add_argument("--group", type=str, default=DEFAULT_GROUP, help="Consumer group name")
     parser.add_argument("--consumer", type=str, default=None, help="Consumer instance name")
     parser.add_argument("--batch-size", type=int, default=50, help="Batch size per read")
+    parser.add_argument("--fifo", action="store_true", help="Disable within-batch tenant dispatch")
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -293,6 +321,7 @@ def main() -> None:
             group_name=args.group,
             consumer_name=args.consumer,
             batch_size=args.batch_size,
+            fair_dispatch=not args.fifo,
         )
         if args.once:
             consumer.init_group()

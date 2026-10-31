@@ -165,9 +165,34 @@ def metrics(tenant_id: UUID):
     settings = get_settings()
     try:
         with Redis.from_url(settings.redis_url, socket_timeout=2) as redis:
+            exists = bool(redis.exists(settings.order_stream))
+            groups = redis.xinfo_groups(settings.order_stream) if exists else []
+            pending = []
+            for group in groups:
+                name = group.get(b"name", group.get("name"))
+                rows = redis.xpending_range(settings.order_stream, name, "-", "+", 1)
+                if rows:
+                    row = rows[0]
+                    message_id = row["message_id"]
+                    if isinstance(message_id, bytes):
+                        message_id = message_id.decode()
+                    pending.append(
+                        {
+                            "group": name,
+                            "oldest_pending_stream_age_seconds": max(
+                                0,
+                                datetime.now(UTC).timestamp()
+                                - int(message_id.split("-")[0]) / 1000,
+                            ),
+                            "oldest_entry_idle_ms": row["time_since_delivered"],
+                        }
+                    )
             result["redis"] = {
+                "status": "reachable",
+                "stream_exists": exists,
                 "stream_length": redis.xlen(settings.order_stream),
-                "groups": redis.xinfo_groups(settings.order_stream),
+                "groups": groups,
+                "oldest_pending": pending,
                 "used_memory_bytes": redis.info("memory")["used_memory"],
             }
     except Exception:

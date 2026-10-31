@@ -365,3 +365,40 @@ def test_activation_fences_concurrent_writer_then_live_consumer_converges(
             )
             == 2
         )
+
+
+def test_admin_metrics_distinguishes_missing_stream_and_unapplied_source(
+    factory, tenant_id, redis_client, monkeypatch
+):
+    from astraroll import operations
+    from astraroll.analytics.auth import AuthenticatedPrincipal, get_authenticated_principal
+
+    source(factory, tenant_id)
+    stream, group = f"test:ops:{uuid4()}", f"test:ops-group:{uuid4()}"
+    monkeypatch.setattr(operations, "get_session_factory", lambda: factory)
+    original = operations.get_settings()
+    monkeypatch.setattr(
+        operations, "get_settings", lambda: original.model_copy(update={"order_stream": stream})
+    )
+    previous = app.dependency_overrides.copy()
+    app.dependency_overrides[get_authenticated_principal] = lambda: AuthenticatedPrincipal(
+        subject="ops-test", tenant_ids=frozenset(), is_admin=True
+    )
+    try:
+        with TestClient(app) as client:
+            response = client.get("/ops/metrics", params={"tenant_id": str(tenant_id)})
+            assert response.status_code == 200, response.text
+            body = response.json()
+            assert body["redis"]["status"] == "reachable"
+            assert body["redis"]["stream_exists"] is False
+            assert body["source_lag"]["unmatched_orders"] == 1
+            assert body["processing"] is None and body["coverage"] == []
+            redis_client.xgroup_create(stream, group, id="0-0", mkstream=True)
+            redis_client.xadd(stream, {"event": "{}"})
+            redis_client.xreadgroup(group, "ops-pending", {stream: ">"}, count=1)
+            body = client.get("/ops/metrics", params={"tenant_id": str(tenant_id)}).json()
+            assert body["redis"]["stream_exists"] is True
+            assert body["redis"]["oldest_pending"][0]["oldest_pending_stream_age_seconds"] >= 0
+    finally:
+        app.dependency_overrides.clear()
+        app.dependency_overrides.update(previous)
