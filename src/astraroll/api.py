@@ -2,7 +2,9 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, FastAPI, Query, Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
+from pydantic import ValidationError
 from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
@@ -46,6 +48,11 @@ def not_found(request: Request, exc: NotFound):
 @app.exception_handler(Conflict)
 def conflict(request: Request, exc: Conflict):
     return JSONResponse(status_code=409, content={"detail": str(exc)})
+
+
+@app.exception_handler(ValidationError)
+def validation_error(request: Request, exc: ValidationError):
+    return JSONResponse(status_code=422, content={"detail": jsonable_encoder(exc.errors())})
 
 
 @app.get("/health/live")
