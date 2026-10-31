@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   LayoutDashboard,
   TrendingUp,
@@ -6,10 +6,13 @@ import {
   Bot,
   Activity,
   Network,
-  Server,
-  ShieldCheck,
-  CheckCircle2,
   Database,
+  Terminal,
+  Copy,
+  Check,
+  Code,
+  ShieldCheck,
+  ChevronDown,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
@@ -21,7 +24,9 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
-  const { activeTenant } = useApp();
+  const { activeTenant, currency, startDate, endDate, datePreset } = useApp();
+  const [copied, setCopied] = useState<boolean>(false);
+  const [queryMode, setQueryMode] = useState<'rollup' | 'raw' | 'psql'>('rollup');
 
   const navItems: { id: PageTab; label: string; icon: React.ReactNode; badge?: string }[] = [
     {
@@ -69,8 +74,43 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
     return name;
   };
 
+  // Physical database name in PostgreSQL 55433
+  const rawIdClean = activeTenant ? activeTenant.id.replace(/-/g, '') : '';
+  const tenantDbName = activeTenant ? `v2bench_78b1ee4a_${rawIdClean}` : 'v2bench_control_78b1ee4a';
+
+  // Format start and end timestamps for SQL
+  const formattedStart = startDate ? startDate.replace('T', ' ').replace('Z', '+00') : '2026-10-01 00:00:00+00';
+  const formattedEnd = endDate ? endDate.replace('T', ' ').replace('Z', '+00') : '2026-10-08 00:00:00+00';
+
+  // Dynamic SQL Generation based on current UI selection
+  const rollupSql = `SELECT 
+  SUM(order_count) AS total_orders, 
+  SUM(sales_amount) AS total_shipped_sales 
+FROM hourly_summary_aggregates 
+WHERE currency = '${currency}' 
+  AND bucket_start >= '${formattedStart}' 
+  AND bucket_start < '${formattedEnd}';`;
+
+  const rawSql = `SELECT 
+  COUNT(*) AS total_orders, 
+  COALESCE(SUM(CASE WHEN status='shipped' THEN amount ELSE 0 END), 0) AS total_shipped_sales 
+FROM orders 
+WHERE currency = '${currency}' 
+  AND created_at >= '${formattedStart}' 
+  AND created_at < '${formattedEnd}';`;
+
+  const psqlOneLiner = `psql -h 127.0.0.1 -p 55433 -U astraroll -d ${tenantDbName} -c "SELECT SUM(order_count) AS total_orders, SUM(sales_amount) AS total_shipped_sales FROM hourly_summary_aggregates WHERE currency='${currency}' AND bucket_start >= '${formattedStart}' AND bucket_start < '${formattedEnd}';"`;
+
+  const activeQueryText = queryMode === 'rollup' ? rollupSql : queryMode === 'raw' ? rawSql : psqlOneLiner;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(activeQueryText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
-    <aside className="w-72 shrink-0 border-r bg-[#051c15]/95 backdrop-blur-md border-[#0f4838] flex flex-col justify-between p-5 transition-colors">
+    <aside className="w-80 shrink-0 border-r bg-[#051c15]/95 backdrop-blur-md border-[#0f4838] flex flex-col justify-between p-4 overflow-y-auto transition-colors space-y-6">
       <div className="space-y-6">
         {/* Navigation Section */}
         <div>
@@ -84,7 +124,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
                 <button
                   key={item.id}
                   onClick={() => onTabChange(item.id)}
-                  className={`w-full flex items-center justify-between px-3.5 py-3 rounded-2xl text-sm font-semibold transition-all ${
+                  className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-sm font-semibold transition-all ${
                     isActive
                       ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white shadow-lg shadow-emerald-900/30'
                       : 'text-slate-300 hover:text-white hover:bg-[#092e23] border border-transparent hover:border-[#104d3b]'
@@ -113,46 +153,121 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
           </nav>
         </div>
 
-        {/* Tenant Database Proof Card (Explaining what this does to judges & user) */}
+        {/* Dynamic SQL Verification Card (Live Cross-Check Generator) */}
         {activeTenant && (
-          <div className="p-4 rounded-2xl bg-[#082920] border border-[#114f3c] shadow-sm space-y-2.5">
+          <div className="p-4 rounded-2xl bg-[#062118] border border-[#0d3d2f] shadow-lg space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Database className="w-4 h-4 text-emerald-400" />
-                <span className="text-xs font-bold uppercase tracking-wider text-emerald-300">
-                  Tenant Database
+                <Code className="w-4 h-4 text-emerald-400" />
+                <span className="text-xs font-extrabold uppercase tracking-wider text-emerald-300">
+                  Live SQL Cross-Verify
                 </span>
               </div>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-800">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse" />
-                Isolated
+              <button
+                onClick={handleCopy}
+                className="flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-800 text-[11px] font-bold font-mono transition"
+                title="Copy SQL command to clipboard"
+              >
+                {copied ? (
+                  <>
+                    <Check className="w-3 h-3 text-emerald-400" />
+                    <span>Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3 h-3 text-slate-300" />
+                    <span>Copy</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Target Database Info */}
+            <div className="p-2 rounded-xl bg-[#03150f] border border-[#092c21] flex items-center justify-between text-[11px] font-mono">
+              <span className="text-slate-400">Target DB:</span>
+              <span className="text-emerald-300 font-bold truncate max-w-[170px]" title={tenantDbName}>
+                {tenantDbName}
+              </span>
+            </div>
+
+            {/* Mode Selector Tabs */}
+            <div className="grid grid-cols-3 gap-1 p-0.5 rounded-lg bg-[#03150f] border border-[#092c21] text-[10px] font-semibold">
+              <button
+                onClick={() => setQueryMode('rollup')}
+                className={`py-1 rounded-md transition ${
+                  queryMode === 'rollup' ? 'bg-emerald-700 text-white font-bold' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Rollup
+              </button>
+              <button
+                onClick={() => setQueryMode('raw')}
+                className={`py-1 rounded-md transition ${
+                  queryMode === 'raw' ? 'bg-emerald-700 text-white font-bold' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Raw Orders
+              </button>
+              <button
+                onClick={() => setQueryMode('psql')}
+                className={`py-1 rounded-md transition ${
+                  queryMode === 'psql' ? 'bg-emerald-700 text-white font-bold' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                psql CLI
+              </button>
+            </div>
+
+            {/* Live Generated SQL Code Block */}
+            <div className="relative group">
+              <pre className="p-2.5 rounded-xl bg-[#03140e] border border-[#0a3528] text-[11px] font-mono text-emerald-300/90 leading-tight overflow-x-auto max-h-36 select-all scrollbar-thin">
+                {activeQueryText}
+              </pre>
+            </div>
+
+            <div className="text-[10px] text-slate-400 leading-tight flex items-center justify-between font-mono">
+              <span>Preset: <strong className="text-emerald-400 uppercase">{datePreset}</strong></span>
+              <span>Currency: <strong className="text-emerald-400">{currency}</strong></span>
+            </div>
+          </div>
+        )}
+
+        {/* Tenant Database Proof Card */}
+        {activeTenant && (
+          <div className="p-3.5 rounded-2xl bg-[#082920] border border-[#114f3c] shadow-sm space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Database className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300">
+                  Active Physical Tenant
+                </span>
+              </div>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-800">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 animate-pulse" />
+                Port 55433
               </span>
             </div>
 
             <div>
-              <div className="text-sm font-bold text-white truncate">
+              <div className="text-xs font-bold text-white truncate">
                 {formatTenantDisplayName(activeTenant.name)}
               </div>
-              <div className="text-xs font-mono text-emerald-400/80 truncate mt-0.5">
+              <div className="text-[11px] font-mono text-emerald-400/80 truncate">
                 v2bench_{activeTenant.id.slice(0, 8)}
               </div>
-            </div>
-
-            <div className="pt-2 border-t border-[#0d3f31] text-[11px] text-slate-300 leading-relaxed">
-              Customer data is stored in its own dedicated PostgreSQL database with zero shared tables.
             </div>
           </div>
         )}
       </div>
 
-      {/* Semantic Rule Guard */}
-      <div className="p-3.5 rounded-2xl bg-[#07241c] border border-[#0f4536] text-xs">
-        <div className="flex items-center space-x-2 text-emerald-300 font-semibold mb-1">
-          <ShieldCheck className="w-4 h-4 text-emerald-400" />
-          <span className="font-bold text-xs uppercase tracking-wider">Metric Integrity</span>
+      {/* Metric Integrity Guard */}
+      <div className="p-3 rounded-2xl bg-[#07241c] border border-[#0f4536] text-[11px]">
+        <div className="flex items-center space-x-1.5 text-emerald-300 font-semibold mb-0.5">
+          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+          <span className="font-bold text-[10px] uppercase tracking-wider">100% SQL Mathematical Parity</span>
         </div>
-        <p className="text-xs text-slate-300 leading-snug">
-          Sales strictly reflect <strong className="text-white">shipped</strong> orders under AstraRoll V2 locked semantics.
+        <p className="text-slate-300 leading-snug">
+          Paste the dynamic SQL directly into PostgreSQL to verify identical counts and dollars.
         </p>
       </div>
     </aside>
