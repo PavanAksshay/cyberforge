@@ -33,6 +33,11 @@ from astraroll.schemas import (
     TenantCreate,
     TenantRead,
 )
+from astraroll.v2.router import (
+    TenantDatabaseUnavailable,
+    TenantInactiveError,
+    TenantNotFoundError,
+)
 
 
 @asynccontextmanager
@@ -81,6 +86,21 @@ def conflict(request: Request, exc: Conflict):
 @app.exception_handler(ValidationError)
 def validation_error(request: Request, exc: ValidationError):
     return JSONResponse(status_code=422, content={"detail": jsonable_encoder(exc.errors())})
+
+
+@app.exception_handler(TenantNotFoundError)
+def tenant_not_found(request: Request, exc: TenantNotFoundError):
+    return JSONResponse(status_code=404, content={"detail": str(exc)})
+
+
+@app.exception_handler(TenantInactiveError)
+def tenant_inactive(request: Request, exc: TenantInactiveError):
+    return JSONResponse(status_code=403, content={"detail": str(exc)})
+
+
+@app.exception_handler(TenantDatabaseUnavailable)
+def tenant_db_unavailable(request: Request, exc: TenantDatabaseUnavailable):
+    return JSONResponse(status_code=503, content={"detail": str(exc)})
 
 
 @app.get("/health/live")

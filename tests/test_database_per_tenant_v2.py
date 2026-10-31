@@ -9,7 +9,7 @@ from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, select, text
+from sqlalchemy import create_engine, func, select, text
 from sqlalchemy.orm import sessionmaker
 
 from astraroll.aggregation.models import (
@@ -40,6 +40,15 @@ START = datetime(2026, 10, 1, 0, 0, tzinfo=UTC)
 END = START + timedelta(days=60)
 
 
+@pytest.fixture(autouse=True)
+def reset_settings_cache(monkeypatch):
+    """Ensure settings cache is clean before and after each test."""
+    get_settings.cache_clear()
+    yield
+    monkeypatch.delenv("DEPLOYMENT_MODE", raising=False)
+    get_settings.cache_clear()
+
+
 @pytest.fixture
 def base_db_url():
     """Use isolated local PostgreSQL test cluster on port 5432 (never port 55433)."""
@@ -53,9 +62,11 @@ def control_registry(base_db_url):
     registry = ControlRegistry(engine)
     registry.init_schema()
     with engine.begin() as conn:
+        conn.execute(text("DELETE FROM control_tenant_migration_checkpoints"))
         conn.execute(text("DELETE FROM control_tenant_registry"))
     yield registry
     with engine.begin() as conn:
+        conn.execute(text("DELETE FROM control_tenant_migration_checkpoints"))
         conn.execute(text("DELETE FROM control_tenant_registry"))
     engine.dispose()
 
@@ -208,12 +219,13 @@ def test_provisioning_idempotence_and_rollback(provisioner, control_registry):
         with pytest.raises(RuntimeError, match="Simulated schema migration failure"):
             broken.provision_tenant(bad_id, "Bad Tenant")
 
-        # Verify rollback: database was dropped and state set to FAILED
+        # Verify failure path: DB is preserved in FAILED state for diagnosis (no unsafe DROP)
         bad_rec = control_registry.get_tenant(bad_id)
         assert bad_rec.status == TenantStatus.FAILED.value
         assert "Simulated schema migration failure" in bad_rec.error_message
-        assert not provisioner._database_exists(bad_rec.database_name)
+        assert provisioner._database_exists(bad_rec.database_name)
     finally:
+        provisioner.deprovision_tenant(bad_id, drop_database=True)
         provisioner.deprovision_tenant(t_id, drop_database=True)
 
 
@@ -553,6 +565,7 @@ def test_v2_end_to_end_fastapi_and_analytics_lifecycle(
         redis_client.delete(stream_name)
         from astraroll.config import get_settings
 
+        monkeypatch.delenv("DEPLOYMENT_MODE", raising=False)
         get_settings.cache_clear()
 
 
@@ -815,4 +828,346 @@ def test_v2_health_ready_and_graceful_shutdown(
 
     finally:
         provisioner.deprovision_tenant(t_id, drop_database=True)
+        monkeypatch.delenv("DEPLOYMENT_MODE", raising=False)
+        get_settings.cache_clear()
+
+
+# =========================================================================
+# Phase 13: Safety Hardening, Preexisting Protection & Resume Tests
+# =========================================================================
+def test_v2_migration_parity_failure_quarantined_without_drop(
+    control_registry, provisioner, base_db_url
+):
+    """Test that parity failures retain target DB as QUARANTINED without dropping it."""
+    from astraroll.v2.migration import MigrationParityError, ParityReport, TenantMigrator
+
+    shared_engine = create_engine(base_db_url, pool_pre_ping=True)
+    shared_factory = sessionmaker(shared_engine, expire_on_commit=False)
+    resolver = TenantDatabaseResolver(control_registry, base_db_url)
+    engine_mgr = TenantEngineManager(resolver, max_active_pools=5)
+
+    t_id = uuid4()
+    p_id = uuid4()
+
+    try:
+        # Seed 1 order in shared DB
+        with shared_factory() as sess:
+            with sess.begin():
+                sess.add(Tenant(id=t_id, name="Quarantine Test Tenant"))
+                create_order(
+                    sess, t_id, OrderCreate(product_id=p_id, amount="50.00", currency="USD")
+                )
+
+        # Provision target DB
+        rec = provisioner.provision_tenant(t_id, "Quarantine Test Tenant")
+        target_db = rec.database_name
+
+        # Intentionally tamper with verify_parity
+        class BrokenParityMigrator(TenantMigrator):
+            def verify_parity(self, tenant_id: UUID):
+                report = super().verify_parity(tenant_id)
+                return ParityReport(
+                    tenant_id=tenant_id,
+                    source_order_count=report.source_order_count,
+                    target_order_count=report.target_order_count + 999,
+                    source_sales=report.source_sales,
+                    target_sales=report.target_sales,
+                    source_outbox_count=report.source_outbox_count,
+                    target_outbox_count=report.target_outbox_count,
+                    status_parity=False,
+                    currency_parity=True,
+                    rollups_parity=True,
+                    coverage_parity=True,
+                    verified=False,
+                    details={"error": "Simulated parity mismatch"},
+                )
+
+        broken_migrator = BrokenParityMigrator(
+            shared_session_factory=shared_factory,
+            control_registry=control_registry,
+            provisioner=provisioner,
+            engine_manager=engine_mgr,
+        )
+
+        with pytest.raises(MigrationParityError, match="Parity verification failed"):
+            broken_migrator.migrate_tenant(t_id)
+
+        # CRITICAL SAFETY ASSERTIONS:
+        # 1. Target database MUST NOT be dropped!
+        assert provisioner._database_exists(target_db) is True
+        # 2. Control registry must be QUARANTINED
+        saved_rec = control_registry.get_tenant(t_id)
+        assert saved_rec.status == TenantStatus.QUARANTINED.value
+        assert "Simulated parity mismatch" in saved_rec.error_message
+        # 3. Checkpoint must be QUARANTINED
+        cp = control_registry.get_checkpoint(t_id)
+        assert cp is not None
+        assert cp.status == "QUARANTINED"
+
+    finally:
+        engine_mgr.close_all()
+        provisioner.deprovision_tenant(t_id, drop_database=True)
+        shared_engine.dispose()
+
+
+def test_v2_preexisting_destination_protection(provisioner, control_registry):
+    """Test protection against overwriting or dropping unverified preexisting databases."""
+    from astraroll.v2.provisioning import make_tenant_db_name
+
+    t_id = uuid4()
+    db_name = make_tenant_db_name(t_id, provisioner.tenant_database_prefix)
+
+    try:
+        # Manually create an untracked physical database on PostgreSQL cluster
+        provisioner._create_database(db_name)
+        assert provisioner._database_exists(db_name) is True
+
+        # Attempting to provision without control plane provenance must be REFUSED
+        with pytest.raises(ValueError, match="unverified provenance"):
+            provisioner.provision_tenant(t_id, "Untracked Tenant")
+
+        # Database must still exist unharmed
+        assert provisioner._database_exists(db_name) is True
+
+    finally:
+        provisioner._drop_database(db_name)
+
+
+def test_v2_migration_bounded_batches_and_checkpoint_resume(
+    control_registry, provisioner, base_db_url
+):
+    """Test bounded batch keyset pagination and safe checkpoint resume."""
+    from astraroll.v2.migration import TenantMigrator
+
+    shared_engine = create_engine(base_db_url, pool_pre_ping=True)
+    shared_factory = sessionmaker(shared_engine, expire_on_commit=False)
+    resolver = TenantDatabaseResolver(control_registry, base_db_url)
+    engine_mgr = TenantEngineManager(resolver, max_active_pools=5)
+
+    migrator = TenantMigrator(
+        shared_session_factory=shared_factory,
+        control_registry=control_registry,
+        provisioner=provisioner,
+        engine_manager=engine_mgr,
+        batch_size=3,
+    )
+
+    t_id = uuid4()
+    p_id = uuid4()
+
+    try:
+        # Seed 9 orders in shared DB
+        with shared_factory() as sess:
+            with sess.begin():
+                sess.add(Tenant(id=t_id, name="Batch Test Tenant"))
+                for i in range(9):
+                    create_order(
+                        sess,
+                        t_id,
+                        OrderCreate(product_id=p_id, amount=f"{(i + 1) * 10}.00", currency="USD"),
+                    )
+
+        # Migrate with batch_size=3
+        res = migrator.migrate_tenant(t_id, resume=True)
+        assert res.verified is True
+        assert res.orders_migrated == 9
+
+        # Checkpoint shows completed
+        cp = control_registry.get_checkpoint(t_id)
+        assert cp.orders_copied == 9
+        assert cp.status == "COMPLETED"
+
+        # Verify idempotence on repeated run
+        res2 = migrator.migrate_tenant(t_id, resume=True)
+        assert res2.verified is True
+        assert res2.orders_migrated == 9
+
+    finally:
+        engine_mgr.close_all()
+        provisioner.deprovision_tenant(t_id, drop_database=True)
+        shared_engine.dispose()
+
+
+def test_v2_migration_historical_outbox_not_republished(
+    control_registry, provisioner, base_db_url, redis_client
+):
+    """Test that historical outbox events are marked published and not re-streamed."""
+    from astraroll.v2.migration import TenantMigrator
+
+    shared_engine = create_engine(base_db_url, pool_pre_ping=True)
+    shared_factory = sessionmaker(shared_engine, expire_on_commit=False)
+    resolver = TenantDatabaseResolver(control_registry, base_db_url)
+    engine_mgr = TenantEngineManager(resolver, max_active_pools=5)
+
+    migrator = TenantMigrator(
+        shared_session_factory=shared_factory,
+        control_registry=control_registry,
+        provisioner=provisioner,
+        engine_manager=engine_mgr,
+    )
+
+    t_id = uuid4()
+    p_id = uuid4()
+    stream_name = f"test:v2:historical:{uuid4().hex}"
+
+    try:
+        # Seed 2 orders in shared DB with outbox events, simulating populated rollups
+        with shared_factory() as sess:
+            with sess.begin():
+                sess.add(Tenant(id=t_id, name="Historical Outbox Tenant"))
+                sess.add(TenantProcessingState(tenant_id=t_id, revision=1))
+                create_order(
+                    sess, t_id, OrderCreate(product_id=p_id, amount="100.00", currency="USD")
+                )
+                create_order(
+                    sess, t_id, OrderCreate(product_id=p_id, amount="200.00", currency="USD")
+                )
+
+        # Migrate tenant
+        res = migrator.migrate_tenant(t_id)
+        assert res.verified is True
+
+        # In target DB, historical outbox events must have published_at set
+        relay = MultiTenantRelay(
+            registry=control_registry,
+            engine_manager=engine_mgr,
+            redis_client=redis_client,
+            stream_name=stream_name,
+        )
+        published = relay.relay_tenant(t_id)
+        assert published == 0
+
+        # Now create a brand new order in the dedicated tenant DB
+        with engine_mgr.session(t_id) as sess:
+            with sess.begin():
+                create_order(
+                    sess, t_id, OrderCreate(product_id=p_id, amount="50.00", currency="USD")
+                )
+
+        # Relay must publish ONLY the new order
+        new_published = relay.relay_tenant(t_id)
+        assert new_published == 1
+
+    finally:
+        engine_mgr.close_all()
+        provisioner.deprovision_tenant(t_id, drop_database=True)
+        shared_engine.dispose()
+
+
+def test_v2_safe_source_purge_with_verified_backup(control_registry, provisioner, base_db_url):
+    """Test source purge requires confirmed cutover, explicit approval, and creates backup."""
+    from pathlib import Path
+
+    from astraroll.v2.migration import MigrationSafetyError, TenantMigrator
+
+    shared_engine = create_engine(base_db_url, pool_pre_ping=True)
+    shared_factory = sessionmaker(shared_engine, expire_on_commit=False)
+    resolver = TenantDatabaseResolver(control_registry, base_db_url)
+    engine_mgr = TenantEngineManager(resolver, max_active_pools=5)
+
+    migrator = TenantMigrator(
+        shared_session_factory=shared_factory,
+        control_registry=control_registry,
+        provisioner=provisioner,
+        engine_manager=engine_mgr,
+    )
+
+    t_id = uuid4()
+    p_id = uuid4()
+    backup_path = None
+
+    try:
+        # Seed order in shared DB
+        with shared_factory() as sess:
+            with sess.begin():
+                sess.add(Tenant(id=t_id, name="Purge Test Tenant"))
+                create_order(
+                    sess, t_id, OrderCreate(product_id=p_id, amount="75.00", currency="USD")
+                )
+
+        # Migrate tenant
+        migrator.migrate_tenant(t_id)
+
+        # 1. Unconfirmed purge must raise MigrationSafetyError
+        with pytest.raises(MigrationSafetyError, match="must be explicitly provided"):
+            migrator.purge_source_records(t_id, confirm_purge=False)
+
+        # 2. Wrong token must raise MigrationSafetyError
+        with pytest.raises(MigrationSafetyError, match="does not match"):
+            migrator.purge_source_records(t_id, confirm_purge=True, approval_token="wrong_token")
+
+        # 3. Valid purge with matching approval token
+        backup_path = migrator.purge_source_records(
+            t_id, confirm_purge=True, approval_token=str(t_id)
+        )
+        assert backup_path is not None
+        assert Path(backup_path).exists()
+        assert Path(backup_path).stat().st_size > 0
+
+        # Verify source records are deleted
+        with shared_factory() as sess:
+            assert sess.scalar(select(func.count(Order.id)).where(Order.tenant_id == t_id)) == 0
+            assert sess.get(Tenant, t_id) is None
+
+        # Verify target records remain intact
+        with engine_mgr.session(t_id) as sess:
+            assert sess.scalar(select(func.count(Order.id)).where(Order.tenant_id == t_id)) == 1
+
+    finally:
+        engine_mgr.close_all()
+        provisioner.deprovision_tenant(t_id, drop_database=True)
+        shared_engine.dispose()
+        if backup_path and Path(backup_path).exists():
+            Path(backup_path).unlink()
+
+
+def test_v2_auth_and_public_api_fail_closed_on_inactive_tenant(
+    monkeypatch, control_registry, client
+):
+    """Verify public API routes fail closed (403/404) for inactive or missing tenants."""
+    monkeypatch.setenv("DEPLOYMENT_MODE", "database_per_tenant")
+    get_settings.cache_clear()
+
+    pending_id = uuid4()
+    migrating_id = uuid4()
+    quarantined_id = uuid4()
+    failed_id = uuid4()
+    missing_id = uuid4()
+
+    control_registry.register_tenant(
+        pending_id, "Pending Tenant", "db_pending", status=TenantStatus.PENDING
+    )
+    control_registry.register_tenant(
+        migrating_id, "Migrating Tenant", "db_migrating", status=TenantStatus.MIGRATING
+    )
+    control_registry.register_tenant(
+        quarantined_id,
+        "Quarantined Tenant",
+        "db_quarantined",
+        status=TenantStatus.QUARANTINED,
+    )
+    control_registry.register_tenant(
+        failed_id, "Failed Tenant", "db_failed", status=TenantStatus.FAILED
+    )
+
+    try:
+        # Non-existent tenant: must return 404
+        resp = client.get(f"/tenants/{missing_id}/orders")
+        assert resp.status_code == 404
+
+        # Inactive tenants: must fail closed with 403 Forbidden
+        for tid in (pending_id, migrating_id, quarantined_id, failed_id):
+            resp = client.get(f"/tenants/{tid}/orders")
+            assert resp.status_code == 403
+            assert "not active" in resp.json()["detail"].lower()
+
+            # Mutation must also fail closed with 403
+            create_resp = client.post(
+                f"/tenants/{tid}/orders",
+                json={"product_id": str(uuid4()), "amount": "10.00", "currency": "USD"},
+            )
+            assert create_resp.status_code == 403
+
+    finally:
+        monkeypatch.delenv("DEPLOYMENT_MODE", raising=False)
         get_settings.cache_clear()
