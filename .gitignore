@@ -22,6 +22,7 @@ __pycache__/
 build/
 develop-eggs/
 dist/
+!web/dist/
 downloads/
 eggs/
 .eggs/
@@ -52,10 +53,15 @@ coverage.xml
 *.py,cover
 .hypothesis/
 
+# Node / Frontend
+node_modules/
+.npm/
+
 # Data and logs
 data/
 datasets/
 *.csv
+!demo/*.csv
 *.jsonl
 pip-log.txt
 pip-delete-this-directory.txt

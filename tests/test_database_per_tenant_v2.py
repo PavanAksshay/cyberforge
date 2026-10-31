@@ -1171,3 +1171,164 @@ def test_v2_auth_and_public_api_fail_closed_on_inactive_tenant(
     finally:
         monkeypatch.delenv("DEPLOYMENT_MODE", raising=False)
         get_settings.cache_clear()
+
+
+def test_v2_e2e_csv_ingestion_and_assistant(
+    control_registry, provisioner, base_db_url, redis_client, monkeypatch
+):
+    """Full Product Smoke Test: CSV Ingest -> Tenant DB -> Outbox -> Redis -> Consumer -> API."""
+    t_id = uuid4()
+    p1 = uuid4()
+    p2 = uuid4()
+
+    token = secrets.token_urlsafe(32)
+    keys_config = [
+        {
+            "subject": "e2e-csv-assistant-user",
+            "tenant_ids": [str(t_id)],
+            "key_sha256": hashlib.sha256(token.encode()).hexdigest(),
+            "expires_at": (datetime.now(UTC) + timedelta(hours=2)).isoformat(),
+        }
+    ]
+    monkeypatch.setenv("DEPLOYMENT_MODE", "database_per_tenant")
+    monkeypatch.setenv("ANALYTICS_API_KEYS_JSON", json.dumps(keys_config))
+    stream_name = f"test:v2:stream:{t_id.hex[:8]}"
+    group_name = f"test:v2:group:{t_id.hex[:8]}"
+    monkeypatch.setenv("ORDER_STREAM", stream_name)
+    from astraroll.config import get_settings
+
+    get_settings.cache_clear()
+
+    provisioner.provision_tenant(t_id, "CSV Demo Tenant")
+    resolver = TenantDatabaseResolver(control_registry, base_db_url)
+    engine_mgr = TenantEngineManager(resolver, max_active_pools=5)
+
+    headers = {"Authorization": f"Bearer {token}"}
+
+    relay = MultiTenantRelay(
+        registry=control_registry,
+        engine_manager=engine_mgr,
+        redis_client=redis_client,
+        stream_name=stream_name,
+        batch_size=50,
+    )
+    consumer = MultiTenantAggregationConsumer(
+        engine_manager=engine_mgr,
+        redis_client=redis_client,
+        stream_name=stream_name,
+        group_name=group_name,
+        consumer_name="worker-csv-e2e",
+        block_ms=100,
+        fair_dispatch=True,
+    )
+    consumer.init_group()
+
+    from astraroll.analytics.coverage import CoverageProof
+    from astraroll.analytics.reader import get_analytics_reader
+
+    def mock_coverage(session, q):
+        return CoverageProof(
+            tenant_id=q.tenant_id,
+            currency=q.currency,
+            start=START,
+            end=END,
+            metric_semantics="created_at_shipped_sales_v2",
+            ready=True,
+            intervals=frozenset({"hour", "day"}),
+            dimensions=frozenset({"summary", "status", "product"}),
+        )
+
+    adapter = MultiTenantPostgresAnalyticsAdapter(
+        engine_manager=engine_mgr,
+        coverage=mock_coverage,
+    )
+    app.dependency_overrides[get_analytics_reader] = lambda: adapter
+
+    try:
+        with TestClient(app) as client:
+            csv_payload = f"""product_id,amount,currency,status,created_at
+{p1},200.00,USD,shipped,2026-10-10T12:00:00Z
+{p1},300.00,USD,shipped,2026-10-10T13:00:00Z
+{p2},150.00,USD,placed,2026-10-11T09:00:00Z
+{p2},50.00,USD,cancelled,2026-10-11T10:00:00Z
+"""
+            # 1. Ingest CSV via API
+            ingest_resp = client.post(
+                f"/tenants/{t_id}/ingest/csv?trigger_relay=false",
+                content=csv_payload,
+                headers={**headers, "Content-Type": "text/csv"},
+            )
+            assert ingest_resp.status_code == 200, ingest_resp.text
+            ingest_data = ingest_resp.json()
+            assert ingest_data["accepted"] == 4
+            assert ingest_data["rejected"] == 0
+            assert Decimal(ingest_data["total_sales"]) == Decimal("500.00")
+
+            # 2. Relay events from tenant outbox to Redis Stream
+            published = relay.relay_batch()
+            assert published >= 4
+
+            # 3. Aggregation consumer processes messages into tenant rollups
+            processed = consumer.process_batch()
+            assert processed >= 4
+
+            # 4. Check summary API reflects new 500.00 shipped sales
+            qparams = {
+                "tenant_id": str(t_id),
+                "currency": "USD",
+                "start": START.isoformat(),
+                "end": END.isoformat(),
+            }
+            sum_resp = client.get("/analytics/summary", params=qparams, headers=headers)
+            assert sum_resp.status_code == 200
+            sum_json = sum_resp.json()
+            assert sum_json["total_order_count"] == 4
+            assert Decimal(sum_json["sales_amount"]) == Decimal("500.00")
+
+            # 5. Check status breakdown API
+            stat_resp = client.get("/analytics/status-breakdown", params=qparams, headers=headers)
+            assert stat_resp.status_code == 200
+            stat_json = stat_resp.json()
+            shipped_metric = next(s for s in stat_json["statuses"] if s["status"] == "shipped")
+            placed_metric = next(s for s in stat_json["statuses"] if s["status"] == "placed")
+            cancelled_metric = next(s for s in stat_json["statuses"] if s["status"] == "cancelled")
+            assert shipped_metric["total_order_count"] == 2
+            assert Decimal(shipped_metric["sales_amount"]) == Decimal("500.00")
+            assert placed_metric["total_order_count"] == 1
+            assert Decimal(placed_metric["sales_amount"]) == Decimal("0.00")
+            assert cancelled_metric["total_order_count"] == 1
+            assert Decimal(cancelled_metric["sales_amount"]) == Decimal("0.00")
+
+            # 6. Check Assistant API answers using real metrics
+            ast_resp = client.post(
+                f"/tenants/{t_id}/assistant",
+                json={
+                    "query": "What are our total sales?",
+                    "currency": "USD",
+                    "start": START.isoformat(),
+                    "end": END.isoformat(),
+                },
+                headers=headers,
+            )
+            assert ast_resp.status_code == 200
+            ast_data = ast_resp.json()
+            assert "500.00" in ast_data["reply"]
+            assert ast_data["data"]["summary"]["sales_amount"] == "500.00"
+
+            # 7. Test Idempotency / Dry Run: dry run commits 0 records
+            dry_resp = client.post(
+                f"/tenants/{t_id}/ingest/csv?dry_run=true",
+                content=csv_payload,
+                headers={**headers, "Content-Type": "text/csv"},
+            )
+            assert dry_resp.status_code == 200
+            assert dry_resp.json()["dry_run"] is True
+            assert dry_resp.json()["accepted"] == 4
+
+    finally:
+        app.dependency_overrides.clear()
+        engine_mgr.close_all()
+        provisioner.deprovision_tenant(t_id, drop_database=True)
+        redis_client.delete(stream_name)
+        monkeypatch.delenv("DEPLOYMENT_MODE", raising=False)
+        get_settings.cache_clear()
