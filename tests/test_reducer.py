@@ -18,7 +18,7 @@ Verifies:
 from datetime import datetime, timezone, timedelta
 import pytest
 
-from app.aggregation.contracts import (
+from astraroll.aggregation.contracts import (
     AggregateDelta,
     AggregateType,
     AggregationKey,
@@ -28,14 +28,14 @@ from app.aggregation.contracts import (
     OrderSnapshot,
     OrderStatus,
 )
-from app.aggregation.exceptions import (
+from astraroll.aggregation.exceptions import (
     ImmutableFieldViolationError,
     InvalidEventError,
     InvalidSnapshotError,
     OutOfOrderEventError,
     TenantMismatchError,
 )
-from app.aggregation.reducer import (
+from astraroll.aggregation.reducer import (
     AggregationReducer,
     ReductionResult,
     reduce_event,

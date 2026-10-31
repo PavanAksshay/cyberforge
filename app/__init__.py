@@ -1,2 +1,0 @@
-"""AstraRoll Application Package."""
-

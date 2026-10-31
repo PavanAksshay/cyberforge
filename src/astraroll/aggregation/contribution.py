@@ -19,7 +19,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Dict, Optional, Tuple
 
-from app.aggregation.contracts import (
+from astraroll.aggregation.contracts import (
     AggregateDelta,
     AggregateType,
     AggregationKey,
@@ -27,7 +27,7 @@ from app.aggregation.contracts import (
     OrderSnapshot,
     OrderStatus,
 )
-from app.aggregation.exceptions import ImmutableFieldViolationError, InvalidSnapshotError
+from astraroll.aggregation.exceptions import ImmutableFieldViolationError, InvalidSnapshotError
 
 
 def normalize_to_utc(dt: datetime) -> datetime:

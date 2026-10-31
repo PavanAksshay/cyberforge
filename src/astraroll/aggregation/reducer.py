@@ -10,7 +10,7 @@ from typing import Dict, Optional, Set, Tuple
 
 from pydantic import BaseModel, ConfigDict
 
-from app.aggregation.contracts import (
+from astraroll.aggregation.contracts import (
     AggregateDelta,
     AggregateType,
     AggregationKey,
@@ -18,8 +18,8 @@ from app.aggregation.contracts import (
     OrderEvent,
     OrderProjectionState,
 )
-from app.aggregation.contribution import compute_contribution_delta
-from app.aggregation.exceptions import (
+from astraroll.aggregation.contribution import compute_contribution_delta
+from astraroll.aggregation.exceptions import (
     DuplicateEventError,
     ImmutableFieldViolationError,
     InvalidEventError,

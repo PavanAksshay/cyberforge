@@ -15,7 +15,7 @@ Verifies:
 from datetime import datetime, timezone, timedelta
 import pytest
 
-from app.aggregation.contracts import (
+from astraroll.aggregation.contracts import (
     AggregateDelta,
     AggregateType,
     AggregationKey,
@@ -23,7 +23,7 @@ from app.aggregation.contracts import (
     OrderSnapshot,
     OrderStatus,
 )
-from app.aggregation.contribution import (
+from astraroll.aggregation.contribution import (
     calculate_daily_product_contribution,
     calculate_daily_status_contribution,
     calculate_daily_summary_contribution,
@@ -38,7 +38,7 @@ from app.aggregation.contribution import (
     get_hourly_bucket_start,
     normalize_to_utc,
 )
-from app.aggregation.exceptions import (
+from astraroll.aggregation.exceptions import (
     ImmutableFieldViolationError,
     InvalidSnapshotError,
 )
