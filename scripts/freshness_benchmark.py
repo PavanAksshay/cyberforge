@@ -337,8 +337,21 @@ def run_benchmark(
     relay_batch(harness.session_factory, harness.redis, stream_fifo, batch_size=200)
 
     fifo_t0 = time.time()
+    fifo_small_first_ack = None
+    orig_fifo_pm = consumer_fifo.process_message
+
+    def timed_fifo_pm(sid, fields):
+        res = orig_fifo_pm(sid, fields)
+        p = fields.get(b"event") or fields.get("event")
+        if p and str(small_tenant) in (p.decode("utf-8") if isinstance(p, bytes) else str(p)):
+            nonlocal fifo_small_first_ack
+            if fifo_small_first_ack is None:
+                fifo_small_first_ack = time.time() - fifo_t0
+        return res
+
+    consumer_fifo.process_message = timed_fifo_pm
     consumer_fifo.process_batch()
-    fifo_latency_small = time.time() - fifo_t0
+    fifo_batch_total = time.time() - fifo_t0
 
     # Test FAIR
     stream_fair = f"bench:fair:{uuid4().hex}"
@@ -368,8 +381,21 @@ def run_benchmark(
     relay_batch(harness.session_factory, harness.redis, stream_fair, batch_size=200)
 
     fair_t0 = time.time()
+    fair_small_first_ack = None
+    orig_fair_pm = consumer_fair.process_message
+
+    def timed_fair_pm(sid, fields):
+        res = orig_fair_pm(sid, fields)
+        p = fields.get(b"event") or fields.get("event")
+        if p and str(small_tenant) in (p.decode("utf-8") if isinstance(p, bytes) else str(p)):
+            nonlocal fair_small_first_ack
+            if fair_small_first_ack is None:
+                fair_small_first_ack = time.time() - fair_t0
+        return res
+
+    consumer_fair.process_message = timed_fair_pm
     consumer_fair.process_batch()
-    fair_latency_small = time.time() - fair_t0
+    fair_batch_total = time.time() - fair_t0
 
     # Results aggregation
     results = {
@@ -394,8 +420,10 @@ def run_benchmark(
         "fairness_test": {
             "hot_tenant_orders": 30,
             "small_tenant_orders": 1,
-            "fifo_batch_time_sec": round(fifo_latency_small, 4),
-            "fair_batch_time_sec": round(fair_latency_small, 4),
+            "fifo_small_first_ack_sec": round(fifo_small_first_ack or 0.0, 4),
+            "fair_small_first_ack_sec": round(fair_small_first_ack or 0.0, 4),
+            "fifo_batch_time_sec": round(fifo_batch_total, 4),
+            "fair_batch_time_sec": round(fair_batch_total, 4),
         },
         "target_evaluation": {
             "organizer_good_target_sec": 300.0,
@@ -427,9 +455,12 @@ def run_benchmark(
     print("-" * 65)
     tput = results["burst_test"]["burst_throughput_events_per_sec"]
     print(f"Burst Processing Throughput:  {tput} events/sec")
+    fifo_ack = results["fairness_test"]["fifo_small_first_ack_sec"]
+    fair_ack = results["fairness_test"]["fair_small_first_ack_sec"]
     fifo_time = results["fairness_test"]["fifo_batch_time_sec"]
     fair_time = results["fairness_test"]["fair_batch_time_sec"]
-    print(f"Fairness (FIFO vs Fair):      FIFO: {fifo_time}s | Fair: {fair_time}s")
+    print(f"Fairness (Small Tenant Ack): FIFO: {fifo_ack}s | Fair: {fair_ack}s")
+    print(f"Fairness (Total Batch Time):  FIFO: {fifo_time}s | Fair: {fair_time}s")
     print("-" * 65)
     good_eval = "YES" if results["target_evaluation"]["achieved_good"] else "NO"
     great_eval = "YES" if results["target_evaluation"]["achieved_great"] else "NO"
