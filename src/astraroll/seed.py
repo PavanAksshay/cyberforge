@@ -44,9 +44,11 @@ def seed(session_factory, *, tenants=3, orders_per_tenant=100, seed_value=42, ba
                     order = Order(
                         id=order_id,
                         tenant_id=tenant_id,
+                        # Five synthetic catalog products per tenant; never used for backfills.
+                        product_id=uuid5(tenant_id, f"product:{index % 5}"),
                         amount=Decimal(rng.randrange(1, 1000000)) / 100,
-                        currency="USD",
-                        status="created",
+                        currency="USD" if index % 2 == 0 else "EUR",
+                        status="placed",
                         version=1,
                         created_at=timestamp,
                         updated_at=timestamp,
@@ -63,6 +65,7 @@ def seed(session_factory, *, tenants=3, orders_per_tenant=100, seed_value=42, ba
                             OrderUpdate(
                                 expected_version=order.version,
                                 amount=order.amount + Decimal("1.00"),
+                                product_id=uuid5(tenant_id, f"product:{(index + 1) % 5}"),
                             ),
                         )
                     if index % 10 == 0:
@@ -73,7 +76,7 @@ def seed(session_factory, *, tenants=3, orders_per_tenant=100, seed_value=42, ba
                             tenant_id,
                             order_id,
                             order.version,
-                            OrderUpdate(expected_version=order.version, status="completed"),
+                            OrderUpdate(expected_version=order.version, status="shipped"),
                         )
                     inserted += 1
     return inserted

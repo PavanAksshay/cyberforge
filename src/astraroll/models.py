@@ -33,15 +33,16 @@ class Order(Base):
     __table_args__ = (
         CheckConstraint("amount >= 0 AND amount <> 'NaN'::numeric", name="ck_order_amount"),
         CheckConstraint("version >= 1", name="ck_order_version"),
-        CheckConstraint("status IN ('created', 'completed', 'cancelled')", name="ck_order_status"),
+        CheckConstraint("status IN ('placed', 'shipped', 'cancelled')", name="ck_order_status"),
         CheckConstraint("currency ~ '^[A-Z]{3}$'", name="ck_order_currency"),
         Index("ix_orders_tenant_created", "tenant_id", "created_at", "id"),
     )
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     tenant_id: Mapped[UUID] = mapped_column(ForeignKey("tenants.id", ondelete="RESTRICT"))
+    product_id: Mapped[UUID] = mapped_column(nullable=False)
     amount: Mapped[Decimal] = mapped_column(Numeric(18, 2))
     currency: Mapped[str] = mapped_column(String(3))
-    status: Mapped[str] = mapped_column(String(16), default="created")
+    status: Mapped[str] = mapped_column(String(16), default="placed")
     version: Mapped[int] = mapped_column(BigInteger, default=1)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
@@ -61,7 +62,7 @@ class OutboxEvent(Base):
     order_id: Mapped[UUID] = mapped_column(ForeignKey("orders.id", ondelete="RESTRICT"))
     order_version: Mapped[int] = mapped_column(BigInteger)
     event_type: Mapped[str] = mapped_column(String(32))
-    schema_version: Mapped[int] = mapped_column(default=1)
+    schema_version: Mapped[int] = mapped_column(default=2)
     payload: Mapped[dict] = mapped_column(JSONB)
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

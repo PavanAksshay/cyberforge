@@ -29,7 +29,9 @@ def test_migration_matches_models(factory):
 
 def test_api_lifecycle_and_tenant_isolation(client, factory, tenant_id):
     base = f"/tenants/{tenant_id}/orders"
-    response = client.post(base, json={"amount": "12.34", "currency": "USD"})
+    response = client.post(
+        base, json={"product_id": str(uuid4()), "amount": "12.34", "currency": "USD"}
+    )
     assert response.status_code == 201, response.text
     order = response.json()
     assert order["amount"] == "12.34"
@@ -44,9 +46,7 @@ def test_api_lifecycle_and_tenant_isolation(client, factory, tenant_id):
         ).status_code
         == 404
     )
-    response = client.patch(
-        path, json={"expected_version": 1, "amount": "19.99", "status": "completed"}
-    )
+    response = client.patch(path, json={"expected_version": 1, "amount": "19.99"})
     assert response.status_code == 200
     assert response.json()["version"] == 2
     assert client.patch(path, json={"expected_version": 1, "amount": "2"}).status_code == 409
@@ -80,14 +80,28 @@ def test_tenant_api_and_validation(client):
     assert client.get(f"/tenants/{tenant_id}").json()["name"] == "Example"
     assert client.get(f"/tenants/{uuid4()}").status_code == 404
     assert client.get("/health/ready").status_code == 200
-    assert client.post(f"/tenants/{uuid4()}/orders", json={"amount": "1"}).status_code == 404
-    assert client.post(f"/tenants/{tenant_id}/orders", json={"amount": "0.001"}).status_code == 422
+    assert (
+        client.post(
+            f"/tenants/{uuid4()}/orders",
+            json={"product_id": str(uuid4()), "amount": "1", "currency": "USD"},
+        ).status_code
+        == 404
+    )
+    assert (
+        client.post(
+            f"/tenants/{tenant_id}/orders",
+            json={"product_id": str(uuid4()), "amount": "0.001", "currency": "USD"},
+        ).status_code
+        == 422
+    )
 
 
 def test_order_and_event_rollback_together(factory, tenant_id):
     order_id = None
     with pytest.raises(RuntimeError), factory.begin() as session:
-        order = create_order(session, tenant_id, OrderCreate(amount="4.56"))
+        order = create_order(
+            session, tenant_id, OrderCreate(product_id=uuid4(), currency="USD", amount="4.56")
+        )
         order_id = order.id
         raise RuntimeError("Injected failure before commit")
     with factory() as session:
@@ -97,7 +111,9 @@ def test_order_and_event_rollback_together(factory, tenant_id):
 
 def test_outbox_failure_rolls_back_order(factory, tenant_id):
     with factory.begin() as session:
-        order = create_order(session, tenant_id, OrderCreate(amount="1"))
+        order = create_order(
+            session, tenant_id, OrderCreate(product_id=uuid4(), currency="USD", amount="1")
+        )
         order_id = order.id
     with pytest.raises(IntegrityError), factory.begin() as session:
         mutate_order(session, tenant_id, order_id, 1, OrderUpdate(expected_version=1, amount="9"))
@@ -109,7 +125,7 @@ def test_outbox_failure_rolls_back_order(factory, tenant_id):
                 order_id=order_id,
                 order_version=1,
                 event_type=event.event_type,
-                schema_version=1,
+                schema_version=event.schema_version,
                 payload=event.payload,
                 occurred_at=event.occurred_at,
             )
@@ -123,7 +139,9 @@ def test_outbox_failure_rolls_back_order(factory, tenant_id):
 
 def test_concurrent_updates_allow_exactly_one_winner(factory, tenant_id):
     with factory.begin() as session:
-        order_id = create_order(session, tenant_id, OrderCreate(amount="1")).id
+        order_id = create_order(
+            session, tenant_id, OrderCreate(product_id=uuid4(), currency="USD", amount="1")
+        ).id
     barrier = Barrier(2)
 
     def update(amount):
@@ -154,7 +172,9 @@ def test_concurrent_updates_allow_exactly_one_winner(factory, tenant_id):
 @pytest.mark.parametrize("amount", ["-1", "NaN"])
 def test_database_constraints(factory, tenant_id, amount):
     with factory.begin() as session:
-        order_id = create_order(session, tenant_id, OrderCreate(amount="1")).id
+        order_id = create_order(
+            session, tenant_id, OrderCreate(product_id=uuid4(), currency="USD", amount="1")
+        ).id
     with pytest.raises(IntegrityError), factory.begin() as session:
         session.execute(
             text("UPDATE orders SET amount = CAST(:amount AS numeric) WHERE id = :id"),
@@ -165,7 +185,9 @@ def test_database_constraints(factory, tenant_id, amount):
 def test_relay_failure_retry_and_duplicate_contract(factory, tenant_id, redis_client):
     stream = f"test:astraroll:{uuid4()}"
     with factory.begin() as session:
-        order_id = create_order(session, tenant_id, OrderCreate(amount="5.25")).id
+        order_id = create_order(
+            session, tenant_id, OrderCreate(product_id=uuid4(), currency="USD", amount="5.25")
+        ).id
 
     class PublishThenFail:
         def xadd(self, name, fields):
@@ -192,7 +214,9 @@ def test_relay_failure_retry_and_duplicate_contract(factory, tenant_id, redis_cl
 
 def test_relay_skips_locked_rows(factory, tenant_id, redis_client):
     with factory.begin() as session:
-        order_id = create_order(session, tenant_id, OrderCreate(amount="3")).id
+        order_id = create_order(
+            session, tenant_id, OrderCreate(product_id=uuid4(), currency="USD", amount="3")
+        ).id
     with factory.begin() as locked:
         event = locked.scalar(
             select(OutboxEvent).where(OutboxEvent.order_id == order_id).with_for_update()

@@ -16,7 +16,7 @@ from astraroll.models import Tenant
 
 
 @pytest.fixture(scope="session")
-def factory():
+def isolated_engine():
     if os.environ.get("RUN_INTEGRATION") != "1":
         pytest.skip("Set RUN_INTEGRATION=1 with migrated PostgreSQL and Redis")
     engine = get_engine()
@@ -28,14 +28,42 @@ def factory():
     isolated = create_engine(
         engine.url, connect_args={"options": f"-csearch_path={schema} -c timezone=UTC"}
     )
-    with isolated.begin() as connection:
+    yield isolated
+    isolated.dispose()
+    # Retain schema for inspection; no destructive cleanup in shared environments.
+    print(f"Integration artifacts retained in schema {schema}")
+
+
+def migrate(engine, revision="head", *, downgrade=False):
+    with engine.begin() as connection:
         config = Config("alembic.ini")
         config.attributes["connection"] = connection
-        command.upgrade(config, "head")
+        if downgrade:
+            command.downgrade(config, revision)
+        else:
+            command.upgrade(config, revision)
+
+
+@pytest.fixture(scope="session")
+def factory(isolated_engine):
+    migrate(isolated_engine)
+    isolated = isolated_engine
     yield sessionmaker(isolated, expire_on_commit=False)
+
+
+@pytest.fixture
+def migration_engine(factory):
+    # Each history test owns its own empty schema, separate from the API suite.
+    schema = f"test_migration_{uuid4().hex}"
+    engine = get_engine()
+    with engine.begin() as connection:
+        connection.execute(text(f'CREATE SCHEMA "{schema}"'))
+    isolated = create_engine(
+        engine.url, connect_args={"options": f"-csearch_path={schema} -c timezone=UTC"}
+    )
+    yield isolated
     isolated.dispose()
-    # Retain schema for inspection; no automatic destructive cleanup in shared environments.
-    print(f"Integration artifacts retained in schema {schema}")
+    print(f"Migration artifacts retained in schema {schema}")
 
 
 @pytest.fixture

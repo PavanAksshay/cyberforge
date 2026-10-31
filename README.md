@@ -1,4 +1,4 @@
-# AstraRoll V1 — Developer A
+# AstraRoll V1 - Developer A
 
 Python 3.12+, FastAPI, SQLAlchemy/Alembic, PostgreSQL 16 and Redis 7.
 Producer infrastructure, tenant/order API, atomic transactional outbox, relay,
@@ -14,7 +14,8 @@ src/astraroll/
   api.py                    FastAPI routes
   relay.py                  PostgreSQL outbox -> Redis Streams
   seed.py                   bounded, repeatable synthetic input
-alembic/versions/0001_producer.py
+alembic/versions/0001_producer.py  # preserved history
+alembic/versions/0002_producer_contract.py
 tests/                      validation + PostgreSQL/Redis integration tests
 docs/contracts.md           Developer B handoff contract
 compose.yaml, Dockerfile, requirements.lock
@@ -23,6 +24,29 @@ compose.yaml, Dockerfile, requirements.lock
 Read [the database/event contract](docs/contracts.md) before implementing B's
 consumers, rollups, corrections or caching. Those modules are not included here.
 Developer A services have no dependency on B's modules.
+
+## Frozen contract and upgrades
+
+New orders require `product_id`, `amount` and `currency`, and start as `placed`.
+Only placed orders can be edited or transition to `shipped` / `cancelled`; both
+are terminal. New events use **schema_version 2** on **astraroll:orders:v1**, field
+**event**. Schema-1 events remain historical and need explicit handling by B.
+See [the exact event fixture](docs/order-event-v2.json).
+
+Fresh databases upgrade through `0001_producer` then `0002_producer_contract`.
+For existing databases, stop API/relay/consumers together and follow the
+[authoritative backfill policy](docs/contracts.md#migration-and-authoritative-backfill-policy)
+before starting the new producer. Missing products and unresolved legacy statuses
+block migration safely; no default products or shipping decisions are inferred.
+Revision 0002 is forward-only, and revision 0001 is unchanged.
+
+```powershell
+docker compose stop api relay
+docker compose build
+docker compose run --rm migrate
+# Resume only after migration and Developer B's baseline/version coordination:
+docker compose up -d api relay
+```
 
 ## Run with Docker Compose
 
@@ -43,9 +67,11 @@ API: http://localhost:8000/docs (interactive OpenAPI).
 ```powershell
 $tenant = Invoke-RestMethod http://localhost:8000/tenants -Method Post -ContentType 'application/json' -Body '{"name":"Hackathon"}'
 $url = "http://localhost:8000/tenants/$($tenant.id)/orders"
-$order = Invoke-RestMethod $url -Method Post -ContentType 'application/json' -Body '{"amount":"12.50","currency":"USD"}'
-Invoke-RestMethod "$url/$($order.id)" -Method Patch -ContentType 'application/json' -Body '{"expected_version":1,"amount":"19.99","status":"completed"}'
+$order = Invoke-RestMethod $url -Method Post -ContentType 'application/json' -Body '{"product_id":"47b53ec8-c26c-45d3-8503-76f809b55952","amount":"12.50","currency":"USD"}'
+Invoke-RestMethod "$url/$($order.id)" -Method Patch -ContentType 'application/json' -Body '{"expected_version":1,"amount":"19.99"}'
 Invoke-RestMethod "$url/$($order.id)/cancel" -Method Post -ContentType 'application/json' -Body '{"expected_version":2}'
+# Shipment is an alternative to cancellation: PATCH {"expected_version":1,"status":"shipped"}
+# on a different placed order. A shipped order cannot subsequently be cancelled.
 docker compose exec redis redis-cli XRANGE astraroll:orders:v1 - + COUNT 5
 ```
 
@@ -58,8 +84,9 @@ docker compose --profile test run --build --rm test
 Tests create a unique `test_<uuid>` PostgreSQL schema, apply Alembic migrations
 there, and publish only to unique `test:astraroll:<uuid>` Redis streams. Test
 artifacts are retained for inspection; tests never truncate shared tables, flush
-Redis, remove volumes, or downgrade a database. Coordinate explicit cleanup when
-needed. The normal relay cannot see test schemas or their outboxes.
+Redis, remove volumes, or downgrade a valuable database. Migration tests also verify
+that revision 0002 safely refuses downgrade inside a unique test schema. Coordinate
+explicit cleanup when needed. The normal relay cannot see test schemas or their outboxes.
 
 Integration checks cover migration/model parity, API lifecycle and tenant
 isolation, input and DB constraints, concurrent version conflicts, atomic rollback
@@ -68,9 +95,11 @@ locked-row skipping, and seeder repeatability. Without `RUN_INTEGRATION=1`, pyte
 explicitly skips integration tests rather than substituting SQLite.
 
 Verified on 2026-10-31 with Python 3.12.10, PostgreSQL 16.6 and portable Redis
-5.0.14.1: **22 tests passed**, plus a CLI migration/seed/relay smoke check
-(20 orders, 32 events, zero pending). Ruff and Compose configuration validation
-passed. Container startup with the pinned Redis 7 image remains unverified on
+5.0.14.1: **60 tests passed**, including fresh/historical migration tests, full
+snapshots, terminal transitions, invalid mutations, retry identity and mixed event
+versions. A CLI smoke check migrated a fresh database, seeded 20 orders (zero new
+orders on rerun), and relayed 32 schema-2 events to the exact frozen stream/field.
+Ruff and Compose configuration validation passed. Container startup with the pinned Redis 7 image remains unverified on
 this host because Docker Desktop fails during initialization of its inference
 socket; the fallback processes used separate localhost ports and test data.
 
@@ -106,7 +135,9 @@ docker compose run --rm api astraroll-seed --tenants 3 --orders-per-tenant 1000 
 ```
 
 The seeder writes to PostgreSQL using production domain/outbox services. It
-produces created/completed/cancelled orders plus amount changes for corrections.
+produces placed/shipped/cancelled orders plus amount/product changes for corrections.
+Each tenant has five deterministic synthetic product UUIDs. USD and EUR orders
+remain separate; real historical product IDs are never generated by migration.
 Amounts, order IDs, tenant IDs, and original creation timestamps are stable for
 a seed. Event IDs and mutation timestamps are runtime values. Historical creation
 dates span 2025; update events occur at seeding time. Re-running skips existing

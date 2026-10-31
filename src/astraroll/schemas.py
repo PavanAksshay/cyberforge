@@ -6,7 +6,8 @@ from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StringConstrai
 
 Amount = Annotated[Decimal, Field(ge=0, max_digits=18, decimal_places=2, allow_inf_nan=False)]
 Currency = Annotated[str, StringConstraints(pattern=r"^[A-Z]{3}$")]
-Status = Literal["created", "completed", "cancelled"]
+Status = Literal["placed", "shipped", "cancelled"]
+EVENT_SCHEMA_VERSION = 2
 
 
 class InputModel(BaseModel):
@@ -25,20 +26,22 @@ class TenantRead(BaseModel):
 
 
 class OrderCreate(InputModel):
+    product_id: UUID
     amount: Amount
-    currency: Currency = "USD"
+    currency: Currency
 
 
 class OrderUpdate(InputModel):
     expected_version: int = Field(ge=1)
     amount: Amount | None = None
-    status: Literal["completed"] | None = None
+    product_id: UUID | None = None
+    status: Literal["shipped", "cancelled"] | None = None
 
     @model_validator(mode="after")
     def require_change(self):
         changes = self.model_fields_set - {"expected_version"}
         if not changes or any(getattr(self, key) is None for key in changes):
-            raise ValueError("Provide a non-null amount or status")
+            raise ValueError("Provide a non-null amount, product_id or status")
         return self
 
 
@@ -50,6 +53,7 @@ class OrderRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: UUID
     tenant_id: UUID
+    product_id: UUID
     amount: Decimal
     currency: str
     status: Status
@@ -60,7 +64,7 @@ class OrderRead(BaseModel):
 
 class OrderEvent(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    schema_version: Literal[1] = 1
+    schema_version: Literal[2]
     event_id: UUID
     event_type: Literal["order.created", "order.updated", "order.cancelled"]
     tenant_id: UUID
