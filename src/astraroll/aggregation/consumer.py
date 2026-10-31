@@ -18,7 +18,7 @@ import json
 import logging
 import signal
 import time
-from collections import defaultdict
+from collections import deque
 from threading import Event
 from typing import Any, Literal
 from uuid import uuid4
@@ -32,11 +32,35 @@ from astraroll.aggregation.processor import OrderEventProcessor
 from astraroll.aggregation.repository import AggregateRepository
 from astraroll.config import get_settings
 from astraroll.db import get_session_factory
+from astraroll.operations import increment
 
 log = logging.getLogger("astraroll.consumer")
 
 DEFAULT_STREAM = "astraroll:orders:v1"
 DEFAULT_GROUP = "astraroll:aggregators"
+
+
+def fair_messages(messages):
+    """Round-robin tenant work within one bounded Redis read/claim reply.
+
+    Preserves each tenant's delivery order and every message, including invalid
+    payloads (which still pass through durable quarantine). This does not guarantee
+    fairness for messages beyond the current read-ahead window.
+    """
+    tenants = {}
+    for stream_id, fields in messages:
+        try:
+            raw = fields.get(b"event") or fields.get("event")
+            tenant = str(json.loads(raw)["tenant_id"])
+        except (ValueError, TypeError, KeyError, RecursionError):
+            tenant = "invalid"
+        tenants.setdefault(tenant, deque()).append((stream_id, fields))
+    active = deque(tenants.values())
+    while active:
+        queue = active.popleft()
+        yield queue.popleft()
+        if queue:
+            active.append(queue)
 
 
 class AggregationConsumer:
@@ -52,17 +76,24 @@ class AggregationConsumer:
         batch_size: int = 50,
         block_ms: int = 1000,
         min_idle_claim_ms: int = 30000,
-        dispatch_mode: Literal["fifo", "fair"] = "fifo",
+        fair_dispatch: bool = True,
+        dispatch_mode: Literal["fifo", "fair"] | None = None,
     ):
         self.session_factory = session_factory
         self.redis = redis_client
         self.stream_name = stream_name
         self.group_name = group_name
         self.consumer_name = consumer_name or f"consumer-{uuid4().hex[:8]}"
+        if not 1 <= batch_size <= 10000:
+            raise ValueError("Batch size must be 1..10000")
         self.batch_size = batch_size
         self.block_ms = block_ms
         self.min_idle_claim_ms = min_idle_claim_ms
-        self.dispatch_mode = dispatch_mode
+        if dispatch_mode is not None:
+            self.fair_dispatch = dispatch_mode == "fair"
+        else:
+            self.fair_dispatch = fair_dispatch
+        self.dispatch_mode: Literal["fifo", "fair"] = "fair" if self.fair_dispatch else "fifo"
         self.last_claim_ts: float = 0.0
         self.claim_cursor: str = "0-0"
 
@@ -193,10 +224,12 @@ class AggregationConsumer:
                 )
 
             messages = res[1] if isinstance(res, (list, tuple)) and len(res) > 1 else []
-            for stream_id, fields in messages:
+            for stream_id, fields in fair_messages(messages) if self.fair_dispatch else messages:
                 if self.process_message(stream_id, fields):
                     claimed_count += 1
             if claimed_count > 0:
+                with self.session_factory.begin() as session:
+                    increment(session, "recovered", claimed_count)
                 log.info(
                     "Recovered and processed %d abandoned messages via XAUTOCLAIM (cursor: %s)",
                     claimed_count,
@@ -206,39 +239,6 @@ class AggregationConsumer:
             log.warning("XAUTOCLAIM cycle error: %s", exc)
 
         return claimed_count
-
-    @staticmethod
-    def _reorder_fair(
-        messages: list[tuple[Any, dict[Any, Any]]],
-    ) -> list[tuple[Any, dict[Any, Any]]]:
-        """Round-robin interleave messages by tenant_id within the batch."""
-        tenant_queues: dict[str, list[tuple[Any, dict[Any, Any]]]] = defaultdict(list)
-        for stream_id, fields in messages:
-            payload_raw = fields.get(b"event") or fields.get("event")
-            tenant_key = "unknown"
-            if payload_raw:
-                try:
-                    data = (
-                        json.loads(payload_raw)
-                        if isinstance(payload_raw, (str, bytes))
-                        else payload_raw
-                    )
-                    tenant_key = str(data.get("tenant_id") or "unknown")
-                except Exception:
-                    tenant_key = "unknown"
-            tenant_queues[tenant_key].append((stream_id, fields))
-
-        reordered: list[tuple[Any, dict[Any, Any]]] = []
-        active_keys = list(tenant_queues.keys())
-        while active_keys:
-            next_keys = []
-            for k in active_keys:
-                q = tenant_queues[k]
-                reordered.append(q.pop(0))
-                if q:
-                    next_keys.append(k)
-            active_keys = next_keys
-        return reordered
 
     def process_batch(self) -> int:
         """Read and process a batch of new messages using XREADGROUP."""
@@ -265,9 +265,7 @@ class AggregationConsumer:
 
         processed_count = 0
         for stream_key, messages in streams_res:
-            if self.dispatch_mode == "fair":
-                messages = self._reorder_fair(messages)
-            for stream_id, fields in messages:
+            for stream_id, fields in fair_messages(messages) if self.fair_dispatch else messages:
                 if self.process_message(stream_id, fields):
                     processed_count += 1
 
@@ -286,6 +284,11 @@ class AggregationConsumer:
             except Exception as exc:
                 if stop_event.is_set():
                     break
+                try:
+                    with self.session_factory.begin() as session:
+                        increment(session, "worker_errors")
+                except Exception:
+                    log.warning("Could not persist worker error counter")
                 log.error("Error in consumer loop: %s", exc, exc_info=True)
                 time.sleep(1.0)
 
@@ -300,12 +303,7 @@ def main() -> None:
     parser.add_argument("--group", type=str, default=DEFAULT_GROUP, help="Consumer group name")
     parser.add_argument("--consumer", type=str, default=None, help="Consumer instance name")
     parser.add_argument("--batch-size", type=int, default=50, help="Batch size per read")
-    parser.add_argument(
-        "--dispatch-mode",
-        choices=["fifo", "fair"],
-        default="fifo",
-        help="Batch dispatch mode (fifo or fair round-robin)",
-    )
+    parser.add_argument("--fifo", action="store_true", help="Disable within-batch tenant dispatch")
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -328,7 +326,7 @@ def main() -> None:
             group_name=args.group,
             consumer_name=args.consumer,
             batch_size=args.batch_size,
-            dispatch_mode=args.dispatch_mode,
+            fair_dispatch=not args.fifo,
         )
         if args.once:
             consumer.init_group()

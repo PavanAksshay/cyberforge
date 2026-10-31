@@ -79,7 +79,6 @@ def test_order_event_processor_lifecycle(factory):
         assert proc_evt is not None
         assert proc_evt.order_version == 1
 
-        # Check summary aggregate (placed contributes $0.00 sales in v2)
         summary = session.scalar(
             select(HourlySummaryAggregate).where(
                 HourlySummaryAggregate.tenant_id == tenant_id,

@@ -16,7 +16,10 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=8.3,<10", "httpx>=0.28,<1", "ruff>=0.11,<1"]
 
+benchmark = ["psutil>=6,<8"]
+
 [project.scripts]
+astraroll-admin = "astraroll.admin:main"
 astraroll-relay = "astraroll.relay:main"
 astraroll-seed = "astraroll.seed:main"
 astraroll-consumer = "astraroll.aggregation.consumer:main"

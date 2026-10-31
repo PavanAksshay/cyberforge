@@ -68,12 +68,17 @@ def clock(monkeypatch):
     return current
 
 
+_TENANT_TOKENS: dict[str, str] = {}
+
+
 @pytest.fixture
 def identity(monkeypatch):
     records = []
+    _TENANT_TOKENS.clear()
 
     def register(tenant: UUID):
         token = secrets.token_urlsafe(32)
+        _TENANT_TOKENS[str(tenant)] = token
         records.append(
             {
                 "subject": f"freshness-user-{len(records)}",
@@ -105,6 +110,21 @@ def make_proof(query, ready=True):
     )
 
 
+class AutoAuthClient(TestClient):
+    def request(self, method, url, *args, **kwargs):
+        headers = kwargs.get("headers")
+        if headers is None:
+            import re
+
+            m = re.search(r"/tenants/([0-9a-fA-F-]+)", str(url))
+            if m:
+                tenant_id = m.group(1)
+                token = _TENANT_TOKENS.get(tenant_id)
+                if token:
+                    kwargs["headers"] = {"Authorization": f"Bearer {token}"}
+        return super().request(method, url, *args, **kwargs)
+
+
 @contextmanager
 def wired_client(store, coverage_func=None):
     if coverage_func is None:
@@ -120,7 +140,7 @@ def wired_client(store, coverage_func=None):
     app.dependency_overrides[get_analytics_reader] = lambda: PostgresAnalyticsAdapter(
         lambda: store.kw["bind"], coverage_func
     )
-    with TestClient(app) as client:
+    with AutoAuthClient(app) as client:
         yield client
     app.dependency_overrides.clear()
 

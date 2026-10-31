@@ -3,6 +3,8 @@
 import json
 from uuid import uuid4
 
+import pytest
+
 from astraroll.aggregation.adapter import adapt_stream_message
 from astraroll.aggregation.contracts import OrderStatus
 
@@ -62,6 +64,30 @@ def test_valid_v2_payload_adapts_cleanly():
     assert res.event.before_snapshot is not None
     assert res.event.before_snapshot.amount_cents == 1000
     assert res.event.before_snapshot.status == OrderStatus.PLACED
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        lambda p: p["after"].update(tenant_id=str(uuid4())),
+        lambda p: p["after"].update(id=str(uuid4())),
+        lambda p: p["after"].update(version=3),
+        lambda p: p["before"].update(version=9),
+        lambda p: p["before"].update(currency="EUR"),
+        lambda p: p.update(before=None),
+        lambda p: p.update(order_version=2.5),
+        lambda p: p.update(order_version=True),
+        lambda p: p.update(schema_version=2.0),
+        lambda p: p["after"].update(created_at="2026-10-31T07:00:00"),
+        lambda p: p["after"].update(amount="10000000000000000.00"),
+    ],
+)
+def test_malformed_full_snapshot_or_envelope_is_quarantined(mutation):
+    payload = create_valid_v2_payload()
+    mutation(payload)
+    result = adapt_stream_message("3-0", json.dumps(payload))
+    assert result.should_quarantine
+    assert result.event is None
 
 
 def test_v1_payload_is_quarantined():

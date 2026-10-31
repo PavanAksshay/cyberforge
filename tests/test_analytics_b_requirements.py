@@ -1,4 +1,4 @@
-"""Run against the isolated combined checkout; never copy B into dev-a to enable these."""
+"""Integrated consumer correctness and Redis recovery release gates."""
 
 import json
 from datetime import UTC, datetime
@@ -8,18 +8,16 @@ from uuid import uuid4
 import pytest
 from sqlalchemy import select, update
 
-consumer_module = pytest.importorskip("astraroll.aggregation.consumer")
-adapter_module = pytest.importorskip("astraroll.aggregation.adapter")
-backend_module = pytest.importorskip("astraroll.aggregation.reader")
-models_module = pytest.importorskip("astraroll.aggregation.models")
-processor_module = pytest.importorskip("astraroll.aggregation.processor")
+from astraroll.aggregation import adapter as adapter_module
+from astraroll.aggregation import consumer as consumer_module
+from astraroll.aggregation import models as models_module
+from astraroll.aggregation import processor as processor_module
+from astraroll.aggregation import reader as backend_module
 
 HourlySummaryAggregate = models_module.HourlySummaryAggregate
 OrderProjection = models_module.OrderProjection
 OrderEventProcessor = processor_module.OrderEventProcessor
 
-manifest = Path("combined-check-manifest.json")
-LEGACY_B = manifest.exists() and json.loads(manifest.read_text())["b_commit"].startswith("36a0aeb")
 
 from astraroll.analytics.contracts import METRIC_SEMANTICS, AnalyticsQuery  # noqa: E402
 from astraroll.analytics.postgres import PostgresAnalyticsAdapter  # noqa: E402
@@ -44,18 +42,12 @@ def test_real_backend_advertisement_checked_before_connection():
         assert reader.capabilities().metric_semantics == METRIC_SEMANTICS
 
 
-@pytest.mark.xfail(
-    LEGACY_B, strict=True, reason="B 36a0aeb rounds fractional cents; B-owned adapter fix pending"
-)
 def test_b_quarantines_fractional_cents():
     payload = json.loads(Path("docs/order-event-v2.json").read_text())
     payload["after"]["amount"] = "12.345"
     assert adapter_module.adapt_stream_message("1-0", json.dumps(payload)).should_quarantine
 
 
-@pytest.mark.xfail(
-    LEGACY_B, strict=True, reason="B 36a0aeb discards the returned XAUTOCLAIM scan cursor"
-)
 def test_b_recovery_advances_scan_cursor(monkeypatch):
     starts = []
 
@@ -74,8 +66,7 @@ def test_b_recovery_advances_scan_cursor(monkeypatch):
 
 @pytest.mark.integration
 def test_redis7_abandoned_event_is_claimed_committed_and_acknowledged(factory, redis_client):
-    if int(redis_client.info("server")["redis_version"].split(".")[0]) < 7:
-        pytest.skip("Redis 7+ required; Redis 5 cannot verify XAUTOCLAIM")
+    assert int(redis_client.info("server")["redis_version"].split(".")[0]) >= 7
     tenant = uuid4()
     with factory.begin() as session:
         session.add(Tenant(id=tenant, name="Recovery integration"))
@@ -108,11 +99,6 @@ def test_redis7_abandoned_event_is_claimed_committed_and_acknowledged(factory, r
 
 
 @pytest.mark.integration
-@pytest.mark.xfail(
-    LEGACY_B,
-    strict=True,
-    reason="B 36a0aeb silently resets invalid prior snapshots and double counts",
-)
 def test_b_invalid_projection_fails_without_double_counting(factory):
     tenant = uuid4()
     with factory.begin() as session:
@@ -142,11 +128,11 @@ def test_b_invalid_projection_fails_without_double_counting(factory):
         mutate_order(
             session, tenant, order_id, 1, OrderUpdate(expected_version=1, status="shipped")
         )
-    try:
+    from astraroll.aggregation.exceptions import CorruptedProjectionError
+
+    with pytest.raises(CorruptedProjectionError):
         with factory.begin() as session:
             OrderEventProcessor(session).process_event(event_at(session, 2))
-    except Exception:
-        pass  # A safe rollback is acceptable; silent re-initialization is not.
     with factory() as session:
         row = session.scalar(
             select(HourlySummaryAggregate).where(HourlySummaryAggregate.tenant_id == tenant)
@@ -156,8 +142,7 @@ def test_b_invalid_projection_fails_without_double_counting(factory):
 
 @pytest.mark.integration
 def test_redis7_commit_before_ack_crash_recovers_without_drift(factory, redis_client, monkeypatch):
-    if int(redis_client.info("server")["redis_version"].split(".")[0]) < 7:
-        pytest.skip("Redis 7+ required for crash recovery verification")
+    assert int(redis_client.info("server")["redis_version"].split(".")[0]) >= 7
     tenant = uuid4()
     with factory.begin() as session:
         session.add(Tenant(id=tenant, name="Commit-before-ACK integration"))

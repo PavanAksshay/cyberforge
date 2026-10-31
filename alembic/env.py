@@ -1,6 +1,7 @@
 from alembic import context
 from astraroll import models  # noqa: F401
 from astraroll.aggregation import models as aggregation_models  # noqa: F401
+from astraroll.aggregation import release_models  # noqa: F401
 from astraroll.config import get_settings
 from astraroll.db import Base, get_engine
 

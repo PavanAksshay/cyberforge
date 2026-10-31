@@ -20,19 +20,13 @@ Supports:
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from decimal import ROUND_HALF_UP, Decimal
-from typing import Annotated, Literal, Protocol
 from uuid import UUID
 
 from pydantic import (
-    AwareDatetime,
     BaseModel,
     ConfigDict,
-    Field,
-    field_validator,
-    model_validator,
 )
 from sqlalchemy import desc, func, select
 from sqlalchemy.orm import Session
@@ -46,97 +40,29 @@ from astraroll.aggregation.models import (
     HourlySummaryAggregate,
     TenantProcessingState,
 )
-
-Interval = Literal["hour", "day"]
-METRIC_SEMANTICS = "created_at_shipped_sales_v2"
-MAX_WINDOW = timedelta(days=366)
-Count = Annotated[int, Field(strict=True, ge=0)]
-Money = Annotated[Decimal, Field(strict=True, ge=0, decimal_places=2, allow_inf_nan=False)]
-
-
-class AnalyticsUnavailable(Exception):
-    """Reader not integrated, source not ready, or uninitialized tenant coverage."""
-
-
-class UnsupportedAnalyticsWindow(Exception):
-    """The installed aggregate reader cannot answer this exact window/interval."""
-
-
-class Freshness(BaseModel):
-    """Tenant processing freshness and revision metadata."""
-
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    checkpoint: str | None = Field(default=None, min_length=1)
-    last_processed_at: AwareDatetime | None = None
-
-    @field_validator("last_processed_at")
-    @classmethod
-    def normalize_utc(cls, value: datetime | None) -> datetime | None:
-        return value.astimezone(UTC) if value is not None else None
-
-
-@dataclass(frozen=True)
-class ReaderCapabilities:
-    base_granularity: Interval
-    metric_semantics: str = METRIC_SEMANTICS
-
-
-@dataclass(frozen=True)
-class ReadResult[T]:
-    value: T
-    freshness: Freshness | None = None
-
-
-class SummaryMetrics(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    total_order_count: Count
-    sales_amount: Money
-
-
-class TrendMetrics(SummaryMetrics):
-    bucket_start: AwareDatetime
-
-
-class ProductMetrics(SummaryMetrics):
-    product_id: UUID
-    total_order_count: Annotated[int, Field(strict=True, ge=1)]
-
-
-class StatusMetrics(SummaryMetrics):
-    status: str
-
-    @model_validator(mode="after")
-    def cancelled_sales_are_excluded(self) -> StatusMetrics:
-        if self.status == "cancelled" and self.sales_amount != Decimal("0.00"):
-            raise ValueError("Cancelled orders contribute zero sales")
-        return self
-
-
-class AnalyticsQuery(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True)
-
-    tenant_id: UUID
-    start: AwareDatetime
-    end: AwareDatetime
-    currency: str
-
-    @model_validator(mode="after")
-    def validate_window(self) -> AnalyticsQuery:
-        if self.end <= self.start:
-            raise ValueError("end must be later than start; window is [start, end)")
-        if self.end - self.start > MAX_WINDOW:
-            raise ValueError("Analytics windows cannot exceed 366 days")
-        return self
-
-
-class TrendsQuery(AnalyticsQuery):
-    interval: Interval = "day"
-
-
-class TopProductsQuery(AnalyticsQuery):
-    limit: int = Field(default=10, ge=1, le=10)
+from astraroll.analytics.contracts import (
+    METRIC_SEMANTICS as METRIC_SEMANTICS,
+)
+from astraroll.analytics.contracts import (
+    AnalyticsQuery,
+    Freshness,
+    ProductMetrics,
+    StatusMetrics,
+    SummaryMetrics,
+    TopProductsQuery,
+    TrendMetrics,
+    TrendsQuery,
+)
+from astraroll.analytics.reader import (
+    AnalyticsReader as AnalyticsReader,
+)
+from astraroll.analytics.reader import (
+    AnalyticsUnavailable as AnalyticsUnavailable,
+)
+from astraroll.analytics.reader import (
+    ReaderCapabilities,
+    ReadResult,
+)
 
 
 class SummaryData(BaseModel):
@@ -193,20 +119,6 @@ class FreshnessData(BaseModel):
     is_initialized: bool
 
 
-class AnalyticsReader(Protocol):
-    """Protocol defining the analytics reader contract."""
-
-    def capabilities(self) -> ReaderCapabilities: ...
-
-    def summary(self, query: AnalyticsQuery) -> ReadResult[SummaryMetrics]: ...
-
-    def trends(self, query: TrendsQuery) -> ReadResult[list[TrendMetrics]]: ...
-
-    def top_products(self, query: TopProductsQuery) -> ReadResult[list[ProductMetrics]]: ...
-
-    def status_breakdown(self, query: AnalyticsQuery) -> ReadResult[list[StatusMetrics]]: ...
-
-
 def _ensure_utc(dt: datetime) -> datetime:
     if dt.tzinfo is None:
         return dt.replace(tzinfo=UTC)
@@ -224,185 +136,74 @@ class PostgresAnalyticsReader:
     def __init__(self, session: Session):
         self.session = session
 
-    # -------------------------------------------------------------------------
-    # Shared readiness & freshness check
-    # -------------------------------------------------------------------------
-    def check_readiness(self, tenant_id: UUID) -> Freshness:
-        """Verify tenant is initialized and return current snapshot freshness.
-
-        Raises AnalyticsUnavailable if tenant has no state or has never successfully
-        applied an event.
-        """
-        stmt = select(TenantProcessingState).where(TenantProcessingState.tenant_id == tenant_id)
-        state = self.session.scalar(stmt)
-
-        if state is None or state.last_successful_apply_at is None:
-            raise AnalyticsUnavailable(
-                f"Analytics uninitialized or no trustworthy coverage for tenant {tenant_id}"
-            )
-
-        return Freshness(
-            checkpoint=str(state.revision),
-            last_processed_at=state.last_successful_apply_at,
-        )
-
-    # -------------------------------------------------------------------------
-    # Developer A AnalyticsReader Protocol Implementation
-    # -------------------------------------------------------------------------
     def capabilities(self) -> ReaderCapabilities:
-        return ReaderCapabilities(
-            base_granularity="hour",
-            metric_semantics=METRIC_SEMANTICS,
-        )
+        return ReaderCapabilities(base_granularity="hour")
+
+    def check_readiness(self, query: AnalyticsQuery) -> Freshness:
+        from astraroll.aggregation.coverage import read_coverage
+        from astraroll.analytics.coverage import require_coverage
+
+        proof = read_coverage(self.session, query)
+        require_coverage(proof, query, "summary")
+        state = self.get_freshness(query.tenant_id)
+        return Freshness(tenant_revision=state.revision, last_processed_at=state.last_applied_at)
 
     def summary(self, query: AnalyticsQuery) -> ReadResult[SummaryMetrics]:
-        freshness = self.check_readiness(query.tenant_id)
-        from_utc = _ensure_utc(query.start)
-        to_utc = _ensure_utc(query.end)
-        curr = query.currency.strip().upper()
-
-        stmt = select(
-            func.coalesce(func.sum(HourlySummaryAggregate.order_count), 0).label("total_orders"),
-            func.coalesce(func.sum(HourlySummaryAggregate.sales_amount), Decimal("0.00")).label(
-                "total_sales"
-            ),
-        ).where(
-            HourlySummaryAggregate.tenant_id == query.tenant_id,
-            HourlySummaryAggregate.currency == curr,
-            HourlySummaryAggregate.bucket_start >= from_utc,
-            HourlySummaryAggregate.bucket_start < to_utc,
-        )
-        row = self.session.execute(stmt).one()
+        freshness = self.check_readiness(query)
+        data = self.get_summary(query.tenant_id, query.currency, query.start, query.end)
         return ReadResult(
-            value=SummaryMetrics(
-                total_order_count=int(row.total_orders),
-                sales_amount=Decimal(str(row.total_sales)),
-            ),
-            freshness=freshness,
+            SummaryMetrics(total_order_count=data.total_orders, sales_amount=data.total_sales),
+            freshness,
         )
 
     def trends(self, query: TrendsQuery) -> ReadResult[list[TrendMetrics]]:
-        freshness = self.check_readiness(query.tenant_id)
-        from_utc = _ensure_utc(query.start)
-        to_utc = _ensure_utc(query.end)
-        curr = query.currency.strip().upper()
-
-        if query.interval == "day":
-            if from_utc.hour or to_utc.hour:
-                raise UnsupportedAnalyticsWindow("Daily trends require UTC midnight boundaries")
-            model = DailySummaryAggregate
-        else:
-            model = HourlySummaryAggregate
-
-        stmt = (
-            select(
-                model.bucket_start,
-                model.order_count,
-                model.sales_amount,
-            )
-            .where(
-                model.tenant_id == query.tenant_id,
-                model.currency == curr,
-                model.bucket_start >= from_utc,
-                model.bucket_start < to_utc,
-            )
-            .order_by(model.bucket_start.asc())
-        )
-        rows = self.session.execute(stmt).all()
+        freshness = self.check_readiness(query)
         return ReadResult(
-            value=[
+            [
                 TrendMetrics(
-                    bucket_start=r.bucket_start,
-                    total_order_count=int(r.order_count),
-                    sales_amount=Decimal(str(r.sales_amount)),
+                    bucket_start=row.bucket_start,
+                    total_order_count=row.order_count,
+                    sales_amount=row.sales_amount,
                 )
-                for r in rows
+                for row in self.get_trends(
+                    query.tenant_id, query.currency, query.start, query.end, query.interval
+                )
             ],
-            freshness=freshness,
+            freshness,
         )
 
     def top_products(self, query: TopProductsQuery) -> ReadResult[list[ProductMetrics]]:
-        freshness = self.check_readiness(query.tenant_id)
-        from_utc = _ensure_utc(query.start)
-        to_utc = _ensure_utc(query.end)
-        curr = query.currency.strip().upper()
-
-        sum_sales = func.coalesce(
-            func.sum(HourlyProductAggregate.sales_amount), Decimal("0.00")
-        ).label("total_sales")
-        sum_orders = func.coalesce(func.sum(HourlyProductAggregate.order_count), 0).label(
-            "total_orders"
-        )
-
-        stmt = (
-            select(
-                HourlyProductAggregate.product_id,
-                sum_orders,
-                sum_sales,
-            )
-            .where(
-                HourlyProductAggregate.tenant_id == query.tenant_id,
-                HourlyProductAggregate.currency == curr,
-                HourlyProductAggregate.bucket_start >= from_utc,
-                HourlyProductAggregate.bucket_start < to_utc,
-            )
-            .group_by(HourlyProductAggregate.product_id)
-            .having(sum_orders >= 1)
-            .order_by(
-                desc(sum_sales),
-                HourlyProductAggregate.product_id.asc(),
-            )
-            .limit(query.limit)
-        )
-        rows = self.session.execute(stmt).all()
+        freshness = self.check_readiness(query)
         return ReadResult(
-            value=[
+            [
                 ProductMetrics(
-                    product_id=r.product_id,
-                    total_order_count=int(r.total_orders),
-                    sales_amount=Decimal(str(r.total_sales)),
+                    product_id=row.product_id,
+                    total_order_count=row.order_count,
+                    sales_amount=row.sales_amount,
                 )
-                for r in rows
+                for row in self.get_top_products(
+                    query.tenant_id, query.currency, query.start, query.end, limit=query.limit
+                )
             ],
-            freshness=freshness,
+            freshness,
         )
 
     def status_breakdown(self, query: AnalyticsQuery) -> ReadResult[list[StatusMetrics]]:
-        freshness = self.check_readiness(query.tenant_id)
-        from_utc = _ensure_utc(query.start)
-        to_utc = _ensure_utc(query.end)
-        curr = query.currency.strip().upper()
-
-        stmt = (
-            select(
-                HourlyStatusAggregate.status,
-                func.sum(HourlyStatusAggregate.order_count).label("total_orders"),
-                func.sum(HourlyStatusAggregate.sales_amount).label("total_sales"),
-            )
-            .where(
-                HourlyStatusAggregate.tenant_id == query.tenant_id,
-                HourlyStatusAggregate.currency == curr,
-                HourlyStatusAggregate.bucket_start >= from_utc,
-                HourlyStatusAggregate.bucket_start < to_utc,
-            )
-            .group_by(HourlyStatusAggregate.status)
+        freshness = self.check_readiness(query)
+        return ReadResult(
+            [
+                StatusMetrics(
+                    status=row.status,
+                    total_order_count=row.order_count,
+                    sales_amount=row.sales_amount,
+                )
+                for row in self.get_status_breakdown(
+                    query.tenant_id, query.currency, query.start, query.end
+                )
+            ],
+            freshness,
         )
-        rows = self.session.execute(stmt).all()
-        mapped = {r.status: (int(r.total_orders), Decimal(str(r.total_sales))) for r in rows}
 
-        result = [
-            StatusMetrics(
-                status=st,
-                total_order_count=mapped.get(st, (0, Decimal("0.00")))[0],
-                sales_amount=mapped.get(st, (0, Decimal("0.00")))[1],
-            )
-            for st in ("placed", "shipped", "cancelled")
-        ]
-        return ReadResult(value=result, freshness=freshness)
-
-    # -------------------------------------------------------------------------
-    # Internal Reader Methods
-    # -------------------------------------------------------------------------
     def get_summary(
         self,
         tenant_id: UUID,
@@ -433,8 +234,18 @@ class PostgresAnalyticsReader:
         total_orders = int(row.total_orders)
         total_sales = Decimal(str(row.total_sales))
 
-        if total_orders > 0:
-            aov = (total_sales / Decimal(total_orders)).quantize(
+        status_model = DailyStatusAggregate if use_daily else HourlyStatusAggregate
+        shipped_count = self.session.scalar(
+            select(func.coalesce(func.sum(status_model.order_count), 0)).where(
+                status_model.tenant_id == tenant_id,
+                status_model.currency == curr,
+                status_model.status == "shipped",
+                status_model.bucket_start >= from_utc,
+                status_model.bucket_start < to_utc,
+            )
+        )
+        if shipped_count > 0:
+            aov = (total_sales / Decimal(shipped_count)).quantize(
                 Decimal("0.01"), rounding=ROUND_HALF_UP
             )
         else:
@@ -496,9 +307,9 @@ class PostgresAnalyticsReader:
         granularity: str = "hour",
         limit: int = 10,
     ) -> list[TopProductItem]:
-        """Rank products by sales_amount DESC, product_id ASC.
+        """Rank positive sales DESC, count DESC, UUID ASC before LIMIT.
 
-        Includes products with zero sales as long as they have at least 1 order.
+        Zero-sales groups are excluded.
         """
         from_utc = _ensure_utc(from_ts)
         to_utc = _ensure_utc(to_ts)

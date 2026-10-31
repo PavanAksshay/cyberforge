@@ -28,6 +28,7 @@ from astraroll.aggregation.contracts import (
 from astraroll.aggregation.contribution import compute_contribution_delta
 from astraroll.aggregation.exceptions import CorruptedProjectionError
 from astraroll.aggregation.repository import AggregateRepository
+from astraroll.locking import tenant_lock
 from astraroll.models import Order
 
 
@@ -73,6 +74,7 @@ class OrderEventProcessor:
         event_uuid = UUID(event.event_id)
         tenant_uuid = UUID(event.tenant_id)
         order_uuid = UUID(event.order_id)
+        tenant_lock(self.session, tenant_uuid)
 
         # 1. Exact-once check: processed_events deduplication
         if self.repo.is_event_processed(event_uuid):

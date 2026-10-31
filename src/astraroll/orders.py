@@ -6,6 +6,7 @@ from uuid import UUID, uuid4
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from astraroll.locking import tenant_lock
 from astraroll.models import Order, OutboxEvent, Tenant
 from astraroll.schemas import EVENT_SCHEMA_VERSION, OrderCreate, OrderEvent, OrderRead, OrderUpdate
 
@@ -62,6 +63,7 @@ def record_event(session: Session, order: Order, event_type: str, before: OrderR
 
 
 def create_order(session: Session, tenant_id: UUID, data: OrderCreate) -> Order:
+    tenant_lock(session, tenant_id)
     require_tenant(session, tenant_id)
     now = datetime.now(UTC)
     order = Order(
@@ -87,6 +89,7 @@ def mutate_order(
     expected_version: int,
     update: OrderUpdate | None = None,
 ) -> Order:
+    tenant_lock(session, tenant_id)
     order = find_order(session, tenant_id, order_id, lock=True)
     if order.version != expected_version:
         raise Conflict(f"Version conflict: current version is {order.version}")

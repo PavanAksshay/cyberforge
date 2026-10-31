@@ -90,7 +90,6 @@ class TestPureReduceEvent:
         assert result.new_state.current_version == 1
         assert result.new_state.last_event_id == "evt-1"
 
-        # 6 aggregate dimensions; placed order contributes 1 count and 0 sales in v2
         assert len(result.deltas) == 6
         for delta in result.deltas.values():
             assert delta.order_count == 1
@@ -170,7 +169,6 @@ class TestPureReduceEvent:
             dimension_value="shipped",
         )
 
-        # placed had 0 sales in v2
         assert res_v2.deltas[h_placed].order_count == -1
         assert res_v2.deltas[h_placed].sales_cents == 0
         # shipped has 10000 sales
@@ -338,7 +336,6 @@ class TestAggregationReducerEngine:
             dimension_value="PROD-A",
         )
 
-        # Placed orders contribute 0 sales in v2
         assert reducer.get_aggregate(h_summary_k) == AggregateDelta(order_count=1, sales_cents=0)
         assert reducer.get_aggregate(h_placed_k) == AggregateDelta(order_count=1, sales_cents=0)
         assert reducer.get_aggregate(h_prod_a_k) == AggregateDelta(order_count=1, sales_cents=0)
@@ -369,9 +366,7 @@ class TestAggregationReducerEngine:
         )
         # PROD-A is now 0 count, 0 sales
         assert reducer.get_aggregate(h_prod_a_k) == AggregateDelta(order_count=0, sales_cents=0)
-        # PROD-B has 1 count, 0 sales
         assert reducer.get_aggregate(h_prod_b_k) == AggregateDelta(order_count=1, sales_cents=0)
-        # Summary is 1 count, 0 sales
         assert reducer.get_aggregate(h_summary_k) == AggregateDelta(order_count=1, sales_cents=0)
 
         # Step 4: Status change to SHIPPED (v4: shipped, $150, PROD-B)
@@ -388,15 +383,11 @@ class TestAggregationReducerEngine:
             bucket_start=datetime(2026, 10, 31, 10, 0, 0, tzinfo=UTC),
             dimension_value="shipped",
         )
-        # 'placed' is now 0 count, 0 sales
         assert reducer.get_aggregate(h_placed_k) == AggregateDelta(order_count=0, sales_cents=0)
-        # 'shipped' has 1 count, 15000 sales
         assert reducer.get_aggregate(h_shipped_k) == AggregateDelta(
             order_count=1, sales_cents=15000
         )
-        # PROD-B has 1 count, 15000 sales
         assert reducer.get_aggregate(h_prod_b_k) == AggregateDelta(order_count=1, sales_cents=15000)
-        # Summary has 1 count, 15000 sales
         assert reducer.get_aggregate(h_summary_k) == AggregateDelta(
             order_count=1, sales_cents=15000
         )

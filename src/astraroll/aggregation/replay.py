@@ -17,12 +17,13 @@ from datetime import UTC, datetime
 from uuid import UUID
 
 from redis import Redis
-from sqlalchemy import select
+from sqlalchemy import select, tuple_
 from sqlalchemy.orm import Session, sessionmaker
 
 from astraroll.config import get_settings
 from astraroll.db import get_session_factory
 from astraroll.models import OutboxEvent
+from astraroll.operations import increment
 
 log = logging.getLogger("astraroll.replay")
 
@@ -43,7 +44,9 @@ def replay_outbox_events(
     Returns total number of replayed events.
     """
     total_replayed = 0
-    offset = 0
+    cursor = None
+    if not 1 <= batch_size <= 100000:
+        raise ValueError("Batch size must be 1..100000")
 
     with session_factory() as session:
         while True:
@@ -56,7 +59,9 @@ def replay_outbox_events(
             if to_ts is not None:
                 stmt = stmt.where(OutboxEvent.occurred_at < to_ts)
 
-            stmt = stmt.offset(offset).limit(batch_size)
+            if cursor is not None:
+                stmt = stmt.where(tuple_(OutboxEvent.occurred_at, OutboxEvent.id) > cursor)
+            stmt = stmt.limit(batch_size)
             events = session.scalars(stmt).all()
 
             if not events:
@@ -68,8 +73,12 @@ def replay_outbox_events(
                     redis_client.xadd(stream_name, {"event": payload_str})
                 total_replayed += 1
 
-            offset += len(events)
+            cursor = (events[-1].occurred_at, events[-1].id)
             log.info("Replay progress: %d events processed so far...", total_replayed)
+
+    if not dry_run and total_replayed:
+        with session_factory.begin() as counter_session:
+            increment(counter_session, "replayed", total_replayed)
 
     log.info("Replay complete. Total events processed: %d (dry_run=%s)", total_replayed, dry_run)
     return total_replayed

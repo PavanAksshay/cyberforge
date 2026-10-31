@@ -1,4 +1,4 @@
-# AstraRoll V1 frozen producer contract — schema version 2
+# AstraRoll V1 frozen producer contract â€” schema version 2
 
 Developer A owns the producer models, schemas, domain services, API, outbox relay,
 seeder, infrastructure and migrations `0001_producer` / `0002_producer_contract`.
@@ -236,26 +236,23 @@ All states, product IDs, currencies and creation/update timestamps are supplied.
 | POST | `/tenants/{tenant_id}/orders/{id}/cancel` | expected_version; same terminal/version rules |
 | GET | `/health/live`, `/health/ready` | process liveness / DB connectivity |
 
-Producer routes have no authentication/RLS; tenant UUIDs are not credentials. Compose binds
-ports to localhost. Readiness checks PostgreSQL only, so writes can continue
-while Redis is unavailable and outbox events accumulate.
+Tenant and order routes require expiring server-verified bearer keys and trusted
+memberships. POST /tenants requires an admin. No PostgreSQL RLS is implemented.
+Compose binds ports to localhost. Readiness checks PostgreSQL connectivity only;
+writes can continue while Redis is unavailable and the outbox accumulates.
 
-## Analytics query phase
+## Integrated analytics contract
 
-Four Developer A routes now exist under `/analytics`: summary, trends,
-top-products and status-breakdown. Their typed contracts, exact time/currency
-semantics, authorization boundary and logical requirements for B's persistence are
-in [analytics.md](analytics.md). B's subsequently published pure contracts at
-`dev-b@36a0aeb` were reviewed read-only: currency-partitioned durable tables and a
-schema-2 adapter now exist. The owner approved shipped-only sales and positive-sales
-product ranking (sales DESC, count DESC, UUID ASC), identified as
-`created_at_shipped_sales_v2`. No B files/models/migrations are created or changed
-on dev-a. A supplies an optional reader bridge and expiring API-key verification;
-valid credentials still cannot bypass the missing durable coverage provider.
-Producer routes remain unauthenticated; tenant UUIDs remain identifiers, not credentials.
+The coordinated release uses the approved **created_at_shipped_sales_v2** semantics:
+every order counts once, only shipped amounts recognize sales, and positive-sales
+products rank by sales DESC, count DESC, UUID ASC before LIMIT. Six B-owned hourly/
+daily tables retain currency, creation buckets, and summary/status/product dimensions.
+A's shared AnalyticsReader DTOs/protocol are used by B's reader and A's bridge.
+The bridge uses a read-only REPEATABLE READ transaction. There is no raw-order read
+fallback or application cache.
 
-Latest integration review: B `7909075` fixes the three previously identified
-processing/recovery defects but advertises the superseded analytics semantics.
-The owner's approved `created_at_shipped_sales_v2` decision remains authoritative;
-A rejects incompatible advertised contracts. Durable coverage still requires B's
-provider. See the exact verification ledger in [analytics.md](analytics.md).
+Revision 0004 adds durable bootstrap/coverage, archived rebuild rows, operational
+counters and NUMERIC(38,2) aggregate amounts. It does not certify existing totals.
+Explicit bootstrap archives/rebuilds/validates them before enabling coverage. Source
+orders, outbox history and processed-event deduplication survive rebuilds. See
+[analytics](analytics.md) and [operations](release-operations.md) for exact guarantees.

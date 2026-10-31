@@ -51,6 +51,18 @@ def test_reader_summary_and_aov(factory):
             )
         )
 
+    with factory.begin() as session:
+        for bucket, count, amount in ((b1, 2, "100.00"), (b2, 1, "50.00")):
+            session.add(
+                HourlyStatusAggregate(
+                    tenant_id=tenant_id,
+                    currency="USD",
+                    bucket_start=bucket,
+                    status="shipped",
+                    order_count=count,
+                    sales_amount=Decimal(amount),
+                )
+            )
     with factory() as session:
         reader = PostgresAnalyticsReader(session)
         # Query window covering both buckets
@@ -86,7 +98,7 @@ def test_reader_aov_with_zero_orders(factory):
         assert summary.average_order_value == Decimal("0.00")
 
 
-def test_reader_top_products_ranking_and_zero_sales_inclusion(factory):
+def test_reader_top_products_ranking_and_zero_sales_exclusion(factory):
     tenant_id = uuid4()
     b = datetime(2026, 10, 31, 10, 0, 0, tzinfo=UTC)
     prod_high = uuid4()
@@ -136,7 +148,6 @@ def test_reader_top_products_ranking_and_zero_sales_inclusion(factory):
             limit=10,
         )
 
-        # prod_zero is EXCLUDED because sales_amount == 0.00 (positive shipped sales only)
         assert len(top_prods) == 2
         assert top_prods[0].product_id == prod_high
         assert top_prods[0].rank == 1
@@ -243,6 +254,15 @@ def test_reader_protocol_readiness_and_empty_windows(factory):
             )
         )
 
+    from astraroll.aggregation.bootstrap import bootstrap
+
+    bootstrap(
+        factory,
+        tenant_init,
+        ["USD"],
+        datetime(2026, 10, 31, tzinfo=UTC),
+        datetime(2026, 11, 1, tzinfo=UTC),
+    )
     with factory() as session:
         reader = PostgresAnalyticsReader(session)
 
@@ -253,7 +273,7 @@ def test_reader_protocol_readiness_and_empty_windows(factory):
             end=end_ts,
             currency="USD",
         )
-        with pytest.raises(AnalyticsUnavailable, match="uninitialized or no trustworthy coverage"):
+        with pytest.raises(AnalyticsUnavailable, match="baseline"):
             reader.summary(q_uninit)
 
         # 2. Initialized tenant with empty window returns covered zeros with Freshness
@@ -267,7 +287,7 @@ def test_reader_protocol_readiness_and_empty_windows(factory):
         assert res.value.total_order_count == 0
         assert res.value.sales_amount == Decimal("0.00")
         assert res.freshness is not None
-        assert res.freshness.checkpoint == "10"
+        assert res.freshness.tenant_revision == 11
         assert res.freshness.last_processed_at == now_utc
 
         # 3. Trends protocol
@@ -281,7 +301,7 @@ def test_reader_protocol_readiness_and_empty_windows(factory):
             )
         )
         assert t_res.value == []
-        assert t_res.freshness.checkpoint == "10"
+        assert t_res.freshness.tenant_revision == 11
 
         # 4. Top products protocol
         tp_res = reader.top_products(
@@ -294,7 +314,7 @@ def test_reader_protocol_readiness_and_empty_windows(factory):
             )
         )
         assert tp_res.value == []
-        assert tp_res.freshness.checkpoint == "10"
+        assert tp_res.freshness.tenant_revision == 11
 
         # 5. Status breakdown protocol
         sb_res = reader.status_breakdown(q_init)
