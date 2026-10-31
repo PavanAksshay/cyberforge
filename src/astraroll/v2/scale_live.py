@@ -56,6 +56,8 @@ def live_probe(manager, redis, client, tenant: UUID, params, timeout_seconds=300
             raise TimeoutError("Historical relay/deduplication did not finish")
         n = relay.relay_tenant(tenant)
         historical += n
+        if n:
+            print(f"Live-probe historical events relayed: {historical}", flush=True)
         while consumer.process_batch():
             if time.monotonic() > deadline:
                 raise TimeoutError("Historical consumption did not finish")
@@ -124,12 +126,53 @@ def live_probe(manager, redis, client, tenant: UUID, params, timeout_seconds=300
             raise ValueError("Redelivery double-applied the live event")
     if redis.xpending(stream, group)["pending"]:
         raise ValueError("Recovery left pending work")
+    # Measure an ordinary cycle separately from the injected recovery sequence.
+    with manager.session(tenant) as session:
+        ordinary = session.scalar(
+            select(Order)
+            .where(
+                Order.tenant_id == tenant,
+                Order.status == "placed",
+                Order.currency == params["currency"],
+            )
+            .order_by(Order.id)
+            .limit(1)
+        )
+        if ordinary is None:
+            raise ValueError("Ordinary visibility probe needs another placed order")
+        next_id, next_version, next_amount = ordinary.id, ordinary.version, ordinary.amount
+    ordinary_start = time.perf_counter()
+    changed = client.patch(
+        f"/tenants/{tenant}/orders/{next_id}",
+        json={
+            "expected_version": next_version,
+            "status": "shipped",
+        },
+    )
+    changed.raise_for_status()
+    if relay.relay_tenant(tenant) != 1 or consumer.process_batch() != 1:
+        raise ValueError("Ordinary event cycle did not process exactly one event")
+    visible = client.get("/analytics/summary", params=params)
+    visible.raise_for_status()
+    ordinary_ms = (time.perf_counter() - ordinary_start) * 1000
+    if (
+        Decimal(visible.json()["sales_amount"])
+        != Decimal(after.json()["sales_amount"]) + next_amount
+        or visible.json()["total_order_count"] != after.json()["total_order_count"]
+    ):
+        raise ValueError("Ordinary visibility delta mismatch")
+    with manager.session(tenant) as session:
+        validate_rollups(session, tenant)
+        if session.get(TenantProcessingState, tenant).revision != revision + 2:
+            raise ValueError("Two live changes did not produce exactly two revisions")
     return {
         "tenant_id": str(tenant),
         "order_id": str(order_id),
         "stream": stream,
         "historical_events_drained": historical,
-        "live_events": 1,
+        "live_events": 2,
+        "ordinary_order_id": str(next_id),
+        "ordinary_visibility_ms": ordinary_ms,
         "visibility_including_recovery_ms": visibility_ms,
         "recovery": "commit-before-ACK, XAUTOCLAIM, deduplicated, ACKed",
         "scope": "one existing target order; cardinality unchanged; includes injected recovery",

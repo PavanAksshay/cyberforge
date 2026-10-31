@@ -167,6 +167,9 @@ def test_live_recovery_with_real_bearer_and_cross_tenant_denial(
     monkeypatch,
 ):
     engine, factory, _, tenant = scale_fixture
+    from astraroll.workload import seed_batch
+
+    seed_batch(factory, tenant, 12, 24)
     bootstrap(factory, tenant, ["USD", "EUR"], START, END, 5)
 
     class Manager:
@@ -231,7 +234,7 @@ def test_live_recovery_with_real_bearer_and_cross_tenant_denial(
                     == 401
                 )
             result = live_probe(manager, redis_client, client, tenant, params)
-            assert result["live_events"] == 1
+            assert result["live_events"] == 2
             assert "deduplicated" in result["recovery"]
             with engine.connect() as c:
                 for currency in ("USD", "EUR"):

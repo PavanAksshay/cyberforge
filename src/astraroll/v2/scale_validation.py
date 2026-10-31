@@ -19,7 +19,7 @@ from uuid import UUID
 
 import httpx
 import psutil
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session
 
@@ -153,8 +153,8 @@ def snapshot(conn, schema, tenant, limit, cutoff=None):
         )
         versions = Counter(row["order_id"] for row in events)
         last_version = {}
-        for event in events:
-            last_version[event["order_id"]] = event["order_version"]
+        for item in events:
+            last_version[item["order_id"]] = item["order_version"]
         if any(
             versions[row["id"]] != row["version"] or last_version.get(row["id"]) != row["version"]
             for row in rows
@@ -439,6 +439,45 @@ def compare_api(conn, body, endpoint, params, interval="day"):
         raise ValueError("API tenant/currency mismatch")
 
 
+def reader_query_plans(engine, params):
+    """Explain actual reader SELECTs, separately from raw-order oracle plans."""
+    from astraroll.aggregation.reader import PostgresAnalyticsReader
+
+    statements = []
+
+    def capture(conn, cursor, statement, parameters, context, executemany):
+        if statement.lstrip().upper().startswith("SELECT"):
+            statements.append((statement, parameters))
+
+    event.listen(engine, "before_cursor_execute", capture)
+    try:
+        with Session(engine) as session:
+            reader = PostgresAnalyticsReader(session)
+            args = (params["tenant"], params["currency"], params["start"], params["end"])
+            reader.get_summary(*args)
+            reader.get_trends(*args, "day")
+            reader.get_trends(*args, "hour")
+            reader.get_top_products(*args)
+            reader.get_status_breakdown(*args)
+    finally:
+        event.remove(engine, "before_cursor_execute", capture)
+    plans = []
+    with engine.connect() as conn:
+        for statement, parameters in statements:
+            if re.search(r"\bFROM\s+(?:public\.)?orders\b", statement, re.IGNORECASE):
+                raise ValueError("Analytics reader unexpectedly scans raw orders")
+            plans.append(
+                {
+                    "sql": statement,
+                    "plan": conn.exec_driver_sql(
+                        "EXPLAIN (ANALYZE,BUFFERS,FORMAT JSON) " + statement,
+                        parameters,
+                    ).scalar(),
+                }
+            )
+    return plans
+
+
 def measure_api(control_url, plan, api_url, token, samples=200, concurrency=4):
     """Real authenticated HTTP; all tenants/currencies/shapes checked before sampling."""
     if not 1 <= concurrency <= 16 or samples < len(plan["tenants"]):
@@ -465,6 +504,7 @@ def measure_api(control_url, plan, api_url, token, samples=200, concurrency=4):
                 return response.json()
 
             plans = {}
+            aggregate_plans = []
             for tenant, name in targets:
                 engine = readonly_engine(make_url(control_url).set(database=name))
                 try:
@@ -495,6 +535,7 @@ def measure_api(control_url, plan, api_url, token, samples=200, concurrency=4):
                                     ).scalar()
                                     for ep in ENDPOINTS
                                 }
+                                aggregate_plans = reader_query_plans(engine, params)
                 finally:
                     engine.dispose()
             metrics = {}
@@ -521,6 +562,7 @@ def measure_api(control_url, plan, api_url, token, samples=200, concurrency=4):
                 "oracle_tenants": len(targets),
                 "queries": metrics,
                 "sql_plans": plans,
+                "aggregate_reader_plans": aggregate_plans,
                 "limitations": [
                     "Same-host HTTP unless external API URL supplied",
                     "Direct SQL plans describe first tenant/currency only",
