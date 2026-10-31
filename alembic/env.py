@@ -1,0 +1,29 @@
+from alembic import context
+from astraroll import models  # noqa: F401
+from astraroll.config import get_settings
+from astraroll.db import Base, get_engine
+
+target_metadata = Base.metadata
+
+if context.is_offline_mode():
+    context.configure(
+        url=get_settings().database_url,
+        target_metadata=target_metadata,
+        literal_binds=True,
+        dialect_opts={"paramstyle": "named"},
+    )
+    with context.begin_transaction():
+        context.run_migrations()
+else:
+
+    def run(connection):
+        context.configure(connection=connection, target_metadata=target_metadata, compare_type=True)
+        with context.begin_transaction():
+            context.run_migrations()
+
+    supplied_connection = context.config.attributes.get("connection")
+    if supplied_connection is not None:
+        run(supplied_connection)
+    else:
+        with get_engine().connect() as connection:
+            run(connection)
