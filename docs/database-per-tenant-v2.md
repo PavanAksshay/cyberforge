@@ -248,7 +248,20 @@ export DEPLOYMENT_MODE="database_per_tenant"
 export MAX_ACTIVE_TENANT_POOLS=25
 ```
 
-### 10.3 Safe Rollback Procedure
+### 10.3 Tenant Migration (V1 Shared -> V2 Dedicated)
+```bash
+# Migrate an existing tenant from shared database to dedicated database with strict parity verification
+python -m astraroll.v2.cli migrate-tenant --tenant-id "<uuid>"
+
+# Migrate and optionally purge source records from shared DB once parity is confirmed
+python -m astraroll.v2.cli migrate-tenant --tenant-id "<uuid>" --purge-source
+```
+
+### 10.4 Health Check & Graceful Shutdown
+- `/health/ready` validates control plane connectivity and actively probes a provisioned tenant database.
+- FastAPI `lifespan` automatically executes clean connection pool disposal (`get_tenant_engine_manager().close_all()`) on SIGTERM / application exit.
+
+### 10.5 Safe Rollback Procedure
 1. If issues occur in database-per-tenant mode, set `DEPLOYMENT_MODE="shared"` in environment / `.env`.
 2. Restart the API and worker processes.
 3. The system immediately reverts to the shared V1 schema and database without dropping or altering any tenant databases.
