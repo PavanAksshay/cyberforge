@@ -45,6 +45,9 @@ def run_cycle(manager, redis, client, plan, environment, output):
             return {
                 "orders": session.scalar(text("SELECT count(*) FROM orders")),
                 "revision": session.get(TenantProcessingState, tenant).revision,
+                "last_stream_id": session.get(
+                    TenantProcessingState, tenant
+                ).last_successful_stream_id,
                 "pending": session.scalar(
                     text("SELECT count(*) FROM outbox_events WHERE published_at IS NULL")
                 ),
@@ -135,7 +138,9 @@ def run_cycle(manager, redis, client, plan, environment, output):
         manager, FailFirstAck(redis), stream_name=stream, group_name=group, block_ms=1
     )
     try:
-        consumer.process_message(*message)
+        stream_id, fields = message
+        stream_id = stream_id.decode() if isinstance(stream_id, bytes) else stream_id
+        consumer.process_message(stream_id, fields)
     except RuntimeError as exc:
         if str(exc) != "injected commit-before-ACK failure":
             raise
@@ -147,6 +152,8 @@ def run_cycle(manager, redis, client, plan, environment, output):
     recovered = query()
     recovery_ms = (time.perf_counter() - begin) * 1000
     final = state(first)
+    if final["last_stream_id"] != stream_id:
+        raise ValueError("Recovered checkpoint does not equal the real Redis string ID")
     if (
         final["revision"] != revision + 1
         or final["orders"] != 10000

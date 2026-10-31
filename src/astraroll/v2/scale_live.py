@@ -96,6 +96,7 @@ def live_probe(manager, redis, client, tenant: UUID, params, timeout_seconds=300
     if not messages:
         raise ValueError("Live event missing from stream")
     sid, fields = messages[0][1][0]
+    sid = sid.decode() if isinstance(sid, bytes) else sid
     consumer.redis = FailFirstAck(redis)
     try:
         consumer.process_message(sid, fields)
@@ -107,6 +108,8 @@ def live_probe(manager, redis, client, tenant: UUID, params, timeout_seconds=300
     with manager.session(tenant) as session:
         if session.get(TenantProcessingState, tenant).revision != revision + 1:
             raise ValueError("Live event was not committed before ACK failure")
+        if session.get(TenantProcessingState, tenant).last_successful_stream_id != sid:
+            raise ValueError("Stored processing checkpoint is not the real Redis string ID")
     if redis.xpending(stream, group)["pending"] != 1:
         raise ValueError("Failed ACK did not retain the pending message")
     consumer.redis = redis
