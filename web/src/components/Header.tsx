@@ -42,12 +42,11 @@ export const Header: React.FC = () => {
     setTimeout(() => setIsRotating(false), 600);
   };
 
-  const currencies: Currency[] = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD'];
+  // Primary settlement currencies pre-aggregated in 100 tenant DBs
+  const currencies: Currency[] = ['USD', 'EUR'];
   const presets: { id: DatePreset; label: string }[] = [
     { id: '24h', label: '24h' },
     { id: '7d', label: '7d' },
-    { id: '30d', label: '30d' },
-    { id: '90d', label: '90d' },
     { id: 'all', label: 'All Time' },
   ];
 

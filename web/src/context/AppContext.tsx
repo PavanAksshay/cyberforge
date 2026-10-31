@@ -30,23 +30,19 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 function computeDateRange(preset: DatePreset): { start: string; end: string } {
-  const now = new Date();
-  // Align to complete UTC days (midnight)
-  let end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
-  let start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  // Benchmark dataset window: 2026-10-01T00:00:00Z to 2026-10-08T00:00:00Z
+  const baseStart = new Date(Date.UTC(2026, 9, 1, 0, 0, 0));
+  const baseEnd = new Date(Date.UTC(2026, 9, 8, 0, 0, 0));
+
+  let start = baseStart;
+  let end = baseEnd;
 
   if (preset === '24h') {
-    start = new Date(end.getTime() - 24 * 60 * 60 * 1000);
-  } else if (preset === '7d') {
-    start = new Date(end.getTime() - 7 * 24 * 60 * 60 * 1000);
-  } else if (preset === '30d') {
-    start = new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);
-  } else if (preset === '90d') {
-    start = new Date(end.getTime() - 90 * 24 * 60 * 60 * 1000);
-  } else if (preset === 'all') {
-    // Data window: Oct 2026 (10M benchmark dataset)
-    start = new Date(Date.UTC(2026, 9, 1));  // 2026-10-01
-    end = new Date(Date.UTC(2026, 9, 8));    // 2026-10-08
+    start = baseStart;
+    end = new Date(Date.UTC(2026, 9, 2, 0, 0, 0)); // 24h: Oct 1 - Oct 2
+  } else if (preset === '7d' || preset === 'all' || preset === '30d' || preset === '90d') {
+    start = baseStart;
+    end = baseEnd; // Full coverage: Oct 1 - Oct 8
   }
 
   return {

@@ -14,6 +14,23 @@ const API_BASE = '';
 
 const DEFAULT_AUTH_TOKEN = 'smoke-test-admin-key-astraroll-v2';
 
+export function extractErrorMessage(errPayload: any, fallback: string): string {
+  if (!errPayload) return fallback;
+  if (typeof errPayload === 'string') return errPayload;
+  if (typeof errPayload.detail === 'string') return errPayload.detail;
+  if (errPayload.detail && typeof errPayload.detail.message === 'string') return errPayload.detail.message;
+  if (Array.isArray(errPayload.detail) && errPayload.detail.length > 0) {
+    return errPayload.detail.map((e: any) => e.msg || e.message || JSON.stringify(e)).join(', ');
+  }
+  if (typeof errPayload.message === 'string') return errPayload.message;
+  try {
+    return JSON.stringify(errPayload);
+  } catch {
+    return fallback;
+  }
+}
+
+
 function getHeaders(token?: string): Record<string, string> {
   const headers: Record<string, string> = { Accept: 'application/json' };
   const active = token || (typeof window !== 'undefined' ? localStorage.getItem('astraroll_token') : null) || DEFAULT_AUTH_TOKEN;
@@ -76,7 +93,7 @@ export async function fetchSummary(
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(err.detail || err.message || `Summary request failed (${res.status})`);
+    throw new Error(extractErrorMessage(err, `Summary request failed (${res.status})`));
   }
   return await res.json();
 }
@@ -101,7 +118,7 @@ export async function fetchTrends(
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(err.detail || err.message || `Trends request failed (${res.status})`);
+    throw new Error(extractErrorMessage(err, `Trends request failed (${res.status})`));
   }
   return await res.json();
 }
@@ -126,7 +143,7 @@ export async function fetchTopProducts(
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(err.detail || err.message || `Top products request failed (${res.status})`);
+    throw new Error(extractErrorMessage(err, `Top products request failed (${res.status})`));
   }
   return await res.json();
 }
@@ -149,7 +166,7 @@ export async function fetchStatusBreakdown(
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(err.detail || err.message || `Status breakdown request failed (${res.status})`);
+    throw new Error(extractErrorMessage(err, `Status breakdown request failed (${res.status})`));
   }
   return await res.json();
 }
@@ -174,7 +191,7 @@ export async function ingestCsv(
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(err.detail || `Ingestion failed (${res.status})`);
+    throw new Error(extractErrorMessage(err, `Ingestion failed (${res.status})`));
   }
   return await res.json();
 }
@@ -202,7 +219,7 @@ export async function askAssistant(
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(err.detail || `Assistant request failed (${res.status})`);
+    throw new Error(extractErrorMessage(err, `Assistant request failed (${res.status})`));
   }
   return await res.json();
 }
