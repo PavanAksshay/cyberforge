@@ -86,9 +86,15 @@ delivery. Interrupted replay can safely restart; no source/outbox history is rem
 
 Consumer batches are validated 1..10,000; default 50. Relay batches are bounded by
 configuration and wait for database/Redis operations, naturally limiting admission.
-These controls do not constitute fair scheduling or adaptive backpressure. A shared
-stream does not guarantee tenant fairness. No fairness or cache improvement is
-claimed without an actual before/after experiment.
+New/claimed read replies now dispatch tenants round-robin while preserving each
+tenant's delivery order and retaining every message. This is bounded to the current
+read-ahead batch, not a guarantee over an arbitrarily large stream backlog. Use
+`--fifo` to reproduce the baseline. Durable processing/ACK/recovery is unchanged.
+`python -m astraroll.fairness_benchmark` compares both settings on distinct equivalent
+source histories, alternating scenario order over three repetitions, and validates
+all six rollups and empty PEL after each run. See the benchmark report for measured
+cold-tenant latency. No adaptive concurrency/backpressure controller or cache is
+claimed. A shared stream still does not guarantee global tenant fairness.
 
 ## Security and release boundaries
 

@@ -110,7 +110,7 @@ docker compose config
 ./.venv/Scripts/python -m pip check
 # New isolated schema per run; retains all generated data for inspection.
 ./.venv/Scripts/python -m astraroll.benchmark --orders 1000000 --tenants 10 --samples 100 --concurrency 4
-./.venv/Scripts/python -m astraroll.benchmark --orders 10000000 --tenants 100 --samples 100 --concurrency 4
+./.venv/Scripts/python -m astraroll.benchmark --orders 10000000 --tenants 100 --samples 100 --concurrency 4 --seed-workers 4 --bootstrap-workers 4
 ```
 
 Tests create isolated schemas and uniquely named Redis streams, retained for
@@ -122,11 +122,15 @@ rollups and all four API query shapes against SQL, and emits JSON/CSV.
 It reports bootstrap and bounded live-update throughput separately. It does not
 claim a full bulk event-consumption benchmark or organizer targets without evidence.
 
+The controlled within-batch scheduling experiment is reproducible with
+`python -m astraroll.fairness_benchmark`; `astraroll-consumer --fifo` selects its
+baseline. Both modes retain commit-before-ACK, version safety and recovery.
+
 ## Limits
 
 This is a hackathon release, not production certification. No PostgreSQL RLS, TLS
 termination, external identity lifecycle, distributed cache or automated retention
 is provided. Database/Redis credentials and OS access remain trusted. Rebuild cutover
 serializes a tenant's writers/consumer and can block a hot tenant; staging is bounded,
-but final oracle/grouping cost grows with its source. The shared stream and bounded
-batches do not guarantee tenant fairness. No Kafka, Kubernetes or ML is used.
+but final oracle/grouping cost grows with its source. Within-batch round-robin dispatch reduces cold-tenant delay when its messages are
+in the read reply; the shared stream still does not guarantee global tenant fairness. No Kafka, Kubernetes or ML is used.
