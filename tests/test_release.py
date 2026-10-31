@@ -189,7 +189,7 @@ def test_forward_upgrade_preserves_historical_totals_without_certifying(migratio
             VALUES (:id,'USD',:at,1,100)"""),
             {"id": tenant, "at": START},
         )
-    migrate(migration_engine)
+    migrate(migration_engine, "0004_coverage_precision")
     with migration_engine.connect() as conn:
         assert conn.scalar(text("SELECT sales_amount FROM hourly_summary_aggregates")) == 100
         assert conn.scalar(text("SELECT count(*) FROM aggregate_coverage")) == 0

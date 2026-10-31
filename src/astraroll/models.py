@@ -36,6 +36,7 @@ class Order(Base):
         CheckConstraint("status IN ('placed', 'shipped', 'cancelled')", name="ck_order_status"),
         CheckConstraint("currency ~ '^[A-Z]{3}$'", name="ck_order_currency"),
         Index("ix_orders_tenant_created", "tenant_id", "created_at", "id"),
+        Index("ix_orders_tenant_id_keyset", "tenant_id", "id"),
     )
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     tenant_id: Mapped[UUID] = mapped_column(ForeignKey("tenants.id", ondelete="RESTRICT"))
@@ -52,6 +53,7 @@ class OutboxEvent(Base):
     __tablename__ = "outbox_events"
     __table_args__ = (
         UniqueConstraint("order_id", "order_version", name="uq_outbox_order_version"),
+        Index("ix_outbox_tenant_order_version", "tenant_id", "order_id", "order_version"),
         CheckConstraint("order_version >= 1", name="ck_outbox_version"),
         Index(
             "ix_outbox_pending", "occurred_at", "id", postgresql_where=text("published_at IS NULL")
