@@ -6,10 +6,11 @@ AstraRoll saves order changes transactionally, processes them through Redis Stre
 
 - **10,000,034 existing orders** in the audited expanded baseline.
 - **100 dedicated tenant databases**, with authenticated routing.
+- **All Tenants Overview** combines authorized stores into one portfolio dashboard, with ranked comparisons and individual-store drill-down.
 - **Four analytics APIs** backed by **six rollup tables**.
 - **1,000 API accuracy requests matched direct SQL** in the expanded-data validation.
 - **All four 10M-profile p95 latencies below one second**; two below 200 ms.
-- **386 backend tests passed** in the latest complete regression run; **12 frontend tests passed** in the verified frontend build.
+- **402 backend tests passed** in the complete portfolio regression run; **18 portfolio-specific checks** passed after two additional boundary tests; **15 frontend tests passed**.
 
 [Frontend](#frontend-snapshots) · [PRD checklist](#requirements-checklist) · [Measured results](#measured-results) · [Architecture](#how-it-works) · [Quick start](#quick-start-a-fresh-v2-demo) · [Ports](#ports-and-processes) · [Existing 100 tenants](#start-the-preserved-100-tenant-installation) · [API](#api-guide) · [Tests](#verification-and-tests)
 
@@ -40,7 +41,13 @@ The main idea is simple: **do a small amount of analytics work when an order cha
 
 ## Frontend snapshots
 
-Real local screenshots captured on **1 November 2026** with authenticated tenant data. Values belong to the selected tenant, currency and UTC window; subsequent live writes can change them. No bearer token or provider key is included.
+Real local screenshots captured on **1 November 2026** with authenticated tenant data. Values belong to the selected tenant or authorized portfolio, currency and UTC window; subsequent live writes can change them. No bearer token or provider key is included.
+
+### All Tenants Overview
+
+A marketplace-style portfolio across all authorized active tenant databases: combined shipped sales and order volume, shared-window trends, searchable sales ranking and individual-store drill-down. USD and EUR remain separate. [API guarantees and measured SQL parity](docs/portfolio-overview.md).
+
+![All 100 authorized stores in one portfolio dashboard](docs/images/portfolio-overview.jpg)
 
 ### Command Center
 
@@ -566,7 +573,7 @@ Compare with the API and equivalent sums over `hourly_summary_aggregates`. Raw o
 
 ## Verification and tests
 
-Latest complete backend run: **386 passed**, one existing Starlette/httpx deprecation warning. Verified frontend: **12 passed**, TypeScript build and ESLint passed. These are recorded results tied to reviewed evidence, not a dynamically polled badge.
+Latest complete backend run: **402 passed**, one existing Starlette/httpx deprecation warning. The final portfolio-specific run passed **18 checks**, including two additional boundary tests. Verified frontend: **15 passed**, TypeScript build and ESLint passed. These are recorded results tied to reviewed evidence, not a dynamically polled badge.
 
 ### Isolated backend suite
 
@@ -652,6 +659,7 @@ docs/                                      contracts, evidence and screenshots
 ## Evidence library
 
 - [README checklist and executed startup validation](docs/readme-verification.md)
+- [All Tenants Overview: API, authorization and measured SQL parity](docs/portfolio-overview.md)
 - [Event/database contract](docs/contracts.md)
 - [Analytics semantics/API](docs/analytics.md)
 - [100-tenant restoration](docs/100-tenant-restoration.md)

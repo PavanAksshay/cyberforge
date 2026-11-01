@@ -1,0 +1,27 @@
+{
+  "at": "2026-11-01T09:28:23.947311+00:00",
+  "profiles": [
+    {
+      "currency": "USD",
+      "tenants_checked": 100,
+      "totals": {
+        "total_order_count": 4998598,
+        "sales_amount": "1054450607.31"
+      },
+      "buckets_checked": 32,
+      "retrieval_ms": 5963.12,
+      "raw_sql_parity": "MATCH"
+    },
+    {
+      "currency": "EUR",
+      "tenants_checked": 100,
+      "totals": {
+        "total_order_count": 5001472,
+        "sales_amount": "1055653362.37"
+      },
+      "buckets_checked": 32,
+      "retrieval_ms": 5231.66,
+      "raw_sql_parity": "MATCH"
+    }
+  ]
+}

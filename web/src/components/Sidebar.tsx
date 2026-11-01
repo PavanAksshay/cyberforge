@@ -19,6 +19,7 @@ import { usePolling } from "../lib/usePolling";
 import { useApp } from "../context/AppContext";
 
 export type PageTab =
+  | "portfolio"
   | "overview"
   | "analytics"
   | "ingestion"
@@ -41,10 +42,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
     token,
     refreshKey,
   } = useApp();
-  const telemetry = usePolling(`${activeTenant?.id}:${token}`, (signal) =>
-    activeTenant
-      ? fetchTenantStatus(activeTenant.id, token, signal)
-      : Promise.resolve(null),
+  const telemetry = usePolling(
+    `${activeTenant?.id}:${token}:${activeTab === "portfolio"}`,
+    (signal) =>
+      activeTenant && activeTab !== "portfolio"
+        ? fetchTenantStatus(activeTenant.id, token, signal)
+        : Promise.resolve(null),
   );
   const [verification, setVerification] = useState<any>(null);
   const [verifyError, setVerifyError] = useState<string | null>(null);
@@ -87,6 +90,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
     icon: React.ReactNode;
     badge?: string;
   }[] = [
+    {
+      id: "portfolio",
+      label: "All Tenants Overview",
+      icon: <Database className="w-5 h-5" />,
+    },
     {
       id: "overview",
       label: "Command Center",
@@ -227,7 +235,7 @@ WHERE tenant_id = '${tenantUuid}'
         </div>
 
         {/* Dynamic SQL Verification Card (Live Cross-Check Generator) */}
-        {activeTenant && (
+        {activeTenant && activeTab !== "portfolio" && (
           <div className="p-4 rounded-3xl bg-[#062118] border border-[#0d3d2f] shadow-xl space-y-3.5">
             <div className="flex items-center justify-between pb-2 border-b border-[#0d3d2f]/60">
               <div className="flex items-center space-x-2">
@@ -378,7 +386,7 @@ WHERE tenant_id = '${tenantUuid}'
         )}
 
         {/* Tenant Database Proof Card */}
-        {activeTenant && (
+        {activeTenant && activeTab !== "portfolio" && (
           <div className="p-3.5 rounded-2xl bg-[#082920] border border-[#114f3c] shadow-sm space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
@@ -414,8 +422,9 @@ WHERE tenant_id = '${tenantUuid}'
           </span>
         </div>
         <p className="text-xs text-slate-300 leading-relaxed">
-          Run Verification compares raw orders, rollups and API values. A
-          mismatch is never marked verified.
+          {activeTab === "portfolio"
+            ? "Open an individual store to compare its raw orders, rollups and API values with Run Verification."
+            : "Run Verification compares raw orders, rollups and API values. A mismatch is never marked verified."}
         </p>
       </div>
     </aside>
