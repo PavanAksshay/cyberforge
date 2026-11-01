@@ -22,6 +22,7 @@ from astraroll.analytics.auth import (
     get_authorized_path_tenant,
     require_admin,
 )
+from astraroll.analytics.portfolio import router as portfolio_router
 from astraroll.analytics.reader import AnalyticsReader, get_analytics_reader
 from astraroll.analytics.routes import router as analytics_router
 from astraroll.config import get_settings
@@ -86,6 +87,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(analytics_router)
+app.include_router(portfolio_router)
 app.include_router(operations_router)
 
 app.include_router(live_router)

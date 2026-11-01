@@ -14,7 +14,9 @@ import {
 import { useApp, DatePreset } from "../context/AppContext";
 import { Currency } from "../types";
 
-export const Header: React.FC = () => {
+export const Header: React.FC<{ portfolio?: boolean }> = ({
+  portfolio = false,
+}) => {
   const {
     theme,
     toggleTheme,
@@ -101,16 +103,19 @@ export const Header: React.FC = () => {
         <div className="relative">
           <button
             onClick={() => setTenantDropdownOpen(!tenantDropdownOpen)}
+            disabled={portfolio}
             className="flex items-center space-x-2.5 px-3.5 py-2 rounded-xl bg-[#082920] border border-[#114f3c] text-sm font-semibold text-white hover:border-emerald-500/50 transition shadow-sm"
           >
             <Database className="w-4 h-4 text-emerald-400 shrink-0" />
             <span className="max-w-[160px] truncate">
-              {formatTenantDisplayName(activeTenant?.name)}
+              {portfolio
+                ? `All ${tenants.length} authorized stores`
+                : formatTenantDisplayName(activeTenant?.name)}
             </span>
             <ChevronDown className="w-4 h-4 text-slate-400" />
           </button>
 
-          {tenantDropdownOpen && (
+          {tenantDropdownOpen && !portfolio && (
             <div className="absolute left-0 mt-2 w-72 max-h-96 overflow-y-auto rounded-2xl bg-[#07261d] border border-[#12533f] shadow-2xl p-2 z-50">
               <div className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-emerald-400 border-b border-[#0f4738] mb-1">
                 Select Isolated Database ({tenants.length} Tenants)

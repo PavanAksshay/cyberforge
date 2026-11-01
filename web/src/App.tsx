@@ -8,6 +8,7 @@ import { CsvIngestionPage } from "./pages/CsvIngestionPage";
 import { AssistantPage } from "./pages/AssistantPage";
 import { TenantOpsPage } from "./pages/TenantOpsPage";
 import { ArchitecturePage } from "./pages/ArchitecturePage";
+import { PortfolioPage } from "./pages/PortfolioPage";
 
 const AppContent: React.FC = () => {
   const { tenantLoadError, activeTenant, currency, startDate, endDate } =
@@ -20,7 +21,7 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-transparent text-slate-100 transition-colors duration-200">
-      <Header />
+      <Header portfolio={activeTab === "portfolio"} />
 
       <div className="flex flex-col lg:flex-row flex-1 min-w-0">
         <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
@@ -37,6 +38,9 @@ const AppContent: React.FC = () => {
               </p>
             )}
             {activeTab === "overview" && <OverviewPage />}
+            {activeTab === "portfolio" && (
+              <PortfolioPage onDrillDown={() => setActiveTab("overview")} />
+            )}
             {activeTab === "analytics" && <AdvancedAnalyticsPage />}
             {activeTab === "ingestion" && <CsvIngestionPage />}
             {activeTab === "assistant" && <AssistantPage key={scopeKey} />}
