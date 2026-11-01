@@ -1,5 +1,8 @@
 # Live product verification — 2026-11-01
 
+Historical report: the subsequent owner-authorized 100-tenant repair and current
+port 8000 status are documented in [100-tenant restoration](100-tenant-restoration.md).
+
 The isolated mentor demo is READY at http://127.0.0.1:8001. The preserved benchmark
 analytics are NOT READY and intentionally return 503. The owner explicitly chose
 not to repair benchmark derived data during this pass. No main/release merge occurred.

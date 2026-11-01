@@ -1,4 +1,7 @@
 import React, { useState } from "react";
+import { useApp } from "../context/AppContext";
+import { usePolling } from "../lib/usePolling";
+import { apiJson } from "../lib/api";
 import {
   Network,
   Database,
@@ -46,55 +49,51 @@ interface StageDetail {
 }
 
 export const ArchitecturePage: React.FC = () => {
+  const { token } = useApp();
+  const audit = usePolling(token, (signal) =>
+    apiJson("/ops/restoration", token, signal),
+  );
+  const snapshot = audit.data;
   const benchmarkStats = [
     {
       label: "Physical Tenant DBs",
-      value: "100",
-      subtitle: "100% physically isolated",
+      value: snapshot ? String(snapshot.authorized_tenants) : "—",
+      subtitle: "Authorized physical databases",
     },
     {
       label: "Orders Per Tenant",
-      value: "100,000",
-      subtitle: "Exact uniform keyset",
+      value: snapshot
+        ? `${snapshot.orders_min?.toLocaleString()}–${snapshot.orders_max?.toLocaleString()}`
+        : "—",
+      subtitle: "Audited per-tenant range",
     },
     {
-      label: "Total Verified V2 Orders",
-      value: "10,000,000",
-      subtitle: "10M scale milestone",
+      label: "Last Audited Source Orders",
+      value: snapshot ? snapshot.source_orders.toLocaleString() : "—",
+      subtitle: snapshot
+        ? `${snapshot.verified_tenants} tenants verified`
+        : "Audit unavailable",
     },
     {
-      label: "Archived 1M target",
-      value: "< 200ms",
-      subtitle: "Not a current 10M measurement",
+      label: "Latest Measured p95",
+      value: snapshot?.performance
+        ? `${Math.max(...Object.values(snapshot.performance.queries).map((q: any) => q.p95_ms)).toFixed(1)} ms`
+        : "Unmeasured",
+      subtitle: "Latest profile: worst endpoint p95",
     },
   ];
 
-  const latencyBreakdown = [
-    {
-      endpoint: "/analytics/summary",
-      p95: "183.0 ms",
-      target: "< 200 ms",
-      status: "Passing (p99: 214.7 ms)",
-    },
-    {
-      endpoint: "/analytics/trends",
-      p95: "104.5 ms",
-      target: "< 200 ms",
-      status: "Passing",
-    },
-    {
-      endpoint: "/analytics/top-products",
-      p95: "94.7 ms",
-      target: "< 200 ms",
-      status: "Passing",
-    },
-    {
-      endpoint: "/analytics/status-breakdown",
-      p95: "157.0 ms",
-      target: "< 200 ms",
-      status: "Passing",
-    },
-  ];
+  const latencyBreakdown = snapshot?.performance
+    ? Object.entries(snapshot.performance.queries).map(([shape, value]) => {
+        const metric = value as any;
+        return {
+          endpoint: `/analytics/${shape}`,
+          p95: `${metric.p95_ms.toFixed(1)} ms`,
+          target: "< 200 ms",
+          status: `${metric.p95_under_200ms ? "Passing" : "Above target"} (p99: ${metric.p99_ms.toFixed(1)} ms)`,
+        };
+      })
+    : [];
 
   const stages: StageDetail[] = [
     {
@@ -103,27 +102,27 @@ export const ArchitecturePage: React.FC = () => {
       title: "Order Ingestion & Transactional Outbox",
       shortDesc: "Instant order writes without analytics overhead",
       icon: <Workflow className="w-5 h-5 text-emerald-400" />,
-      badge: "< 10ms Local Commit",
+      badge: "Atomic tenant-local commit",
       badgeColor: "bg-emerald-950/80 text-emerald-300 border-emerald-800",
       whyEfficient:
-        "Orders and outbox event records are committed in the exact same local ACID transaction inside the tenant DB. Writes never block on rollups or external analytical locks, preventing slow checkout responses.",
+        "Orders and outbox event records are committed in the exact same local ACID transaction inside the tenant DB. Tenant fences coordinate source writes, consumers and rebuild activation.",
       laptopFootprint:
-        "Near-zero memory footprint; uses tenant local engine for short-lived commits.",
+        "Uses tenant-local engines for short-lived commits with bounded pools.",
       dataFlow: {
         input:
           "REST API / CSV Ingestion payload (Order details, status, currency)",
         action:
           "Single ACID Transaction: INSERT INTO orders + INSERT INTO outbox_events",
-        output: "Durable event record created with sequence checkpoint",
+        output: "Durable event UUID and monotonic order version",
         branching: [
           "orders (shipped / placed / cancelled)",
           "outbox_events (event_id, payload, published=false)",
         ],
       },
       keySpecs: [
-        { label: "Ingestion Speed", value: "< 10 ms" },
+        { label: "Ingestion Speed", value: "Measured per request" },
         { label: "Write Consistency", value: "Local ACID" },
-        { label: "Lock Contention", value: "Zero" },
+        { label: "Lock Contention", value: "Tenant-scoped fences" },
       ],
     },
     {
@@ -135,9 +134,9 @@ export const ArchitecturePage: React.FC = () => {
       badge: "LRU Pool Manager",
       badgeColor: "bg-teal-950/80 text-teal-300 border-teal-800",
       whyEfficient:
-        "Instead of keeping 100 persistent database pools open (which crashes PostgreSQL max_connections on a standard laptop), a dynamic LRU connection manager recycles at most 10 active database engines on the fly.",
+        "A tenant registry resolves authorized UUIDs to database connections. An LRU manager bounds active tenant engines instead of opening a persistent pool for every database.",
       laptopFootprint:
-        "Caps active connections to 10 engines (< 150MB RAM total), running effortlessly on 8GB laptops.",
+        "The local API allows four active tenant pools and the worker two; each pool has one connection and no overflow.",
       dataFlow: {
         input: "Incoming request with Tenant UUID header or URL path",
         action:
@@ -150,8 +149,8 @@ export const ArchitecturePage: React.FC = () => {
         ],
       },
       keySpecs: [
-        { label: "Max Active Pools", value: "10 LRU Engines" },
-        { label: "Idle Tenant Cost", value: "0 Open Sockets" },
+        { label: "Max Active Pools", value: "API 4 / worker 2" },
+        { label: "Idle Tenant Cost", value: "LRU eviction closes pools" },
         { label: "Isolation Level", value: "Per-Tenant Connection" },
       ],
     },
@@ -164,7 +163,7 @@ export const ArchitecturePage: React.FC = () => {
       badge: "100 Physical DBs",
       badgeColor: "bg-cyan-950/80 text-cyan-300 border-cyan-800",
       whyEfficient:
-        "By sharding 10,000,000 orders into 100 distinct physical databases (v2bench_78b1ee4a_001..100), each database only contains 100,000 rows. B-tree indexes fit entirely in RAM, queries stay shallow, and noisy-neighbor cross-talk is eliminated.",
+        "Each authorized tenant routes to its own registered physical database. The audited baseline below reports exact counts. PostgreSQL CPU, memory and disk remain shared resources.",
       laptopFootprint:
         "PostgreSQL manages lightweight storage files per DB; buffer cache shared efficiently.",
       dataFlow: {
@@ -174,13 +173,13 @@ export const ArchitecturePage: React.FC = () => {
           "Clean, uncorrupted customer data with independent backup capability",
         branching: [
           "Tenant DB 001..100 (orders, outbox, 6 rollup tables)",
-          "Separate tablespaces / independent vacuum cycles",
+          "Separate databases / independent vacuum cycles",
         ],
       },
       keySpecs: [
         { label: "Database Count", value: "100 Physical" },
-        { label: "Rows Per Tenant", value: "100,000 Orders" },
-        { label: "Cross-Tenant Leakage", value: "0% Guaranteed" },
+        { label: "Rows Per Tenant", value: "See audited range above" },
+        { label: "Tenant Boundary", value: "Authenticated scope + routing" },
       ],
     },
     {
@@ -192,23 +191,23 @@ export const ArchitecturePage: React.FC = () => {
       badge: "Stream: astraroll:orders:v1",
       badgeColor: "bg-amber-950/80 text-amber-300 border-amber-800",
       whyEfficient:
-        "The streaming relay polls outbox tables using a round-robin cursor across active tenants. A single heavy tenant cannot starve others. Events stream into Redis 7 with consumer group checkpoints for zero message loss.",
+        "Committed-order hints accelerate live updates. Bounded round-robin outbox checks recover lost hints. Durable work receipts support retries after publication, and consumers acknowledge stream events after the PostgreSQL commit.",
       laptopFootprint:
-        "Redis consumes < 30MB RAM; streaming batches process in microseconds.",
+        "Bounded batches and tenant connection pools limit resource use; pressure still depends on workload.",
       dataFlow: {
         input: "Unpublished records from tenant outbox_events tables",
         action:
-          "MultiTenantRelay polls batches with round-robin tenant cursor -> XADD to Redis",
+          "LiveOutboxWorker selects bounded cohorts -> XADD -> existing consumer",
         output: "High-throughput stream published to astraroll:orders:v1",
         branching: [
-          "Redis Stream Consumer Group (cg_astraroll_v2)",
+          "Redis Stream Consumer Group (astraroll-live-imports-v2)",
           "ACK-after-commit tracking with fault recovery",
         ],
       },
       keySpecs: [
         { label: "Relay Scheduling", value: "Round-Robin Fair" },
         { label: "Message Durability", value: "At-Least-Once" },
-        { label: "Stream Throughput", value: "> 15,000 evt/s" },
+        { label: "Stream Throughput", value: "Not measured in this profile" },
       ],
     },
     {
@@ -222,13 +221,13 @@ export const ArchitecturePage: React.FC = () => {
       whyEfficient:
         "The rollup consumer incrementally maintains 6 projection tables per tenant database in both USD and EUR using ON CONFLICT DO UPDATE upserts. Dashboard queries never calculate aggregations on raw orders.",
       laptopFootprint:
-        "Microsecond updates during order inflow; zero heavy background recalculations.",
+        "Incremental changes use bounded transactions. Explicit repairs rebuild and verify derived data under tenant fences.",
       dataFlow: {
         input: "Batch of order stream events from Redis consumer group",
         action:
           "Incremental upsert into HourlySummary, Product, and Status aggregate tables",
         output:
-          "Fresh, pre-computed analytical views ready for constant-time query serving",
+          "Verified analytical views with persisted revision and coverage metadata",
         branching: [
           "HourlySummaryAggregate (USD & EUR, interval: hour/day)",
           "ProductAggregate (Top products by revenue & volume)",
@@ -237,20 +236,20 @@ export const ArchitecturePage: React.FC = () => {
       },
       keySpecs: [
         { label: "Aggregate Upsert", value: "O(1) Incremental" },
-        { label: "Freshness SLA", value: "~4.5s (Target < 30s)" },
-        { label: "SQL Parity", value: "100% Exact Match" },
+        { label: "Freshness SLA", value: "Target under 30 seconds" },
+        { label: "SQL Parity", value: "Verify against raw SQL" },
       ],
     },
     {
       id: "serving",
       number: "06",
-      title: "Sub-150ms Query Serving & Groq AI",
+      title: "Measured Rollup Queries & Grounded Assistant",
       shortDesc: "FastAPI analytics engine & function-calling AI",
       icon: <Sparkles className="w-5 h-5 text-emerald-400" />,
-      badge: "p95 < 150ms Constant-Time",
+      badge: "Tenant-scoped rollup queries",
       badgeColor: "bg-emerald-950/80 text-emerald-300 border-emerald-800",
       whyEfficient:
-        "Dashboard queries scan at most 168 pre-aggregated hourly rows instead of 10,000,000 raw orders. Query speed grew by only 1.08x between 1M and 10M rows. Groq LLM queries call these endpoints with strict factual grounding.",
+        "Summary and trends use time-bucket rollups; top products groups product rollups. Actual query plans and latency are measured for the verified UTC window. The assistant uses these same authorized analytics contracts.",
       laptopFootprint:
         "Minimal CPU; index-backed queries return in milliseconds.",
       dataFlow: {
@@ -265,9 +264,9 @@ export const ArchitecturePage: React.FC = () => {
         ],
       },
       keySpecs: [
-        { label: "Dashboard p95", value: "~145 ms (SLA < 200ms)" },
-        { label: "Rows Scanned", value: "~168 vs 10,000,000" },
-        { label: "Growth Factor", value: "1.08x (1M vs 10M)" },
+        { label: "Dashboard p95", value: "Latest measured profile below" },
+        { label: "Read Source", value: "Verified hourly / daily rollups" },
+        { label: "Scale Comparison", value: "Not measured in this profile" },
       ],
     },
   ];
@@ -283,20 +282,20 @@ export const ArchitecturePage: React.FC = () => {
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
               <span className="px-3 py-1 rounded-full text-[11px] font-extrabold uppercase bg-emerald-500/20 border border-emerald-400/40 text-emerald-300">
-                Verified Benchmark Milestone
+                Verified Tenant Baseline
               </span>
               <span className="px-3 py-1 rounded-full text-[11px] font-extrabold uppercase bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 flex items-center">
-                <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> 10,000,000 Orders
-                Across 100 Tenants
+                <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                {snapshot ? snapshot.source_orders.toLocaleString() : "—"}{" "}
+                audited orders
               </span>
             </div>
             <h1 className="text-3xl sm:text-4xl font-black tracking-tight">
               AstraRoll V2: Database-Per-Tenant Architecture
             </h1>
             <p className="text-sm sm:text-base text-emerald-200/90 max-w-3xl leading-relaxed">
-              Enterprise-grade physical database-per-tenant topology with
-              asynchronous streaming rollups, proven at 10,000,000 orders across
-              100 dedicated customer databases on a standard laptop.
+              Physical database-per-tenant routing with asynchronous streaming
+              rollups. Audited counts and measured performance appear below.
             </p>
           </div>
 
@@ -316,7 +315,7 @@ export const ArchitecturePage: React.FC = () => {
       {/* 10M Benchmark Showcase Cards */}
       <div className="space-y-4">
         <div className="text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-          Verified 10M Scale Benchmark Milestones
+          Last Audited Baseline and Measured Profile
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {benchmarkStats.map((st, i) => (
@@ -351,7 +350,7 @@ export const ArchitecturePage: React.FC = () => {
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
             Click on any pipeline stage below to inspect its data flow,
-            isolation mechanics, and why it is 10x more efficient.
+            isolation mechanics and resource limits.
           </p>
         </div>
 
@@ -488,7 +487,7 @@ export const ArchitecturePage: React.FC = () => {
             <div className="p-4 rounded-xl bg-emerald-950/20 border border-emerald-800/50 space-y-1.5">
               <div className="font-black text-base sm:text-lg text-emerald-400 flex items-center">
                 <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
-                Why This Approach Is 10x More Efficient
+                How This Stage Works
               </div>
               <p className="text-slate-200 leading-relaxed text-sm sm:text-base font-normal">
                 {activeStage.whyEfficient}
@@ -530,11 +529,9 @@ export const ArchitecturePage: React.FC = () => {
               </span>
             </div>
             <p className="text-slate-200 dark:text-slate-200 leading-relaxed text-sm sm:text-base">
-              In a single monolithic 10M table, B-tree indexes grow deep,
-              requiring multi-level disk page lookups and causing catastrophic
-              lock contention during concurrent writes. Sharding into 100
-              dedicated databases ensures each B-tree fits entirely in RAM
-              cache.
+              Orders and derived tables live in dedicated tenant databases. Each
+              query targets one tenant. The PostgreSQL server still shares CPU,
+              RAM and storage, so concurrent workloads can affect latency.
             </p>
           </div>
 
@@ -548,12 +545,10 @@ export const ArchitecturePage: React.FC = () => {
               </span>
             </div>
             <p className="text-slate-200 dark:text-slate-200 leading-relaxed text-sm sm:text-base">
-              Opening persistent connection pools to 100 separate databases
-              would crash PostgreSQL on a laptop with &quot;sorry, too many
-              clients already&quot;. AstraRoll V2 implements an LRU connection
-              cache (
-              <code className="font-mono text-[11px]">max_active_pools=10</code>
-              ) that recycles engines effortlessly under 150MB total RAM.
+              LRU eviction closes unused tenant pools. This local profile uses
+              at most four tenant pools in the API and two in the worker, each
+              with one connection and no overflow. Control and diagnostic
+              connections require additional server capacity.
             </p>
           </div>
 
@@ -570,15 +565,15 @@ export const ArchitecturePage: React.FC = () => {
               Writing to both an order database and an analytical store
               simultaneously risks split-brain failure or distributed two-phase
               commit overhead. With the Transactional Outbox pattern, writes
-              complete in &lt; 10ms with guaranteed eventual consistency via
-              Redis Streams.
+              commit atomically; the durable outbox supports retries through
+              Redis Streams. Visibility latency is measured separately.
             </p>
           </div>
 
           <div className="p-6 rounded-2xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 space-y-3 shadow-sm">
             <div className="flex items-center justify-between">
               <h4 className="font-black text-slate-900 dark:text-white text-base sm:text-lg">
-                4. O(1) Pre-Computed Aggregates vs Raw Scans
+                4. Pre-Computed Aggregates
               </h4>
               <span className="px-3 py-1 rounded-full text-xs font-black uppercase bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">
                 Query Speed
@@ -587,8 +582,9 @@ export const ArchitecturePage: React.FC = () => {
             <p className="text-slate-200 dark:text-slate-200 leading-relaxed text-sm sm:text-base">
               Instead of recalculating SUM(sales) over 10,000,000 raw rows on
               every page refresh, the dashboard queries pre-aggregated hourly
-              buckets. It reads at most 168 rows, explaining why query speed
-              only grew by 1.08x between 1M and 10M rows.
+              and daily buckets. Query cost depends on the selected window and
+              grouping. The table below reports the current measured profile; a
+              controlled 1M versus 10M comparison is not available.
             </p>
           </div>
         </div>
@@ -612,7 +608,7 @@ export const ArchitecturePage: React.FC = () => {
             </div>
           </div>
           <span className="px-3 py-1 rounded-full text-xs font-extrabold uppercase bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800 shrink-0">
-            AstraRoll V2: All 5 in &quot;Great&quot;
+            Targets are separate from measured results
           </span>
         </div>
 
@@ -624,7 +620,7 @@ export const ArchitecturePage: React.FC = () => {
                 <th className="px-4 py-3">How</th>
                 <th className="px-4 py-3">Good Target</th>
                 <th className="px-4 py-3">Great Target</th>
-                <th className="px-4 py-3">AstraRoll V2 (10M Projected)</th>
+                <th className="px-4 py-3">Current verified profile</th>
                 <th className="px-4 py-3 rounded-r-lg">Verdict</th>
               </tr>
             </thead>
@@ -641,7 +637,7 @@ export const ArchitecturePage: React.FC = () => {
                   Under 200 ms
                 </td>
                 <td className="px-4 py-3 text-emerald-600 dark:text-emerald-400 font-bold">
-                  Not measured for this live dataset
+                  Use the measured profile above
                 </td>
                 <td className="px-4 py-3">
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">
@@ -683,7 +679,7 @@ export const ArchitecturePage: React.FC = () => {
                   Less than 10% slower
                 </td>
                 <td className="px-4 py-3 text-emerald-600 dark:text-emerald-400 font-bold">
-                  Not measured for this live dataset
+                  Use the measured profile above
                 </td>
                 <td className="px-4 py-3">
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">
@@ -727,7 +723,7 @@ export const ArchitecturePage: React.FC = () => {
                   Less than 2x slower
                 </td>
                 <td className="px-4 py-3 text-emerald-600 dark:text-emerald-400 font-bold">
-                  1.08x slower (135ms → 145ms)
+                  No controlled scale comparison measured
                 </td>
                 <td className="px-4 py-3">
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800">
@@ -746,11 +742,13 @@ export const ArchitecturePage: React.FC = () => {
           <div className="flex items-center space-x-2">
             <Activity className="w-4 h-4 text-emerald-500" />
             <h3 className="font-black text-lg sm:text-xl text-slate-900 dark:text-white">
-              Measured Benchmark p95 Response Times (100 Tenants Concurrently)
+              Measured API Response Times
             </h3>
           </div>
           <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-            All 4 shapes meet &lt; 200ms target
+            {snapshot?.performance
+              ? `${snapshot.performance.concurrency} concurrent requests across ${snapshot.performance.tenant_databases} tenant databases`
+              : "No measured profile available"}
           </span>
         </div>
 
@@ -804,9 +802,9 @@ export const ArchitecturePage: React.FC = () => {
             <li>
               • <strong>Connection Management:</strong> 100 separate PostgreSQL
               databases require disciplined connection pool budgets. AstraRoll
-              V2 implements an LRU connection cache (
-              <code className="font-mono text-[11px]">max_active_pools=10</code>
-              ) to prevent exhausting PostgreSQL server processes.
+              V2 bounds active pools to four in the local API and two in the
+              worker. Pool eviction trades connection setup cost for lower
+              connection use.
             </li>
             <li>
               • <strong>Relay Fairness:</strong> A round-robin cursor across
@@ -845,9 +843,9 @@ export const ArchitecturePage: React.FC = () => {
               tenant-hashed consumer groups.
             </li>
             <li>
-              • <strong>Zero-Downtime Migration:</strong> Checkpointed keyset
-              cursor streaming allows moving high-volume tenants between
-              clusters without downtime.
+              • <strong>Resumable Migration:</strong> Checkpointed keyset
+              batches support retries. Final cutover requires coordinated tenant
+              fences; uninterrupted writes are not guaranteed.
             </li>
           </ul>
         </div>

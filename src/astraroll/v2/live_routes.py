@@ -1,8 +1,10 @@
 """Product APIs: evidence-based ingestion, read-only SQL parity, and bounded telemetry."""
 
+import json
 from dataclasses import asdict
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 from time import perf_counter
 from typing import Annotated
 from uuid import UUID
@@ -13,11 +15,16 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from starlette.concurrency import run_in_threadpool
 
-from astraroll.analytics.auth import get_authorized_path_tenant
+from astraroll.analytics.auth import (
+    AuthenticatedPrincipal,
+    get_authenticated_principal,
+    get_authorized_path_tenant,
+)
 from astraroll.analytics.contracts import AnalyticsQuery
 from astraroll.analytics.routes import Reader, Tenant, get_summary_query, read
 from astraroll.config import get_settings
 from astraroll.v2.live_ingestion import advance_import, import_progress
+from astraroll.v2.live_worker import hint_committed_orders, read_worker_health
 
 router = APIRouter()
 
@@ -35,7 +42,11 @@ def protect_benchmark(tenant_id: UUID):
 
     if get_settings().deployment_mode == "database_per_tenant":
         record = get_control_registry().get_tenant(tenant_id)
-        if record and record.database_name.startswith("v2bench_"):
+        if (
+            record
+            and record.database_name.startswith("v2bench_")
+            and not get_settings().benchmark_writes_enabled
+        ):
             raise HTTPException(
                 409,
                 "Benchmark tenant is read-only. Select an isolated demo tenant.",
@@ -69,6 +80,7 @@ def commit_import(tenant_id, content, dry_run, trigger_relay):
     with mgr.session(tenant_id) as session, session.begin():
         result = ingest_csv_data(session, tenant_id, content)
     ids = [UUID(i) for i in result.imported_order_ids]
+    hint_committed_orders(tenant_id, ids)
     catalog_error = None
     try:
         from astraroll.v2.products import register_product
@@ -234,8 +246,11 @@ def tenant_status(tenant_id: UUID):
                     }
                     for e in logs
                 ],
-                "worker_health": "unknown (no worker heartbeat configured)",
-                "write_protected": record.database_name.startswith("v2bench_"),
+                "worker_health": read_worker_health(),
+                "write_protected": (
+                    record.database_name.startswith("v2bench_")
+                    and not get_settings().benchmark_writes_enabled
+                ),
                 "checked_at": datetime.now(UTC),
             }
     except SQLAlchemyError:
@@ -304,4 +319,50 @@ def verify(
         "explanation": "Independent SQL comparison at a stable aggregate revision"
         if not concurrent
         else "Retry: aggregate revision changed between API and SQL snapshots",
+    }
+
+
+@router.get("/ops/restoration")
+def restoration_snapshot(
+    principal: Annotated[AuthenticatedPrincipal, Depends(get_authenticated_principal)],
+):
+    """Last audited baseline, not an invented live cross-database count."""
+    root = Path(__file__).resolve().parents[3]
+    try:
+        state = json.loads((root / ".runtime/tenant-analytics-repair.json").read_text())
+    except (OSError, ValueError):
+        raise HTTPException(503, "Verified tenant-baseline report is unavailable") from None
+    visible = {
+        tid: r
+        for tid, r in state["tenants"].items()
+        if principal.is_admin or UUID(tid) in principal.tenant_ids
+    }
+    verified = {tid: r for tid, r in visible.items() if r["phase"] == "verified"}
+    counts = [r["before"]["orders"] for r in verified.values()]
+    performance = None
+    if len(visible) == len(state["tenants"]):
+        try:
+            p = json.loads((root / ".runtime/restored-performance.json").read_text())
+            performance = {
+                "concurrency": p["concurrency"],
+                "tenant_databases": p["tenant_databases"],
+                "samples_per_shape": p["samples_per_shape"],
+                "queries": {
+                    k: {m: v for m, v in metrics.items() if m != "raw_ms"}
+                    for k, metrics in p["queries"].items()
+                },
+            }
+        except (OSError, ValueError):
+            pass
+    return {
+        "kind": "last_audited_baseline",
+        "authorized_tenants": len(visible),
+        "verified_tenants": len(verified),
+        "source_orders": sum(counts),
+        "orders_min": min(counts) if counts else None,
+        "orders_max": max(counts) if counts else None,
+        "verified_at": max((r["verified_at"] for r in verified.values()), default=None),
+        "start": state["start"],
+        "end": state["end"],
+        "performance": performance,
     }

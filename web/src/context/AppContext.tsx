@@ -36,7 +36,7 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-function computeDateRange(
+export function computeDateRange(
   preset: DatePreset,
   coverage?: { start: string; end: string },
 ): { start: string; end: string } {
@@ -48,13 +48,15 @@ function computeDateRange(
   let end = baseEnd;
 
   if (preset === "24h") {
-    start = baseStart;
-    end = new Date(Math.min(baseStart.getTime() + 86400000, baseEnd.getTime())); // 24h: Oct 1 - Oct 2
+    start = new Date(
+      Math.max(baseStart.getTime(), baseEnd.getTime() - 86400000),
+    );
+    end = baseEnd; // 24h: Oct 1 - Oct 2
   } else if (preset === "3d") {
-    start = baseStart;
-    end = new Date(
-      Math.min(baseStart.getTime() + 3 * 86400000, baseEnd.getTime()),
-    ); // 3 Days: Oct 1 - Oct 4
+    start = new Date(
+      Math.max(baseStart.getTime(), baseEnd.getTime() - 3 * 86400000),
+    );
+    end = baseEnd; // 3 Days: Oct 1 - Oct 4
   } else if (preset === "all") {
     start = baseStart;
     end = baseEnd; // All 7 Days: Oct 1 - Oct 8

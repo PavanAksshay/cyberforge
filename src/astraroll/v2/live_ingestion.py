@@ -16,7 +16,9 @@ from astraroll.v2.consumer import MultiTenantAggregationConsumer
 GROUP = "astraroll-live-imports-v2"
 
 
-def advance_import(tenant_id: UUID, order_ids: list[UUID], manager, redis_client=None):
+def advance_import(
+    tenant_id: UUID, order_ids: list[UUID], manager, redis_client=None, register_recovery=True
+):
     """Publish only this bounded cohort, bypassing covered historical backlog.
 
     FORCE claims real stream entries into the group's PEL before processing/ACK.
@@ -39,6 +41,19 @@ def advance_import(tenant_id: UUID, order_ids: list[UUID], manager, redis_client
             block_ms=1,
         )
         consumer.init_group()
+        if register_recovery and settings.live_outbox_hints_enabled:
+            # Retain recovery identity before any publication marker can commit.
+            receipts = [
+                json.dumps(
+                    {
+                        "tenant_id": str(tenant_id),
+                        "order_ids": [str(i) for i in order_ids[n : n + 20]],
+                    }
+                )
+                for n in range(0, len(order_ids), 20)
+            ]
+            if receipts:
+                client.rpush(settings.order_stream + ":live-work:processing", *receipts)
         with manager.session(tenant_id) as session, session.begin():
             events = session.scalars(
                 select(OutboxEvent)

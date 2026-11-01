@@ -263,8 +263,8 @@ export const CsvIngestionPage: React.FC = () => {
           is preserved.
         </p>
         <p>
-          Benchmark tenants are read-only. Use an isolated live demo tenant for
-          imports.
+          Imports target the selected tenant database. Server authorization and
+          write policy are enforced.
         </p>
         <div className="flex gap-4">
           <button

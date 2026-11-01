@@ -49,12 +49,12 @@ export const Header: React.FC = () => {
     {
       id: "24h",
       label: "24 Hours",
-      tooltip: "First 24 hours of dataset (Oct 1 - Oct 2)",
+      tooltip: "Latest 24 verified UTC hours",
     },
     {
       id: "3d",
       label: "3 Days",
-      tooltip: "First 3 days of dataset (Oct 1 - Oct 4)",
+      tooltip: "Up to the latest three verified UTC days",
     },
     {
       id: "all",
@@ -237,8 +237,8 @@ export const Header: React.FC = () => {
           onChange={(e) => setDatePreset(e.target.value as DatePreset)}
           className="bg-[#082920] p-1"
         >
-          <option value="24h">First 24 covered hours</option>
-          <option value="3d">First 3 covered days</option>
+          <option value="24h">Latest 24 covered hours</option>
+          <option value="3d">Latest 3 covered days</option>
           <option value="all">All verified coverage</option>
           <option value="custom" disabled>
             Custom UTC window

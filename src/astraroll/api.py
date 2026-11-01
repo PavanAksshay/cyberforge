@@ -49,6 +49,7 @@ from astraroll.schemas import (
 )
 from astraroll.v2.live_routes import protect_benchmark
 from astraroll.v2.live_routes import router as live_router
+from astraroll.v2.live_worker import hint_committed_order
 from astraroll.v2.router import (
     TenantDatabaseUnavailable,
     TenantInactiveError,
@@ -259,6 +260,7 @@ def order_create(tenant_id: UUID, data: OrderCreate, db: DB):
         with get_tenant_engine_manager().session(tenant_id) as tenant_db:
             with tenant_db.begin():
                 result = OrderRead.model_validate(create_order(tenant_db, tenant_id, data))
+        hint_committed_order(tenant_id, result.id)
         return result
 
     with db.begin():
@@ -332,6 +334,7 @@ def order_update(tenant_id: UUID, order_id: UUID, data: OrderUpdate, db: DB):
                 result = OrderRead.model_validate(
                     mutate_order(tenant_db, tenant_id, order_id, data.expected_version, data)
                 )
+        hint_committed_order(tenant_id, result.id)
         return result
 
     with db.begin():
@@ -356,6 +359,7 @@ def order_cancel(tenant_id: UUID, order_id: UUID, data: OrderCancel, db: DB):
                 result = OrderRead.model_validate(
                     mutate_order(tenant_db, tenant_id, order_id, data.expected_version)
                 )
+        hint_committed_order(tenant_id, result.id)
         return result
 
     with db.begin():

@@ -1,10 +1,11 @@
 # AstraRoll V2 integrated product
 
-Current live-demo instructions and measured correctness evidence:
-[live product verification](docs/live-product-verification.md).
-The isolated write-enabled dashboard uses port **8001**. The preserved benchmark
-inspection UI uses **8000** with analytics deliberately unavailable: its expanded
-10,000,034-order source no longer matches the old rollups. The owner requested no repair.
+Current local application: **http://127.0.0.1:8000/**, with all 100 dedicated tenant
+databases restored. See [100-tenant restoration verification](docs/100-tenant-restoration.md)
+for exact counts, measured performance, recovery tests and reproducible commands.
+The audited baseline contains **10,000,034 existing orders**, not the older 1M cohort.
+Only derived analytics were rebuilt; all order and outbox fields were preserved.
+The earlier [isolated demo report](docs/live-product-verification.md) is historical.
 Do not run historical seed/population or global relay commands against these databases.
 
 The sections below retain the earlier V1 architecture/setup history. Use the linked

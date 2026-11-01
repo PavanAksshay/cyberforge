@@ -1,0 +1,2463 @@
+{
+  "verified_at": "2026-11-01T02:29:57.789229+00:00",
+  "branch": "codex/astraroll-v2-final-product",
+  "parent_commit": "a5592332a52ffd4988009654b84f662fd774ab84",
+  "release_commit_reference": "git rev-parse HEAD on the pushed codex/astraroll-v2-final-product branch",
+  "dashboard": "http://127.0.0.1:8000/",
+  "tenant_databases": 100,
+  "source_orders": 10000034,
+  "source_outbox_events": 1733805,
+  "historical_orders_generated": 0,
+  "orders_or_outbox_modified_by_repair": false,
+  "archived_derived_rows": 10143992,
+  "recovered_resource_pauses": [
+    {
+      "tenant_id": "2c1af2d1-d217-5b75-afe9-b5123daeef63",
+      "historical_error": "MigrationResourcePause: Migration paused: commit below 1 GiB",
+      "final_phase": "verified"
+    },
+    {
+      "tenant_id": "2d2aee37-a214-5ad9-82d2-2771904472b7",
+      "historical_error": "MigrationResourcePause: Migration paused: commit below 1 GiB",
+      "final_phase": "verified"
+    }
+  ],
+  "coverage": {
+    "start": "2026-10-01T00:00:00+00:00",
+    "end": "2026-11-02T00:00:00+00:00",
+    "currencies": [
+      "USD",
+      "EUR"
+    ],
+    "semantics": "created_at_shipped_sales_v2"
+  },
+  "accuracy": {
+    "tenants": 100,
+    "http_requests": 1000,
+    "transport": "TCP port 8000",
+    "result": "All four shapes match independent SQL, including exact hourly/daily buckets and empty buckets"
+  },
+  "security": {
+    "checks": {
+      "unauthenticated_denied": 401,
+      "invalid_key_denied": 401,
+      "operator_registry": 200,
+      "scoped_registry": 200,
+      "own_tenant_allowed": 200,
+      "other_tenant_denied_summary": 403,
+      "other_tenant_denied_trends": 403,
+      "other_tenant_denied_top-products": 403,
+      "other_tenant_denied_status-breakdown": 403,
+      "other_status_denied": 403,
+      "unsupported_boundary": 422,
+      "invalid_limit": 422,
+      "missing_currency": 422,
+      "scoped_baseline": 200,
+      "operator_baseline": 200
+    },
+    "tenant_health_checks_passed": 100,
+    "pending_unapplied_events": 0,
+    "authenticated_writes_enabled": true
+  },
+  "performance": {
+    "currency": "USD",
+    "concurrency": 4,
+    "samples_per_shape": 200,
+    "tenant_databases": 100,
+    "source_orders": 10000034,
+    "window": {
+      "start": "2026-10-01T00:00:00+00:00",
+      "end": "2026-11-02T00:00:00+00:00"
+    },
+    "query_plans": [
+      {
+        "sql": "SELECT coalesce(sum(hourly_summary_aggregates.order_count), %(coalesce_1)s::INTEGER) AS total_orders, coalesce(sum(hourly_summary_aggregates.sales_amount), %(coalesce_2)s) AS total_sales \nFROM hourly_summary_aggregates \nWHERE hourly_summary_aggregates.tenant_id = %(tenant_id_1)s::UUID AND hourly_summary_aggregates.currency = %(currency_1)s::VARCHAR AND hourly_summary_aggregates.bucket_start >= %(bucket_start_1)s::TIMESTAMP WITH TIME ZONE AND hourly_summary_aggregates.bucket_start < %(bucket_start_2)s::TIMESTAMP WITH TIME ZONE",
+        "plan": [
+          {
+            "Plan": {
+              "Node Type": "Aggregate",
+              "Strategy": "Plain",
+              "Partial Mode": "Simple",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Startup Cost": 51.35,
+              "Total Cost": 51.36,
+              "Plan Rows": 1,
+              "Plan Width": 64,
+              "Actual Startup Time": 0.302,
+              "Actual Total Time": 0.303,
+              "Actual Rows": 1,
+              "Actual Loops": 1,
+              "Shared Hit Blocks": 18,
+              "Shared Read Blocks": 0,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0,
+              "Plans": [
+                {
+                  "Node Type": "Seq Scan",
+                  "Parent Relationship": "Outer",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Relation Name": "hourly_summary_aggregates",
+                  "Alias": "hourly_summary_aggregates",
+                  "Startup Cost": 0.0,
+                  "Total Cost": 47.64,
+                  "Plan Rows": 741,
+                  "Plan Width": 16,
+                  "Actual Startup Time": 0.091,
+                  "Actual Total Time": 0.191,
+                  "Actual Rows": 741,
+                  "Actual Loops": 1,
+                  "Filter": "((bucket_start >= '2026-10-01 00:00:00+00'::timestamp with time zone) AND (bucket_start < '2026-11-02 00:00:00+00'::timestamp with time zone) AND (tenant_id = '0457061c-db4d-553e-9b3c-ba32ec9e5f57'::uuid) AND ((currency)::text = 'USD'::text))",
+                  "Rows Removed by Filter": 741,
+                  "Shared Hit Blocks": 18,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                }
+              ]
+            },
+            "Planning": {
+              "Shared Hit Blocks": 0,
+              "Shared Read Blocks": 0,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            "Planning Time": 0.12,
+            "Triggers": [],
+            "Execution Time": 0.32
+          }
+        ]
+      },
+      {
+        "sql": "SELECT coalesce(sum(hourly_status_aggregates.order_count), %(coalesce_2)s::INTEGER) AS coalesce_1 \nFROM hourly_status_aggregates \nWHERE hourly_status_aggregates.tenant_id = %(tenant_id_1)s::UUID AND hourly_status_aggregates.currency = %(currency_1)s::VARCHAR AND hourly_status_aggregates.status = %(status_1)s::VARCHAR AND hourly_status_aggregates.bucket_start >= %(bucket_start_1)s::TIMESTAMP WITH TIME ZONE AND hourly_status_aggregates.bucket_start < %(bucket_start_2)s::TIMESTAMP WITH TIME ZONE",
+        "plan": [
+          {
+            "Plan": {
+              "Node Type": "Aggregate",
+              "Strategy": "Plain",
+              "Partial Mode": "Simple",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Startup Cost": 121.96,
+              "Total Cost": 121.97,
+              "Plan Rows": 1,
+              "Plan Width": 32,
+              "Actual Startup Time": 0.309,
+              "Actual Total Time": 0.309,
+              "Actual Rows": 1,
+              "Actual Loops": 1,
+              "Shared Hit Blocks": 35,
+              "Shared Read Blocks": 0,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0,
+              "Plans": [
+                {
+                  "Node Type": "Bitmap Heap Scan",
+                  "Parent Relationship": "Outer",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Relation Name": "hourly_status_aggregates",
+                  "Alias": "hourly_status_aggregates",
+                  "Startup Cost": 49.44,
+                  "Total Cost": 120.11,
+                  "Plan Rows": 741,
+                  "Plan Width": 8,
+                  "Actual Startup Time": 0.139,
+                  "Actual Total Time": 0.216,
+                  "Actual Rows": 741,
+                  "Actual Loops": 1,
+                  "Recheck Cond": "((tenant_id = '0457061c-db4d-553e-9b3c-ba32ec9e5f57'::uuid) AND ((currency)::text = 'USD'::text) AND ((status)::text = 'shipped'::text) AND (bucket_start >= '2026-10-01 00:00:00+00'::timestamp with time zone) AND (bucket_start < '2026-11-02 00:00:00+00'::timestamp with time zone))",
+                  "Rows Removed by Index Recheck": 0,
+                  "Exact Heap Blocks": 27,
+                  "Lossy Heap Blocks": 0,
+                  "Shared Hit Blocks": 35,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0,
+                  "Plans": [
+                    {
+                      "Node Type": "Bitmap Index Scan",
+                      "Parent Relationship": "Outer",
+                      "Parallel Aware": false,
+                      "Async Capable": false,
+                      "Index Name": "hourly_status_aggregates_pkey",
+                      "Startup Cost": 0.0,
+                      "Total Cost": 49.25,
+                      "Plan Rows": 741,
+                      "Plan Width": 0,
+                      "Actual Startup Time": 0.13,
+                      "Actual Total Time": 0.13,
+                      "Actual Rows": 741,
+                      "Actual Loops": 1,
+                      "Index Cond": "((tenant_id = '0457061c-db4d-553e-9b3c-ba32ec9e5f57'::uuid) AND ((currency)::text = 'USD'::text) AND ((status)::text = 'shipped'::text) AND (bucket_start >= '2026-10-01 00:00:00+00'::timestamp with time zone) AND (bucket_start < '2026-11-02 00:00:00+00'::timestamp with time zone))",
+                      "Shared Hit Blocks": 8,
+                      "Shared Read Blocks": 0,
+                      "Shared Dirtied Blocks": 0,
+                      "Shared Written Blocks": 0,
+                      "Local Hit Blocks": 0,
+                      "Local Read Blocks": 0,
+                      "Local Dirtied Blocks": 0,
+                      "Local Written Blocks": 0,
+                      "Temp Read Blocks": 0,
+                      "Temp Written Blocks": 0
+                    }
+                  ]
+                }
+              ]
+            },
+            "Planning": {
+              "Shared Hit Blocks": 0,
+              "Shared Read Blocks": 0,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            "Planning Time": 0.101,
+            "Triggers": [],
+            "Execution Time": 0.33
+          }
+        ]
+      },
+      {
+        "sql": "SELECT daily_summary_aggregates.bucket_start, daily_summary_aggregates.order_count, daily_summary_aggregates.sales_amount \nFROM daily_summary_aggregates \nWHERE daily_summary_aggregates.tenant_id = %(tenant_id_1)s::UUID AND daily_summary_aggregates.currency = %(currency_1)s::VARCHAR AND daily_summary_aggregates.bucket_start >= %(bucket_start_1)s::TIMESTAMP WITH TIME ZONE AND daily_summary_aggregates.bucket_start < %(bucket_start_2)s::TIMESTAMP WITH TIME ZONE ORDER BY daily_summary_aggregates.bucket_start ASC",
+        "plan": [
+          {
+            "Plan": {
+              "Node Type": "Sort",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Startup Cost": 3.01,
+              "Total Cost": 3.09,
+              "Plan Rows": 31,
+              "Plan Width": 24,
+              "Actual Startup Time": 0.027,
+              "Actual Total Time": 0.029,
+              "Actual Rows": 31,
+              "Actual Loops": 1,
+              "Sort Key": [
+                "bucket_start"
+              ],
+              "Sort Method": "quicksort",
+              "Sort Space Used": 26,
+              "Sort Space Type": "Memory",
+              "Shared Hit Blocks": 1,
+              "Shared Read Blocks": 0,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0,
+              "Plans": [
+                {
+                  "Node Type": "Seq Scan",
+                  "Parent Relationship": "Outer",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Relation Name": "daily_summary_aggregates",
+                  "Alias": "daily_summary_aggregates",
+                  "Startup Cost": 0.0,
+                  "Total Cost": 2.24,
+                  "Plan Rows": 31,
+                  "Plan Width": 24,
+                  "Actual Startup Time": 0.015,
+                  "Actual Total Time": 0.02,
+                  "Actual Rows": 31,
+                  "Actual Loops": 1,
+                  "Filter": "((bucket_start >= '2026-10-01 00:00:00+00'::timestamp with time zone) AND (bucket_start < '2026-11-02 00:00:00+00'::timestamp with time zone) AND (tenant_id = '0457061c-db4d-553e-9b3c-ba32ec9e5f57'::uuid) AND ((currency)::text = 'USD'::text))",
+                  "Rows Removed by Filter": 31,
+                  "Shared Hit Blocks": 1,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                }
+              ]
+            },
+            "Planning": {
+              "Shared Hit Blocks": 0,
+              "Shared Read Blocks": 0,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            "Planning Time": 0.091,
+            "Triggers": [],
+            "Execution Time": 0.041
+          }
+        ]
+      },
+      {
+        "sql": "SELECT hourly_summary_aggregates.bucket_start, hourly_summary_aggregates.order_count, hourly_summary_aggregates.sales_amount \nFROM hourly_summary_aggregates \nWHERE hourly_summary_aggregates.tenant_id = %(tenant_id_1)s::UUID AND hourly_summary_aggregates.currency = %(currency_1)s::VARCHAR AND hourly_summary_aggregates.bucket_start >= %(bucket_start_1)s::TIMESTAMP WITH TIME ZONE AND hourly_summary_aggregates.bucket_start < %(bucket_start_2)s::TIMESTAMP WITH TIME ZONE ORDER BY hourly_summary_aggregates.bucket_start ASC",
+        "plan": [
+          {
+            "Plan": {
+              "Node Type": "Sort",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Startup Cost": 82.96,
+              "Total Cost": 84.81,
+              "Plan Rows": 741,
+              "Plan Width": 24,
+              "Actual Startup Time": 0.274,
+              "Actual Total Time": 0.315,
+              "Actual Rows": 741,
+              "Actual Loops": 1,
+              "Sort Key": [
+                "bucket_start"
+              ],
+              "Sort Method": "quicksort",
+              "Sort Space Used": 64,
+              "Sort Space Type": "Memory",
+              "Shared Hit Blocks": 18,
+              "Shared Read Blocks": 0,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0,
+              "Plans": [
+                {
+                  "Node Type": "Seq Scan",
+                  "Parent Relationship": "Outer",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Relation Name": "hourly_summary_aggregates",
+                  "Alias": "hourly_summary_aggregates",
+                  "Startup Cost": 0.0,
+                  "Total Cost": 47.64,
+                  "Plan Rows": 741,
+                  "Plan Width": 24,
+                  "Actual Startup Time": 0.085,
+                  "Actual Total Time": 0.199,
+                  "Actual Rows": 741,
+                  "Actual Loops": 1,
+                  "Filter": "((bucket_start >= '2026-10-01 00:00:00+00'::timestamp with time zone) AND (bucket_start < '2026-11-02 00:00:00+00'::timestamp with time zone) AND (tenant_id = '0457061c-db4d-553e-9b3c-ba32ec9e5f57'::uuid) AND ((currency)::text = 'USD'::text))",
+                  "Rows Removed by Filter": 741,
+                  "Shared Hit Blocks": 18,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                }
+              ]
+            },
+            "Planning": {
+              "Shared Hit Blocks": 0,
+              "Shared Read Blocks": 0,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            "Planning Time": 0.076,
+            "Triggers": [],
+            "Execution Time": 0.346
+          }
+        ]
+      },
+      {
+        "sql": "SELECT hourly_product_aggregates.product_id, coalesce(sum(hourly_product_aggregates.order_count), %(coalesce_1)s::INTEGER) AS total_orders, coalesce(sum(hourly_product_aggregates.sales_amount), %(coalesce_2)s) AS total_sales \nFROM hourly_product_aggregates \nWHERE hourly_product_aggregates.tenant_id = %(tenant_id_1)s::UUID AND hourly_product_aggregates.currency = %(currency_1)s::VARCHAR AND hourly_product_aggregates.bucket_start >= %(bucket_start_1)s::TIMESTAMP WITH TIME ZONE AND hourly_product_aggregates.bucket_start < %(bucket_start_2)s::TIMESTAMP WITH TIME ZONE GROUP BY hourly_product_aggregates.product_id \nHAVING coalesce(sum(hourly_product_aggregates.sales_amount), %(coalesce_2)s) > %(param_1)s ORDER BY total_sales DESC, total_orders DESC, hourly_product_aggregates.product_id ASC \n LIMIT %(param_2)s::INTEGER",
+        "plan": [
+          {
+            "Plan": {
+              "Node Type": "Limit",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Startup Cost": 6858.92,
+              "Total Cost": 6858.94,
+              "Plan Rows": 10,
+              "Plan Width": 80,
+              "Actual Startup Time": 49.849,
+              "Actual Total Time": 49.851,
+              "Actual Rows": 10,
+              "Actual Loops": 1,
+              "Shared Hit Blocks": 46507,
+              "Shared Read Blocks": 0,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0,
+              "Plans": [
+                {
+                  "Node Type": "Sort",
+                  "Parent Relationship": "Outer",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Startup Cost": 6858.92,
+                  "Total Cost": 6896.32,
+                  "Plan Rows": 14961,
+                  "Plan Width": 80,
+                  "Actual Startup Time": 49.847,
+                  "Actual Total Time": 49.849,
+                  "Actual Rows": 10,
+                  "Actual Loops": 1,
+                  "Sort Key": [
+                    "(COALESCE(sum(sales_amount), 0.00)) DESC",
+                    "(COALESCE(sum(order_count), '0'::numeric)) DESC",
+                    "product_id"
+                  ],
+                  "Sort Method": "top-N heapsort",
+                  "Sort Space Used": 26,
+                  "Sort Space Type": "Memory",
+                  "Shared Hit Blocks": 46507,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0,
+                  "Plans": [
+                    {
+                      "Node Type": "Aggregate",
+                      "Strategy": "Sorted",
+                      "Partial Mode": "Simple",
+                      "Parent Relationship": "Outer",
+                      "Parallel Aware": false,
+                      "Async Capable": false,
+                      "Startup Cost": 0.42,
+                      "Total Cost": 6535.62,
+                      "Plan Rows": 14961,
+                      "Plan Width": 80,
+                      "Actual Startup Time": 0.044,
+                      "Actual Total Time": 46.328,
+                      "Actual Rows": 22499,
+                      "Actual Loops": 1,
+                      "Group Key": [
+                        "product_id"
+                      ],
+                      "Filter": "(COALESCE(sum(sales_amount), 0.00) > 0.00)",
+                      "Rows Removed by Filter": 22622,
+                      "Shared Hit Blocks": 46507,
+                      "Shared Read Blocks": 0,
+                      "Shared Dirtied Blocks": 0,
+                      "Shared Written Blocks": 0,
+                      "Local Hit Blocks": 0,
+                      "Local Read Blocks": 0,
+                      "Local Dirtied Blocks": 0,
+                      "Local Written Blocks": 0,
+                      "Temp Read Blocks": 0,
+                      "Temp Written Blocks": 0,
+                      "Plans": [
+                        {
+                          "Node Type": "Index Scan",
+                          "Parent Relationship": "Outer",
+                          "Parallel Aware": false,
+                          "Async Capable": false,
+                          "Scan Direction": "Forward",
+                          "Index Name": "hourly_product_aggregates_pkey",
+                          "Relation Name": "hourly_product_aggregates",
+                          "Alias": "hourly_product_aggregates",
+                          "Startup Cost": 0.42,
+                          "Total Cost": 5409.75,
+                          "Plan Rows": 45391,
+                          "Plan Width": 28,
+                          "Actual Startup Time": 0.032,
+                          "Actual Total Time": 19.977,
+                          "Actual Rows": 45661,
+                          "Actual Loops": 1,
+                          "Index Cond": "((tenant_id = '0457061c-db4d-553e-9b3c-ba32ec9e5f57'::uuid) AND ((currency)::text = 'USD'::text) AND (bucket_start >= '2026-10-01 00:00:00+00'::timestamp with time zone) AND (bucket_start < '2026-11-02 00:00:00+00'::timestamp with time zone))",
+                          "Rows Removed by Index Recheck": 0,
+                          "Shared Hit Blocks": 46507,
+                          "Shared Read Blocks": 0,
+                          "Shared Dirtied Blocks": 0,
+                          "Shared Written Blocks": 0,
+                          "Local Hit Blocks": 0,
+                          "Local Read Blocks": 0,
+                          "Local Dirtied Blocks": 0,
+                          "Local Written Blocks": 0,
+                          "Temp Read Blocks": 0,
+                          "Temp Written Blocks": 0
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "Planning": {
+              "Shared Hit Blocks": 0,
+              "Shared Read Blocks": 0,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            "Planning Time": 0.12,
+            "Triggers": [],
+            "Execution Time": 49.874
+          }
+        ]
+      },
+      {
+        "sql": "SELECT hourly_status_aggregates.status, sum(hourly_status_aggregates.order_count) AS total_orders, sum(hourly_status_aggregates.sales_amount) AS total_sales \nFROM hourly_status_aggregates \nWHERE hourly_status_aggregates.tenant_id = %(tenant_id_1)s::UUID AND hourly_status_aggregates.currency = %(currency_1)s::VARCHAR AND hourly_status_aggregates.bucket_start >= %(bucket_start_1)s::TIMESTAMP WITH TIME ZONE AND hourly_status_aggregates.bucket_start < %(bucket_start_2)s::TIMESTAMP WITH TIME ZONE GROUP BY hourly_status_aggregates.status",
+        "plan": [
+          {
+            "Plan": {
+              "Node Type": "Aggregate",
+              "Strategy": "Hashed",
+              "Partial Mode": "Simple",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Startup Cost": 159.59,
+              "Total Cost": 159.64,
+              "Plan Rows": 3,
+              "Plan Width": 72,
+              "Actual Startup Time": 1.113,
+              "Actual Total Time": 1.114,
+              "Actual Rows": 3,
+              "Actual Loops": 1,
+              "Group Key": [
+                "status"
+              ],
+              "Planned Partitions": 0,
+              "HashAgg Batches": 1,
+              "Peak Memory Usage": 24,
+              "Disk Usage": 0,
+              "Shared Hit Blocks": 54,
+              "Shared Read Blocks": 0,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0,
+              "Plans": [
+                {
+                  "Node Type": "Seq Scan",
+                  "Parent Relationship": "Outer",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Relation Name": "hourly_status_aggregates",
+                  "Alias": "hourly_status_aggregates",
+                  "Startup Cost": 0.0,
+                  "Total Cost": 142.92,
+                  "Plan Rows": 2223,
+                  "Plan Width": 20,
+                  "Actual Startup Time": 0.252,
+                  "Actual Total Time": 0.55,
+                  "Actual Rows": 2223,
+                  "Actual Loops": 1,
+                  "Filter": "((bucket_start >= '2026-10-01 00:00:00+00'::timestamp with time zone) AND (bucket_start < '2026-11-02 00:00:00+00'::timestamp with time zone) AND (tenant_id = '0457061c-db4d-553e-9b3c-ba32ec9e5f57'::uuid) AND ((currency)::text = 'USD'::text))",
+                  "Rows Removed by Filter": 2223,
+                  "Shared Hit Blocks": 54,
+                  "Shared Read Blocks": 0,
+                  "Shared Dirtied Blocks": 0,
+                  "Shared Written Blocks": 0,
+                  "Local Hit Blocks": 0,
+                  "Local Read Blocks": 0,
+                  "Local Dirtied Blocks": 0,
+                  "Local Written Blocks": 0,
+                  "Temp Read Blocks": 0,
+                  "Temp Written Blocks": 0
+                }
+              ]
+            },
+            "Planning": {
+              "Shared Hit Blocks": 0,
+              "Shared Read Blocks": 0,
+              "Shared Dirtied Blocks": 0,
+              "Shared Written Blocks": 0,
+              "Local Hit Blocks": 0,
+              "Local Read Blocks": 0,
+              "Local Dirtied Blocks": 0,
+              "Local Written Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            "Planning Time": 0.1,
+            "Triggers": [],
+            "Execution Time": 1.132
+          }
+        ]
+      }
+    ],
+    "queries": {
+      "summary": {
+        "p50_ms": 97.14689999964321,
+        "p95_ms": 203.19300000119256,
+        "p99_ms": 262.69000000320375,
+        "samples": 200,
+        "requests_per_second": 37.536084845966734,
+        "p95_under_200ms": false
+      },
+      "trends": {
+        "p50_ms": 78.23310000094352,
+        "p95_ms": 176.6739000013331,
+        "p99_ms": 202.48020000144606,
+        "samples": 200,
+        "requests_per_second": 45.09672751987779,
+        "p95_under_200ms": true
+      },
+      "top-products": {
+        "p50_ms": 173.73680000309832,
+        "p95_ms": 314.89910000527743,
+        "p99_ms": 393.2130999965011,
+        "samples": 200,
+        "requests_per_second": 21.377648343246687,
+        "p95_under_200ms": false
+      },
+      "status-breakdown": {
+        "p50_ms": 90.56089999648975,
+        "p95_ms": 118.05530000128783,
+        "p99_ms": 207.25039999524597,
+        "samples": 200,
+        "requests_per_second": 41.845086268572075,
+        "p95_under_200ms": true
+      }
+    }
+  },
+  "resources": {
+    "checked_at": "2026-11-01T02:29:17.247512+00:00",
+    "v1_source": {
+      "orders": 10000000,
+      "outbox": 17333300,
+      "postmaster_started": "2026-10-31 15:07:52.841385+00:00"
+    },
+    "v2_storage": {
+      "total_bytes": 33249262764,
+      "min_bytes": 324948451,
+      "max_bytes": 342618595,
+      "databases": [
+        {
+          "datname": "v2bench_78b1ee4a_0457061cdb4d553e9b3cba32ec9e5f57",
+          "bytes": 342618595
+        },
+        {
+          "datname": "v2bench_78b1ee4a_0a5f419c450d56d0aea5f6a5b6a11a29",
+          "bytes": 335204835
+        },
+        {
+          "datname": "v2bench_78b1ee4a_0a97cff769ea5e6fadec33681b041eed",
+          "bytes": 330330595
+        },
+        {
+          "datname": "v2bench_78b1ee4a_0cb398ed3c9a55248dd63eff835c3a71",
+          "bytes": 330879459
+        },
+        {
+          "datname": "v2bench_78b1ee4a_0f3acb7245665bfe85680df70c33a4d0",
+          "bytes": 330658275
+        },
+        {
+          "datname": "v2bench_78b1ee4a_11bc94caf0d35d2fa2dc2941d97af464",
+          "bytes": 334483939
+        },
+        {
+          "datname": "v2bench_78b1ee4a_139175ecca6f59e9a4e0e9d91f6c71db",
+          "bytes": 330944995
+        },
+        {
+          "datname": "v2bench_78b1ee4a_13d873fae94155ddafa99fddbb2004e5",
+          "bytes": 334352867
+        },
+        {
+          "datname": "v2bench_78b1ee4a_15065bacf1ea5073a60cbe8759a8d198",
+          "bytes": 334852579
+        },
+        {
+          "datname": "v2bench_78b1ee4a_163340ffdb4f5ef5a7e9987f69495907",
+          "bytes": 335180259
+        },
+        {
+          "datname": "v2bench_78b1ee4a_167cd95c8df15d3fbf8d7dd56c1be201",
+          "bytes": 330559971
+        },
+        {
+          "datname": "v2bench_78b1ee4a_191c42befc19534abe0d010069a7596d",
+          "bytes": 330756579
+        },
+        {
+          "datname": "v2bench_78b1ee4a_1d3c76f582ef5dcfa6faa2d937591318",
+          "bytes": 334246371
+        },
+        {
+          "datname": "v2bench_78b1ee4a_1eb4465bfd9951409eb8f590088b4f07",
+          "bytes": 334713315
+        },
+        {
+          "datname": "v2bench_78b1ee4a_1f7d8833987a59498e32ccb4863e2483",
+          "bytes": 334729699
+        },
+        {
+          "datname": "v2bench_78b1ee4a_21955e5a743b5f52b1a656ac17442bb6",
+          "bytes": 333844963
+        },
+        {
+          "datname": "v2bench_78b1ee4a_2340f11aebbe53a18607a6c32c64c74f",
+          "bytes": 330445283
+        },
+        {
+          "datname": "v2bench_78b1ee4a_26bedd088ae05f44a09f63fd1e8226d0",
+          "bytes": 334795235
+        },
+        {
+          "datname": "v2bench_78b1ee4a_27b0ae9365ad5e12bb21bd06d338ce37",
+          "bytes": 335253987
+        },
+        {
+          "datname": "v2bench_78b1ee4a_2a0a4cade6115f819c7f1a1f2f4ececb",
+          "bytes": 330469859
+        },
+        {
+          "datname": "v2bench_78b1ee4a_2aa2914bfe11517a8271aee944e5aecb",
+          "bytes": 330863075
+        },
+        {
+          "datname": "v2bench_78b1ee4a_2c1af2d1d2175b75afe9b5123daeef63",
+          "bytes": 331125219
+        },
+        {
+          "datname": "v2bench_78b1ee4a_2c8d5c82e44053689b7321b2e567c4f1",
+          "bytes": 334705123
+        },
+        {
+          "datname": "v2bench_78b1ee4a_2d2aee37a2145ad982d22771904472b7",
+          "bytes": 334377443
+        },
+        {
+          "datname": "v2bench_78b1ee4a_2d6a653fcc2050869c2233760a871cde",
+          "bytes": 333779427
+        },
+        {
+          "datname": "v2bench_78b1ee4a_2fcc3b08e9d75b81b19f259637947e99",
+          "bytes": 330641891
+        },
+        {
+          "datname": "v2bench_78b1ee4a_339751a5200157cea2fe4e2a1b0c46e8",
+          "bytes": 334500323
+        },
+        {
+          "datname": "v2bench_78b1ee4a_3963b8e0cba65449b31457d9c4b1ef57",
+          "bytes": 334434787
+        },
+        {
+          "datname": "v2bench_78b1ee4a_3c49f71a086d51ed92b0f8550e20b206",
+          "bytes": 330371555
+        },
+        {
+          "datname": "v2bench_78b1ee4a_3f37125b62065ccb986486f6264b8b2a",
+          "bytes": 334598627
+        },
+        {
+          "datname": "v2bench_78b1ee4a_44756501bf515dbf881b02895b329d1a",
+          "bytes": 334098915
+        },
+        {
+          "datname": "v2bench_78b1ee4a_460bd96c7b0d5786a721e62217c1e3e3",
+          "bytes": 330486243
+        },
+        {
+          "datname": "v2bench_78b1ee4a_468d91ce258c58fd923dfce7f1c16094",
+          "bytes": 324948451
+        },
+        {
+          "datname": "v2bench_78b1ee4a_4cfa14c385a45c58949b80d243abe0ca",
+          "bytes": 334098915
+        },
+        {
+          "datname": "v2bench_78b1ee4a_4f060a2441205aaeb783440f7ae81e77",
+          "bytes": 330527203
+        },
+        {
+          "datname": "v2bench_78b1ee4a_4ff2c88507465d7f970e69696c138fb9",
+          "bytes": 330600931
+        },
+        {
+          "datname": "v2bench_78b1ee4a_5295ac39c9895084a72375a81b0859bd",
+          "bytes": 330650083
+        },
+        {
+          "datname": "v2bench_78b1ee4a_53351722b98e5b5abcb200b39d2eaa81",
+          "bytes": 334606819
+        },
+        {
+          "datname": "v2bench_78b1ee4a_5ceba82bc3c85b4eb364993c55b8122a",
+          "bytes": 330936803
+        },
+        {
+          "datname": "v2bench_78b1ee4a_5fe10171634d55debb1e06c35e77699f",
+          "bytes": 330273251
+        },
+        {
+          "datname": "v2bench_78b1ee4a_62abe6b5f37b56cd902c41de81b4bff1",
+          "bytes": 330052067
+        },
+        {
+          "datname": "v2bench_78b1ee4a_65b2978aeaa158d5b9a45e9c07448938",
+          "bytes": 334729699
+        },
+        {
+          "datname": "v2bench_78b1ee4a_67dfff80b36c58cdb4f19694f82e4ae0",
+          "bytes": 333869539
+        },
+        {
+          "datname": "v2bench_78b1ee4a_6885b2347fd7521fa64427dc31f8a39a",
+          "bytes": 330535395
+        },
+        {
+          "datname": "v2bench_78b1ee4a_69f7be45da0552a4ba8fcfd175dfd971",
+          "bytes": 330674659
+        },
+        {
+          "datname": "v2bench_78b1ee4a_6a2437889d9e5a759c15fbf48342a8b4",
+          "bytes": 334295523
+        },
+        {
+          "datname": "v2bench_78b1ee4a_6b774053b99d5c869741fbd696bf899f",
+          "bytes": 329798115
+        },
+        {
+          "datname": "v2bench_78b1ee4a_6e556ce074aa53778ab69d74166199c5",
+          "bytes": 334836195
+        },
+        {
+          "datname": "v2bench_78b1ee4a_6e5ab0be732e52e8a7fc4bdcf0b64a2b",
+          "bytes": 329781731
+        },
+        {
+          "datname": "v2bench_78b1ee4a_6fe744da93c15e09bcddb2132d0c7f4c",
+          "bytes": 330420707
+        },
+        {
+          "datname": "v2bench_78b1ee4a_7353644ad49c5d3093debeb26f86e1dc",
+          "bytes": 330944995
+        },
+        {
+          "datname": "v2bench_78b1ee4a_743272c3b5195405be3e9bcb65a6280e",
+          "bytes": 330166755
+        },
+        {
+          "datname": "v2bench_78b1ee4a_78473cbb5c5d57e5bcc51698e68e542f",
+          "bytes": 330355171
+        },
+        {
+          "datname": "v2bench_78b1ee4a_7afbdc6f79a15f8ab0fc7dcbf395cd2c",
+          "bytes": 334762467
+        },
+        {
+          "datname": "v2bench_78b1ee4a_7cbd41511a825ef89ed34b267911c78d",
+          "bytes": 334434787
+        },
+        {
+          "datname": "v2bench_78b1ee4a_7e2fcc9dcd8a5c5185859dbee43e177f",
+          "bytes": 330019299
+        },
+        {
+          "datname": "v2bench_78b1ee4a_7f27c8acbd2755568e0b08631ca63599",
+          "bytes": 329413091
+        },
+        {
+          "datname": "v2bench_78b1ee4a_7ffd96dc871e5ef1805bf79108372a88",
+          "bytes": 330265059
+        },
+        {
+          "datname": "v2bench_78b1ee4a_8c7937a11a2e56899739d897c2f688f6",
+          "bytes": 334795235
+        },
+        {
+          "datname": "v2bench_78b1ee4a_8f2170159a6d5ff1b2a93b595e435278",
+          "bytes": 334909923
+        },
+        {
+          "datname": "v2bench_78b1ee4a_8f9e369c58af5f15a2932bae65df502c",
+          "bytes": 334672355
+        },
+        {
+          "datname": "v2bench_78b1ee4a_910491face8e57a987f4a7fcaf3868f8",
+          "bytes": 329593315
+        },
+        {
+          "datname": "v2bench_78b1ee4a_9137e93ca5215c9e8f7af3b117c7c259",
+          "bytes": 334557667
+        },
+        {
+          "datname": "v2bench_78b1ee4a_9722f10f77dc5b398776a4859d8c29d8",
+          "bytes": 334713315
+        },
+        {
+          "datname": "v2bench_78b1ee4a_a175b4651f3b592cbc24f362816e2418",
+          "bytes": 334352867
+        },
+        {
+          "datname": "v2bench_78b1ee4a_a23a0385a7f75687b534bfcb73463657",
+          "bytes": 330920419
+        },
+        {
+          "datname": "v2bench_78b1ee4a_a277fd9bf2f55024884faa8a0d1e6ffa",
+          "bytes": 334664163
+        },
+        {
+          "datname": "v2bench_78b1ee4a_a339645209c05f258de8a4dcf8883a86",
+          "bytes": 333656547
+        },
+        {
+          "datname": "v2bench_78b1ee4a_a340bccb47165b53a6636b270f33de30",
+          "bytes": 330469859
+        },
+        {
+          "datname": "v2bench_78b1ee4a_a3c7841edee653f0b13cfd7745b6245d",
+          "bytes": 330682851
+        },
+        {
+          "datname": "v2bench_78b1ee4a_a76c0923ce465deea72edffeb5d72231",
+          "bytes": 330953187
+        },
+        {
+          "datname": "v2bench_78b1ee4a_a8de88ba10f65fb4ac5360bdb48b78f2",
+          "bytes": 330437091
+        },
+        {
+          "datname": "v2bench_78b1ee4a_ac7fd980fcee524e9f89591913799e87",
+          "bytes": 334107107
+        },
+        {
+          "datname": "v2bench_78b1ee4a_aef3c77c5e395f8d9788d1aea0ee2f2d",
+          "bytes": 330805731
+        },
+        {
+          "datname": "v2bench_78b1ee4a_af8c972bac9e5877807204e6f30df7ce",
+          "bytes": 334582243
+        },
+        {
+          "datname": "v2bench_78b1ee4a_b0655ca71ed05b53ab1d671ac5159f7c",
+          "bytes": 330756579
+        },
+        {
+          "datname": "v2bench_78b1ee4a_bd324714e3595e278f8b3fd1839b91f5",
+          "bytes": 329830883
+        },
+        {
+          "datname": "v2bench_78b1ee4a_be2ab0abb6b450e68550b2363b12b79f",
+          "bytes": 334410211
+        },
+        {
+          "datname": "v2bench_78b1ee4a_c13b449ce4ea52619a1e4c175f1e842d",
+          "bytes": 334508515
+        },
+        {
+          "datname": "v2bench_78b1ee4a_c1e27c27fa9c5ff480d94a5a130fb45f",
+          "bytes": 331010531
+        },
+        {
+          "datname": "v2bench_78b1ee4a_c20602c7978f50759d3260022237ffb5",
+          "bytes": 334909923
+        },
+        {
+          "datname": "v2bench_78b1ee4a_c2a15d63322c5bb08cf95d17632ca6f4",
+          "bytes": 334483939
+        },
+        {
+          "datname": "v2bench_78b1ee4a_c2ec24801cd855b4bf42f6f8b4bf931b",
+          "bytes": 330658275
+        },
+        {
+          "datname": "v2bench_78b1ee4a_c53352cb682855b391b003c679051bcb",
+          "bytes": 330346979
+        },
+        {
+          "datname": "v2bench_78b1ee4a_c9a96cd00efe5cca88708f3c025b214a",
+          "bytes": 330371555
+        },
+        {
+          "datname": "v2bench_78b1ee4a_cadfd2837a1d592fbe463694420be1a4",
+          "bytes": 333992419
+        },
+        {
+          "datname": "v2bench_78b1ee4a_ccd9dd9cf1665e71b1629fd30b0e1164",
+          "bytes": 329896419
+        },
+        {
+          "datname": "v2bench_78b1ee4a_ce515b09822952318f447845afef819d",
+          "bytes": 330379747
+        },
+        {
+          "datname": "v2bench_78b1ee4a_d5089a839dbe518eb8899a41c7fcb765",
+          "bytes": 334377443
+        },
+        {
+          "datname": "v2bench_78b1ee4a_d5e3d790f1b65bdabecb1ce3372c304d",
+          "bytes": 330781155
+        },
+        {
+          "datname": "v2bench_78b1ee4a_da6796f9d2ea5b3fb448eddd173a4e26",
+          "bytes": 334696931
+        },
+        {
+          "datname": "v2bench_78b1ee4a_e0a9a8c086195bfeba5dcbdc8da7889d",
+          "bytes": 333935075
+        },
+        {
+          "datname": "v2bench_78b1ee4a_e1c747459ac3578b8eeeb5e16ec48ac5",
+          "bytes": 334615011
+        },
+        {
+          "datname": "v2bench_78b1ee4a_e6b2806bff61571794d41fda46d31e4e",
+          "bytes": 330265059
+        },
+        {
+          "datname": "v2bench_78b1ee4a_ee4efcf565565e54852744efa824b3a0",
+          "bytes": 334893539
+        },
+        {
+          "datname": "v2bench_78b1ee4a_f3a4fe7783415ff18b7995144f273c17",
+          "bytes": 330068451
+        },
+        {
+          "datname": "v2bench_78b1ee4a_f3e18878b78c54f7ad44716c8b0ad397",
+          "bytes": 333746659
+        },
+        {
+          "datname": "v2bench_78b1ee4a_f8a59c6cd4635a0a95dc9ef5fae75d52",
+          "bytes": 334483939
+        },
+        {
+          "datname": "v2bench_78b1ee4a_fa3ae9fb54e95aa4a1fc4bd9304d7a4b",
+          "bytes": 333566435
+        },
+        {
+          "datname": "v2bench_78b1ee4a_ff1d5d7108c456ada8482df83d9c0c51",
+          "bytes": 330101219
+        }
+      ]
+    },
+    "connections": {
+      "observed_connections": 31,
+      "active_connections": 1,
+      "max_connections": 100
+    },
+    "wal_directory": {
+      "segments": 256,
+      "bytes": 4294967296
+    },
+    "wal_cumulative_stats": {
+      "wal_records": 359725765,
+      "wal_fpi": 7152267,
+      "wal_bytes": "96315180799",
+      "stats_reset": "2026-10-31 12:40:14.237405+00:00"
+    },
+    "disk_free_bytes": {
+      "C": 14642352128,
+      "D": 103801688064
+    },
+    "ram": {
+      "total": 16858320896,
+      "available": 3906224128
+    },
+    "note": "Point-in-time inspection after repair; cumulative WAL statistics are not a measured repair delta."
+  },
+  "windows_commit_after": {
+    "AvailableMBytes": 3617,
+    "CommittedBytes": 15872884736,
+    "CommitLimit": 31136755712
+  },
+  "validation": {
+    "backend": "357 passed, 1 existing Starlette/httpx deprecation warning, 143.72 seconds",
+    "frontend": "10 tests passed; typecheck, ESLint and production build passed",
+    "ruff": "119 tracked Python files: check and format check passed",
+    "alembic": "One head: 0005_tenant_access_paths; no new upgrade operations detected on isolated test instance",
+    "pip": "No broken requirements",
+    "npm_audit": "0 vulnerabilities",
+    "docker_compose": "config --quiet passed",
+    "ownership": "No Developer B aggregation modules or migrations changed; no runtime data or credentials staged"
+  },
+  "recovery": {
+    "integration_cases": [
+      "lost live hint recovered from durable PostgreSQL outbox",
+      "Redis hint failure does not fail committed source transaction",
+      "crash after publication recovered from retained work receipt",
+      "ordinary create, shipment and cancellation reach exact rollups/API; pending ACKs zero",
+      "existing consumer recovery, duplicate, stale version and replay tests preserved"
+    ],
+    "write_test_environment": "Isolated PostgreSQL 55434 and Redis 56381; preserved tenant baseline receives no probe writes",
+    "live_worker": "Running with recent actual heartbeat; idle baseline has no newly submitted cohorts",
+    "limits": "No sustained 100-tenant write throughput/freshness SLA or source-interference experiment was measured in this restoration profile"
+  },
+  "remaining_work": [
+    "Summary p95 203.19ms and top-products p95 314.90ms exceed the 200ms target at concurrency 4",
+    "Coverage and API keys expire; use reviewed renewal/coverage workflow, never bypass fail-closed validation",
+    "External identity/TLS/RLS and sustained freshness/source-interference certification remain outside this local hackathon release"
+  ],
+  "tenants": [
+    {
+      "tenant_id": "0457061c-db4d-553e-9b3c-ba32ec9e5f57",
+      "database": "v2bench_78b1ee4a_0457061cdb4d553e9b3cba32ec9e5f57",
+      "orders": 100000,
+      "outbox": 17377,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "9d896ce2db20481de3ba215e3b57719a",
+      "outbox_fingerprint": "9b0217bda67e35765cf30e5a4174060d",
+      "job_id": "420be05c-9328-4312-b6b3-00f0934d5a37",
+      "revision": 8,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:36:57.470801+00:00"
+    },
+    {
+      "tenant_id": "0a5f419c-450d-56d0-aea5-f6a5b6a11a29",
+      "database": "v2bench_78b1ee4a_0a5f419c450d56d0aea5f6a5b6a11a29",
+      "orders": 100024,
+      "outbox": 17429,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "52e7237e860a4d942ba2791d06c30c84",
+      "outbox_fingerprint": "f771c8ac73cead7d57a960eba41c3714",
+      "job_id": "4ac8ab29-08fd-46df-a48d-2d8cdcecad54",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:40:06.758109+00:00"
+    },
+    {
+      "tenant_id": "0a97cff7-69ea-5e6f-adec-33681b041eed",
+      "database": "v2bench_78b1ee4a_0a97cff769ea5e6fadec33681b041eed",
+      "orders": 100000,
+      "outbox": 17280,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "5d966553be8230335e139a9d64d5a3ae",
+      "outbox_fingerprint": "a8a2dd22c62c03075ff5009b9da27285",
+      "job_id": "69a60567-8577-4bf4-8e4e-1394c03197ba",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:40:06.663467+00:00"
+    },
+    {
+      "tenant_id": "0cb398ed-3c9a-5524-8dd6-3eff835c3a71",
+      "database": "v2bench_78b1ee4a_0cb398ed3c9a55248dd63eff835c3a71",
+      "orders": 100010,
+      "outbox": 17351,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "38976630e2fce81d11d946adc8d13c62",
+      "outbox_fingerprint": "1422e6f4b42e1650d19e39baeea84e87",
+      "job_id": "1f592a0c-6f44-4ae2-85da-ab6e023caf85",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:40:41.733012+00:00"
+    },
+    {
+      "tenant_id": "0f3acb72-4566-5bfe-8568-0df70c33a4d0",
+      "database": "v2bench_78b1ee4a_0f3acb7245665bfe85680df70c33a4d0",
+      "orders": 100000,
+      "outbox": 17287,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "fab2b4a37ff08fa10b611d556cb87a2c",
+      "outbox_fingerprint": "41c13ce7c2591b6ef4039cb25c873770",
+      "job_id": "ef6d5af1-e5cb-4407-8508-b38ac70620f3",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:40:41.908860+00:00"
+    },
+    {
+      "tenant_id": "11bc94ca-f0d3-5d2f-a2dc-2941d97af464",
+      "database": "v2bench_78b1ee4a_11bc94caf0d35d2fa2dc2941d97af464",
+      "orders": 100000,
+      "outbox": 17332,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "fb80f736eee585caaefe68ed64c37348",
+      "outbox_fingerprint": "9e6b36451be34adac9ac76b6ec26584e",
+      "job_id": "58835548-41e6-4dc0-8dd6-d94715b10a3c",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:41:03.612134+00:00"
+    },
+    {
+      "tenant_id": "139175ec-ca6f-59e9-a4e0-e9d91f6c71db",
+      "database": "v2bench_78b1ee4a_139175ecca6f59e9a4e0e9d91f6c71db",
+      "orders": 100000,
+      "outbox": 17336,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "65635a3ffc0fb1d3e053cae932aa56a0",
+      "outbox_fingerprint": "c81b9e53cd0da90e55cb6af967426f76",
+      "job_id": "ed1e1da3-c19a-45e1-ac34-b41da8f60bab",
+      "revision": 2,
+      "archived_rows": 101439,
+      "verified_at": "2026-11-01T01:41:03.342569+00:00"
+    },
+    {
+      "tenant_id": "13d873fa-e941-55dd-afa9-9fddbb2004e5",
+      "database": "v2bench_78b1ee4a_13d873fae94155ddafa99fddbb2004e5",
+      "orders": 100000,
+      "outbox": 17319,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "9c786aaf700621b5ddbc4e9e8cf4413d",
+      "outbox_fingerprint": "f5f97cc8f5ad979b79d0bc9c0e4febfa",
+      "job_id": "0c0f08c7-67cd-4933-a42d-2260a086a91c",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:41:42.316602+00:00"
+    },
+    {
+      "tenant_id": "15065bac-f1ea-5073-a60c-be8759a8d198",
+      "database": "v2bench_78b1ee4a_15065bacf1ea5073a60cbe8759a8d198",
+      "orders": 100000,
+      "outbox": 17348,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "ba2de657329cf316e32c6784763f620d",
+      "outbox_fingerprint": "ee3dc13bd57d58613ccb97d3ef599be2",
+      "job_id": "4e0cc197-cc4b-4076-baa5-4a7266d9b261",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:41:43.161165+00:00"
+    },
+    {
+      "tenant_id": "163340ff-db4f-5ef5-a7e9-987f69495907",
+      "database": "v2bench_78b1ee4a_163340ffdb4f5ef5a7e9987f69495907",
+      "orders": 100000,
+      "outbox": 17353,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "c479b3e7cc7d4e77bc770419f3c765e7",
+      "outbox_fingerprint": "687bcb2de25af0808eb589bfe160ca96",
+      "job_id": "0a2fd1de-e822-4a12-9ece-b25ec65e0e76",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:42:24.103022+00:00"
+    },
+    {
+      "tenant_id": "167cd95c-8df1-5d3f-bf8d-7dd56c1be201",
+      "database": "v2bench_78b1ee4a_167cd95c8df15d3fbf8d7dd56c1be201",
+      "orders": 100000,
+      "outbox": 17315,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "175a8002311126cc07e2be235b67ee9a",
+      "outbox_fingerprint": "c381dccd266fd1dec361b6b257223d63",
+      "job_id": "c69a3599-5100-4dfb-a0f8-531efeb64375",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:42:24.608680+00:00"
+    },
+    {
+      "tenant_id": "191c42be-fc19-534a-be0d-010069a7596d",
+      "database": "v2bench_78b1ee4a_191c42befc19534abe0d010069a7596d",
+      "orders": 100000,
+      "outbox": 17303,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "dac6293fe7aca8dd0f4cc543143e019f",
+      "outbox_fingerprint": "177e542b22c055bd400c38f1c7831e0e",
+      "job_id": "f6556dbe-8ef9-4382-8eea-e1583820c6e2",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:42:43.112598+00:00"
+    },
+    {
+      "tenant_id": "1d3c76f5-82ef-5dcf-a6fa-a2d937591318",
+      "database": "v2bench_78b1ee4a_1d3c76f582ef5dcfa6faa2d937591318",
+      "orders": 100000,
+      "outbox": 17287,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "be06159b117e593e4b5f539b9764f09b",
+      "outbox_fingerprint": "b63ea0fa08f061a9199c086611319efe",
+      "job_id": "b9887d6a-7343-46a4-99e0-66778dd89e7f",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:42:44.238108+00:00"
+    },
+    {
+      "tenant_id": "1eb4465b-fd99-5140-9eb8-f590088b4f07",
+      "database": "v2bench_78b1ee4a_1eb4465bfd9951409eb8f590088b4f07",
+      "orders": 100000,
+      "outbox": 17305,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "5d89b0458b22832b24526a5c4addcf0d",
+      "outbox_fingerprint": "c9c9c8bf2108bd957c8598ae0bb24a69",
+      "job_id": "6558df86-4a3a-48b0-8c97-c05b4974e9e1",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:43:04.083814+00:00"
+    },
+    {
+      "tenant_id": "1f7d8833-987a-5949-8e32-ccb4863e2483",
+      "database": "v2bench_78b1ee4a_1f7d8833987a59498e32ccb4863e2483",
+      "orders": 100000,
+      "outbox": 17310,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "c6c223b3801b73fb050fb8a4f8fe646d",
+      "outbox_fingerprint": "acc26c9f0f9a0f2f309965c7ad468ef1",
+      "job_id": "21755cc1-b39a-483e-a911-7605c9e3be7f",
+      "revision": 2,
+      "archived_rows": 101439,
+      "verified_at": "2026-11-01T01:43:04.434558+00:00"
+    },
+    {
+      "tenant_id": "21955e5a-743b-5f52-b1a6-56ac17442bb6",
+      "database": "v2bench_78b1ee4a_21955e5a743b5f52b1a656ac17442bb6",
+      "orders": 100000,
+      "outbox": 17345,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "a21117ea6308edf682d07b9e176a4339",
+      "outbox_fingerprint": "3470c9988335c9fa8aaf2aee3b7be319",
+      "job_id": "66ddffe8-b193-4099-8ab9-c857658a50a9",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:43:23.813086+00:00"
+    },
+    {
+      "tenant_id": "2340f11a-ebbe-53a1-8607-a6c32c64c74f",
+      "database": "v2bench_78b1ee4a_2340f11aebbe53a18607a6c32c64c74f",
+      "orders": 100000,
+      "outbox": 17418,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "ef4a97887d1c90cc4a36db9e14fcf0c5",
+      "outbox_fingerprint": "67bbe1e6bc03842b2cdc5c6f04fdd558",
+      "job_id": "66c7b89a-27ca-467d-9b2d-73a88cba2ac2",
+      "revision": 2,
+      "archived_rows": 101439,
+      "verified_at": "2026-11-01T01:43:24.202717+00:00"
+    },
+    {
+      "tenant_id": "26bedd08-8ae0-5f44-a09f-63fd1e8226d0",
+      "database": "v2bench_78b1ee4a_26bedd088ae05f44a09f63fd1e8226d0",
+      "orders": 100000,
+      "outbox": 17386,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "c8c6bf9a001580e042ccf0e83c030fdc",
+      "outbox_fingerprint": "bb7e636a1eff5b24e350a3488d9475f3",
+      "job_id": "180576ee-b1db-4598-b294-e04ddd1440f1",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:43:42.937216+00:00"
+    },
+    {
+      "tenant_id": "27b0ae93-65ad-5e12-bb21-bd06d338ce37",
+      "database": "v2bench_78b1ee4a_27b0ae9365ad5e12bb21bd06d338ce37",
+      "orders": 100000,
+      "outbox": 17403,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "c8231ec5cb993c76723276fdd631ed8d",
+      "outbox_fingerprint": "f564669be972e997e8a0ce84f848552e",
+      "job_id": "64019f57-9c78-4639-8108-4e176a794124",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:43:43.476384+00:00"
+    },
+    {
+      "tenant_id": "2a0a4cad-e611-5f81-9c7f-1a1f2f4ececb",
+      "database": "v2bench_78b1ee4a_2a0a4cade6115f819c7f1a1f2f4ececb",
+      "orders": 100000,
+      "outbox": 17368,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "e120152bf3d4ef02e4c6a9dd8f6a91f6",
+      "outbox_fingerprint": "b846b26b3e623fe2fe6cf6c824c397cb",
+      "job_id": "ead94227-40f9-4b53-b53f-c3c0a169f9b0",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:44:06.389593+00:00"
+    },
+    {
+      "tenant_id": "2aa2914b-fe11-517a-8271-aee944e5aecb",
+      "database": "v2bench_78b1ee4a_2aa2914bfe11517a8271aee944e5aecb",
+      "orders": 100000,
+      "outbox": 17364,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "71861943224db58b594de5d757a88215",
+      "outbox_fingerprint": "155c94da58bc6962c1c8ecfc280b073a",
+      "job_id": "8a95739d-9d0d-4bcd-ad6d-f8d7c0a5b2ba",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:44:08.914196+00:00"
+    },
+    {
+      "tenant_id": "2c1af2d1-d217-5b75-afe9-b5123daeef63",
+      "database": "v2bench_78b1ee4a_2c1af2d1d2175b75afe9b5123daeef63",
+      "orders": 100000,
+      "outbox": 17404,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "4fe882ccdaf4652e851340180c200dbc",
+      "outbox_fingerprint": "27e6c32fa6a5ecc3189324de21a534e2",
+      "job_id": "c225b122-6a83-4987-84ae-4f041f9e3646",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:46:08.018911+00:00"
+    },
+    {
+      "tenant_id": "2c8d5c82-e440-5368-9b73-21b2e567c4f1",
+      "database": "v2bench_78b1ee4a_2c8d5c82e44053689b7321b2e567c4f1",
+      "orders": 100000,
+      "outbox": 17346,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "b44cad47027fa9f7dc2855dc528daf0c",
+      "outbox_fingerprint": "0bf1e10963b98ed582c2f6da2d7910a0",
+      "job_id": "92a3999a-2bef-4f36-858b-b1b42b33c4aa",
+      "revision": 2,
+      "archived_rows": 101439,
+      "verified_at": "2026-11-01T01:46:39.283376+00:00"
+    },
+    {
+      "tenant_id": "2d2aee37-a214-5ad9-82d2-2771904472b7",
+      "database": "v2bench_78b1ee4a_2d2aee37a2145ad982d22771904472b7",
+      "orders": 100000,
+      "outbox": 17247,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "2d525fc472abe081503934e23d9cf1aa",
+      "outbox_fingerprint": "b1327c0a3079e7cbd41c615b34aac1ec",
+      "job_id": "19fd187c-916a-4ded-a8a2-e470ecdc1786",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:48:26.035829+00:00"
+    },
+    {
+      "tenant_id": "2d6a653f-cc20-5086-9c22-33760a871cde",
+      "database": "v2bench_78b1ee4a_2d6a653fcc2050869c2233760a871cde",
+      "orders": 100000,
+      "outbox": 17334,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "942e0bc6fb5c66f56c748298f03d4e7f",
+      "outbox_fingerprint": "07deaba070902eb7c6551ea0d327c59f",
+      "job_id": "02b9559b-f6b5-4280-bb44-58113d1b51cb",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:48:48.437202+00:00"
+    },
+    {
+      "tenant_id": "2fcc3b08-e9d7-5b81-b19f-259637947e99",
+      "database": "v2bench_78b1ee4a_2fcc3b08e9d75b81b19f259637947e99",
+      "orders": 100000,
+      "outbox": 17285,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "233d4554824473c7370dc05b51138aea",
+      "outbox_fingerprint": "5b2d4ae9bb9c43ec725cf58e87402f31",
+      "job_id": "69871348-6445-4d79-bc70-1b4bf5b63c72",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:49:09.021059+00:00"
+    },
+    {
+      "tenant_id": "339751a5-2001-57ce-a2fe-4e2a1b0c46e8",
+      "database": "v2bench_78b1ee4a_339751a5200157cea2fe4e2a1b0c46e8",
+      "orders": 100000,
+      "outbox": 17344,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "af2b0532124df7498a7c80002f05e654",
+      "outbox_fingerprint": "feb96d121ac0ba31c03562ef498ce48d",
+      "job_id": "4bc0b3b1-6389-4b03-9bee-4ee9ee04ebda",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:49:29.645115+00:00"
+    },
+    {
+      "tenant_id": "3963b8e0-cba6-5449-b314-57d9c4b1ef57",
+      "database": "v2bench_78b1ee4a_3963b8e0cba65449b31457d9c4b1ef57",
+      "orders": 100000,
+      "outbox": 17316,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "0ca0b22126d7c7e5ae2b2210cf3fd4df",
+      "outbox_fingerprint": "4a78d212d42abfdb214be6b45e01f773",
+      "job_id": "2c217a31-6ff1-4fd0-b650-89739bb4bab0",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:49:51.021105+00:00"
+    },
+    {
+      "tenant_id": "3c49f71a-086d-51ed-92b0-f8550e20b206",
+      "database": "v2bench_78b1ee4a_3c49f71a086d51ed92b0f8550e20b206",
+      "orders": 100000,
+      "outbox": 17254,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "dc28e88f6155202d1dbb9f32c6a840b4",
+      "outbox_fingerprint": "a0532f589b4013c0211bb761ad931fc7",
+      "job_id": "672b2610-4e3a-4b70-ad88-1bbef52544f5",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:50:10.904606+00:00"
+    },
+    {
+      "tenant_id": "3f37125b-6206-5ccb-9864-86f6264b8b2a",
+      "database": "v2bench_78b1ee4a_3f37125b62065ccb986486f6264b8b2a",
+      "orders": 100000,
+      "outbox": 17290,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "055b1cf5ef94b233ca4c510fb02d1645",
+      "outbox_fingerprint": "b0cfc0391d6a936a620303598189f530",
+      "job_id": "c329192e-5383-4282-990f-feb6bdd198ef",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:50:30.772541+00:00"
+    },
+    {
+      "tenant_id": "44756501-bf51-5dbf-881b-02895b329d1a",
+      "database": "v2bench_78b1ee4a_44756501bf515dbf881b02895b329d1a",
+      "orders": 100000,
+      "outbox": 17453,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "0101d9e540a35e717c9474295a434936",
+      "outbox_fingerprint": "fbdd292e13b5a8efeb114222a4b2c4a5",
+      "job_id": "194afec1-32a9-483b-9d2b-20c351ad8644",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:50:50.547241+00:00"
+    },
+    {
+      "tenant_id": "460bd96c-7b0d-5786-a721-e62217c1e3e3",
+      "database": "v2bench_78b1ee4a_460bd96c7b0d5786a721e62217c1e3e3",
+      "orders": 100000,
+      "outbox": 17362,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "fe7bb34e43c61ac2e09a0c3377c57f8a",
+      "outbox_fingerprint": "957c0c3801098e9b2d76d7f8366f568b",
+      "job_id": "fec3ebe6-8175-4bca-8cb1-f5deab2bff80",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:51:10.327262+00:00"
+    },
+    {
+      "tenant_id": "468d91ce-258c-58fd-923d-fce7f1c16094",
+      "database": "v2bench_78b1ee4a_468d91ce258c58fd923dfce7f1c16094",
+      "orders": 100000,
+      "outbox": 17320,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "95ac7a6599747a8dd752b956fd7410d7",
+      "outbox_fingerprint": "b7f071330714bd1da665255a0a49f087",
+      "job_id": "ceb7868c-6ec9-4815-b1fe-548ef1220f21",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:51:30.924231+00:00"
+    },
+    {
+      "tenant_id": "4cfa14c3-85a4-5c58-949b-80d243abe0ca",
+      "database": "v2bench_78b1ee4a_4cfa14c385a45c58949b80d243abe0ca",
+      "orders": 100000,
+      "outbox": 17323,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "cd5f45e3478b48f3cf454f02096c685a",
+      "outbox_fingerprint": "8890e0eb558239b3157a065b4ebc8bab",
+      "job_id": "1d1ccaa2-7530-4063-9b84-219243240a73",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:51:50.618671+00:00"
+    },
+    {
+      "tenant_id": "4f060a24-4120-5aae-b783-440f7ae81e77",
+      "database": "v2bench_78b1ee4a_4f060a2441205aaeb783440f7ae81e77",
+      "orders": 100000,
+      "outbox": 17314,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "2aef873c2e5cad1e037b90a7c284798f",
+      "outbox_fingerprint": "9f8ceacc7c2544cf0b30f8409ae5e684",
+      "job_id": "8fd19f04-e8bc-4dc7-8add-6c4aed3b304c",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:52:13.185120+00:00"
+    },
+    {
+      "tenant_id": "4ff2c885-0746-5d7f-970e-69696c138fb9",
+      "database": "v2bench_78b1ee4a_4ff2c88507465d7f970e69696c138fb9",
+      "orders": 100000,
+      "outbox": 17336,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "7c77aedcc57cc502f12d41cdf84f112f",
+      "outbox_fingerprint": "6fbe028edb06b6dc579a25d11544afa6",
+      "job_id": "98ed9470-4f31-4203-b432-120dc0bcf551",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:52:32.986861+00:00"
+    },
+    {
+      "tenant_id": "5295ac39-c989-5084-a723-75a81b0859bd",
+      "database": "v2bench_78b1ee4a_5295ac39c9895084a72375a81b0859bd",
+      "orders": 100000,
+      "outbox": 17328,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "cc96be4d1b45e6d4861a742c8f1726b9",
+      "outbox_fingerprint": "5f7b8257b5c0da1e65e7d907a9184025",
+      "job_id": "dc02a146-aacb-4e81-ac18-19e292bc308f",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:53:00.677039+00:00"
+    },
+    {
+      "tenant_id": "53351722-b98e-5b5a-bcb2-00b39d2eaa81",
+      "database": "v2bench_78b1ee4a_53351722b98e5b5abcb200b39d2eaa81",
+      "orders": 100000,
+      "outbox": 17338,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "47552848b11720622b34d49ccec86b77",
+      "outbox_fingerprint": "0aad7097065be817fe2a13b165f398b4",
+      "job_id": "58af497b-05c9-4481-9581-cd845a39892b",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:53:21.072720+00:00"
+    },
+    {
+      "tenant_id": "5ceba82b-c3c8-5b4e-b364-993c55b8122a",
+      "database": "v2bench_78b1ee4a_5ceba82bc3c85b4eb364993c55b8122a",
+      "orders": 100000,
+      "outbox": 17313,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "49e6a229366b9f13fb0de1deba039799",
+      "outbox_fingerprint": "0c9794f1356bd7ddf0caf5abc5ce5354",
+      "job_id": "e9ef3ef6-0587-4d0e-9b02-708546bbfbf9",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:53:41.638142+00:00"
+    },
+    {
+      "tenant_id": "5fe10171-634d-55de-bb1e-06c35e77699f",
+      "database": "v2bench_78b1ee4a_5fe10171634d55debb1e06c35e77699f",
+      "orders": 100000,
+      "outbox": 17302,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "051089dd2ee514548ab1aaee80b9e366",
+      "outbox_fingerprint": "c5c4ae7e711d8bb2c7bb06ae52e5dee3",
+      "job_id": "3d896947-6727-4dc1-beac-d1c943be7779",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:54:01.833844+00:00"
+    },
+    {
+      "tenant_id": "62abe6b5-f37b-56cd-902c-41de81b4bff1",
+      "database": "v2bench_78b1ee4a_62abe6b5f37b56cd902c41de81b4bff1",
+      "orders": 100000,
+      "outbox": 17283,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "6b67bb908a45ecf7e7e4484e38831736",
+      "outbox_fingerprint": "27f36cb2ba6b411cf2f35ea6335f1306",
+      "job_id": "d05c74ae-0513-47f2-9f63-b941725e2aa7",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:54:21.364918+00:00"
+    },
+    {
+      "tenant_id": "65b2978a-eaa1-58d5-b9a4-5e9c07448938",
+      "database": "v2bench_78b1ee4a_65b2978aeaa158d5b9a45e9c07448938",
+      "orders": 100000,
+      "outbox": 17259,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "69494c0e6d555412e7772fe5e31371eb",
+      "outbox_fingerprint": "5e6f902285437a514e6d0f526620bcd8",
+      "job_id": "138062d5-5f4b-4814-b9fe-5360032d0251",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:54:42.040486+00:00"
+    },
+    {
+      "tenant_id": "67dfff80-b36c-58cd-b4f1-9694f82e4ae0",
+      "database": "v2bench_78b1ee4a_67dfff80b36c58cdb4f19694f82e4ae0",
+      "orders": 100000,
+      "outbox": 17381,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "00dd022d3af9d77c90898db3920b5757",
+      "outbox_fingerprint": "842a9292058c8f14795d2c7be1964985",
+      "job_id": "6da7c7c1-c751-413e-8b1a-3721268682cb",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:55:01.745835+00:00"
+    },
+    {
+      "tenant_id": "6885b234-7fd7-521f-a644-27dc31f8a39a",
+      "database": "v2bench_78b1ee4a_6885b2347fd7521fa64427dc31f8a39a",
+      "orders": 100000,
+      "outbox": 17337,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "72ef84d2742a5a0e2868f760402aaa7a",
+      "outbox_fingerprint": "dc662447fef935b3761698f0ed9a9b99",
+      "job_id": "ececca93-f4ff-416a-8370-3e7b2b811cc7",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:55:21.282087+00:00"
+    },
+    {
+      "tenant_id": "69f7be45-da05-52a4-ba8f-cfd175dfd971",
+      "database": "v2bench_78b1ee4a_69f7be45da0552a4ba8fcfd175dfd971",
+      "orders": 100000,
+      "outbox": 17282,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "1a4c6bbf875016465c9af502e86859a2",
+      "outbox_fingerprint": "c32f2df5edf2f72a163ccafa21d05285",
+      "job_id": "c752d05f-ac4c-4e02-a543-c17cf7bd775d",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:55:40.544987+00:00"
+    },
+    {
+      "tenant_id": "6a243788-9d9e-5a75-9c15-fbf48342a8b4",
+      "database": "v2bench_78b1ee4a_6a2437889d9e5a759c15fbf48342a8b4",
+      "orders": 100000,
+      "outbox": 17360,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "6033b09a9a5f7128ab80cf8fce34aa03",
+      "outbox_fingerprint": "ccd405994b6727ae230079bbf97d7816",
+      "job_id": "56083d08-e64a-4127-96c2-52fab9f0c49f",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:56:02.096988+00:00"
+    },
+    {
+      "tenant_id": "6b774053-b99d-5c86-9741-fbd696bf899f",
+      "database": "v2bench_78b1ee4a_6b774053b99d5c869741fbd696bf899f",
+      "orders": 100000,
+      "outbox": 17328,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "b2e9c389ebd6ecbd33837f764e589c80",
+      "outbox_fingerprint": "f32e5dd1d56ae5c0905b2473ceb15b20",
+      "job_id": "9b2b05d5-fa11-47f3-ad81-605f2be32f79",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:56:22.499674+00:00"
+    },
+    {
+      "tenant_id": "6e556ce0-74aa-5377-8ab6-9d74166199c5",
+      "database": "v2bench_78b1ee4a_6e556ce074aa53778ab69d74166199c5",
+      "orders": 100000,
+      "outbox": 17425,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "4bc9dc8b8abc8274df1c6d174824505c",
+      "outbox_fingerprint": "0fcc40996b7bee6fedf10ead6397519e",
+      "job_id": "16c742c1-c649-4d0d-8cc8-2021f3a97834",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:56:44.481265+00:00"
+    },
+    {
+      "tenant_id": "6e5ab0be-732e-52e8-a7fc-4bdcf0b64a2b",
+      "database": "v2bench_78b1ee4a_6e5ab0be732e52e8a7fc4bdcf0b64a2b",
+      "orders": 100000,
+      "outbox": 17269,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "876ba55e95ec80f851c9600ceafd8482",
+      "outbox_fingerprint": "69810e41cfea425aa0fcd72ee52a5334",
+      "job_id": "dfa15486-48d3-48f3-9d75-75061e2a4b19",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:57:12.084185+00:00"
+    },
+    {
+      "tenant_id": "6fe744da-93c1-5e09-bcdd-b2132d0c7f4c",
+      "database": "v2bench_78b1ee4a_6fe744da93c15e09bcddb2132d0c7f4c",
+      "orders": 100000,
+      "outbox": 17312,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "5add031ce1099990d379817352a50fa8",
+      "outbox_fingerprint": "8aacf5f0bc5a14f76696be1cd0fd7353",
+      "job_id": "fad9948e-9fd4-47da-9ef8-d44d6694e2d2",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:57:38.417035+00:00"
+    },
+    {
+      "tenant_id": "7353644a-d49c-5d30-93de-beb26f86e1dc",
+      "database": "v2bench_78b1ee4a_7353644ad49c5d3093debeb26f86e1dc",
+      "orders": 100000,
+      "outbox": 17435,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "5807afda1a51fa00dd6304e0514ae3d6",
+      "outbox_fingerprint": "2e4d7448a2638a2234e6db7787ad5d0b",
+      "job_id": "6f2a9b82-cc30-4b92-80e1-4c87f2514827",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:57:58.343960+00:00"
+    },
+    {
+      "tenant_id": "743272c3-b519-5405-be3e-9bcb65a6280e",
+      "database": "v2bench_78b1ee4a_743272c3b5195405be3e9bcb65a6280e",
+      "orders": 100000,
+      "outbox": 17318,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "4f20349fbe57aeb242916559830e5c6d",
+      "outbox_fingerprint": "266bcf516f0a7ca92925d1d5360b0b72",
+      "job_id": "b378f274-1479-40a5-9c95-36f38930e93c",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:58:18.612734+00:00"
+    },
+    {
+      "tenant_id": "78473cbb-5c5d-57e5-bcc5-1698e68e542f",
+      "database": "v2bench_78b1ee4a_78473cbb5c5d57e5bcc51698e68e542f",
+      "orders": 100000,
+      "outbox": 17428,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "256ad7ed6e48c4dda3442cf59e5d3804",
+      "outbox_fingerprint": "523fe34adb41ef48e80228990858ce3e",
+      "job_id": "98147bda-5831-490a-89cd-931b4d9555ce",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:58:38.845095+00:00"
+    },
+    {
+      "tenant_id": "7afbdc6f-79a1-5f8a-b0fc-7dcbf395cd2c",
+      "database": "v2bench_78b1ee4a_7afbdc6f79a15f8ab0fc7dcbf395cd2c",
+      "orders": 100000,
+      "outbox": 17351,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "bd93cf0b40e563199e6b3871fdf1cc16",
+      "outbox_fingerprint": "0f3f55b069202d316dc9487185857d0b",
+      "job_id": "20c6524a-b6f0-4919-ae81-033322239da0",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:59:00.532769+00:00"
+    },
+    {
+      "tenant_id": "7cbd4151-1a82-5ef8-9ed3-4b267911c78d",
+      "database": "v2bench_78b1ee4a_7cbd41511a825ef89ed34b267911c78d",
+      "orders": 100000,
+      "outbox": 17309,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "4ac51c4b5dcea16ea978070a05bc3e97",
+      "outbox_fingerprint": "681965b1b4056c262c606df9d18dac2c",
+      "job_id": "02d59048-87e6-4843-9f05-3486d1aff91a",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:59:21.474933+00:00"
+    },
+    {
+      "tenant_id": "7e2fcc9d-cd8a-5c51-8585-9dbee43e177f",
+      "database": "v2bench_78b1ee4a_7e2fcc9dcd8a5c5185859dbee43e177f",
+      "orders": 100000,
+      "outbox": 17335,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "9e87773c806ef8cb1d667c5754d1729b",
+      "outbox_fingerprint": "59674212b61d74364c433e3fb590c248",
+      "job_id": "f51f4094-afbd-4f73-aa61-d4fbe3d9ef4e",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T01:59:41.280094+00:00"
+    },
+    {
+      "tenant_id": "7f27c8ac-bd27-5556-8e0b-08631ca63599",
+      "database": "v2bench_78b1ee4a_7f27c8acbd2755568e0b08631ca63599",
+      "orders": 100000,
+      "outbox": 17294,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "daaab981c17f07a74c3d6d38519ec6bb",
+      "outbox_fingerprint": "ba54811bf9e697b24bdb53a93894129a",
+      "job_id": "ee265c35-4174-4121-8b08-ebaf8e4ed389",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:00:00.517721+00:00"
+    },
+    {
+      "tenant_id": "7ffd96dc-871e-5ef1-805b-f79108372a88",
+      "database": "v2bench_78b1ee4a_7ffd96dc871e5ef1805bf79108372a88",
+      "orders": 100000,
+      "outbox": 17342,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "57179c097a5e309198506275a99dd24f",
+      "outbox_fingerprint": "b3392153c241aee957fc30e06b5a74f3",
+      "job_id": "e5e17935-d145-45a0-a1d2-7ae17a02a449",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:00:20.232714+00:00"
+    },
+    {
+      "tenant_id": "8c7937a1-1a2e-5689-9739-d897c2f688f6",
+      "database": "v2bench_78b1ee4a_8c7937a11a2e56899739d897c2f688f6",
+      "orders": 100000,
+      "outbox": 17302,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "ebf1f1379d6a1177892afb5749ec6a4e",
+      "outbox_fingerprint": "04dd9e495229439802fb13b62aa62d3b",
+      "job_id": "17f82866-93cb-40dc-b02f-c862a825321c",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:00:40.910332+00:00"
+    },
+    {
+      "tenant_id": "8f217015-9a6d-5ff1-b2a9-3b595e435278",
+      "database": "v2bench_78b1ee4a_8f2170159a6d5ff1b2a93b595e435278",
+      "orders": 100000,
+      "outbox": 17350,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "de427b78499b769bf41043351281eb1e",
+      "outbox_fingerprint": "3b94553365c8f1075b36b85abd362fd3",
+      "job_id": "278d7f9a-e02e-4df5-823e-0a129b054854",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:01:02.893081+00:00"
+    },
+    {
+      "tenant_id": "8f9e369c-58af-5f15-a293-2bae65df502c",
+      "database": "v2bench_78b1ee4a_8f9e369c58af5f15a2932bae65df502c",
+      "orders": 100000,
+      "outbox": 17359,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "c9dedc65d1d6554d620f042b7704092c",
+      "outbox_fingerprint": "33f323071190a192e14d3e779d891cf6",
+      "job_id": "44960a9a-3c34-4b1d-98f2-f6fc93c52cae",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:01:24.642732+00:00"
+    },
+    {
+      "tenant_id": "910491fa-ce8e-57a9-87f4-a7fcaf3868f8",
+      "database": "v2bench_78b1ee4a_910491face8e57a987f4a7fcaf3868f8",
+      "orders": 100000,
+      "outbox": 17393,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "667d1950378f56d4b858cb7acac4a4e3",
+      "outbox_fingerprint": "3bf3cc0add77c21f343b03f33f8d2f73",
+      "job_id": "8aed452f-9092-43d1-b645-1736d202217f",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:01:45.698957+00:00"
+    },
+    {
+      "tenant_id": "9137e93c-a521-5c9e-8f7a-f3b117c7c259",
+      "database": "v2bench_78b1ee4a_9137e93ca5215c9e8f7af3b117c7c259",
+      "orders": 100000,
+      "outbox": 17389,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "728b9c0162c214bd983e260fb347373f",
+      "outbox_fingerprint": "7c82467ff8a0a5660090de930accec6e",
+      "job_id": "4bb8c7a7-8d0a-4efb-8807-9e6b0a7f992d",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:02:06.904147+00:00"
+    },
+    {
+      "tenant_id": "9722f10f-77dc-5b39-8776-a4859d8c29d8",
+      "database": "v2bench_78b1ee4a_9722f10f77dc5b398776a4859d8c29d8",
+      "orders": 100000,
+      "outbox": 17252,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "f336508ba41a2a9087cf93dcbc064813",
+      "outbox_fingerprint": "eecac9f312cc90a5c8b71d1110c61eb5",
+      "job_id": "346a6020-3fa7-4f0b-aa38-a61e665d482d",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:02:27.937754+00:00"
+    },
+    {
+      "tenant_id": "a175b465-1f3b-592c-bc24-f362816e2418",
+      "database": "v2bench_78b1ee4a_a175b4651f3b592cbc24f362816e2418",
+      "orders": 100000,
+      "outbox": 17271,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "bd145e4f81ab7f55ec3d2fda37c5723e",
+      "outbox_fingerprint": "57869b893b08062651a8b8cb25cda441",
+      "job_id": "56bb69b8-19d0-4380-92ea-66d0ae6990af",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:02:49.303998+00:00"
+    },
+    {
+      "tenant_id": "a23a0385-a7f7-5687-b534-bfcb73463657",
+      "database": "v2bench_78b1ee4a_a23a0385a7f75687b534bfcb73463657",
+      "orders": 100000,
+      "outbox": 17346,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "64835f028c6b298b12b44b4191b97c25",
+      "outbox_fingerprint": "0cd07d7211ebcfbab0db7a411be7ce48",
+      "job_id": "7b49ad9d-a9b8-43b7-9848-072d1aedf095",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:03:09.524186+00:00"
+    },
+    {
+      "tenant_id": "a277fd9b-f2f5-5024-884f-aa8a0d1e6ffa",
+      "database": "v2bench_78b1ee4a_a277fd9bf2f55024884faa8a0d1e6ffa",
+      "orders": 100000,
+      "outbox": 17396,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "6992f6a45d2fa5d06160cfd67653ab14",
+      "outbox_fingerprint": "3aaae569efa8900f11a9e1eeb0eda852",
+      "job_id": "4200d9e6-a7a9-4ea6-af54-11cdd49c49f1",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:03:29.318342+00:00"
+    },
+    {
+      "tenant_id": "a3396452-09c0-5f25-8de8-a4dcf8883a86",
+      "database": "v2bench_78b1ee4a_a339645209c05f258de8a4dcf8883a86",
+      "orders": 100000,
+      "outbox": 17318,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "9553af47184f28ffa034882ae2233e30",
+      "outbox_fingerprint": "05b1ddaf56eb5b5d81ffcc0f4225be25",
+      "job_id": "5e66c79d-d2dc-48ae-9a93-e3875ab76a77",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:04:04.850417+00:00"
+    },
+    {
+      "tenant_id": "a340bccb-4716-5b53-a663-6b270f33de30",
+      "database": "v2bench_78b1ee4a_a340bccb47165b53a6636b270f33de30",
+      "orders": 100000,
+      "outbox": 17336,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "df0fbc9843a684f78cc609bef2e038e9",
+      "outbox_fingerprint": "855df7a9beff0d6a2de3274a4ff033fe",
+      "job_id": "b4590fb0-1c48-4d63-bcf2-86ba2d8c7e32",
+      "revision": 2,
+      "archived_rows": 101439,
+      "verified_at": "2026-11-01T02:04:39.557091+00:00"
+    },
+    {
+      "tenant_id": "a3c7841e-dee6-53f0-b13c-fd7745b6245d",
+      "database": "v2bench_78b1ee4a_a3c7841edee653f0b13cfd7745b6245d",
+      "orders": 100000,
+      "outbox": 17329,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "633aefdeb9c44e790d49cea564bc03ba",
+      "outbox_fingerprint": "1cfbf5d0b2e77da14c348196cff28699",
+      "job_id": "461fc466-04ae-4359-b597-5c38ee7572e7",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:05:14.546031+00:00"
+    },
+    {
+      "tenant_id": "a76c0923-ce46-5dee-a72e-dffeb5d72231",
+      "database": "v2bench_78b1ee4a_a76c0923ce465deea72edffeb5d72231",
+      "orders": 100000,
+      "outbox": 17329,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "abc2137bdc1b7699189f48f184978c0e",
+      "outbox_fingerprint": "9f0ae945164f2e77f8448d651c080fb1",
+      "job_id": "3a55fd99-1c31-453b-b215-c83c0b092ea8",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:05:46.325220+00:00"
+    },
+    {
+      "tenant_id": "a8de88ba-10f6-5fb4-ac53-60bdb48b78f2",
+      "database": "v2bench_78b1ee4a_a8de88ba10f65fb4ac5360bdb48b78f2",
+      "orders": 100000,
+      "outbox": 17356,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "3d9e1b3d30b457f3bf107c00584fc772",
+      "outbox_fingerprint": "451b4523e9cf1696b607055b0d3eba46",
+      "job_id": "f74dcc73-0c31-4d94-91e7-8b88e263f798",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:06:06.129335+00:00"
+    },
+    {
+      "tenant_id": "ac7fd980-fcee-524e-9f89-591913799e87",
+      "database": "v2bench_78b1ee4a_ac7fd980fcee524e9f89591913799e87",
+      "orders": 100000,
+      "outbox": 17313,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "ce276c4b45e279f8d36d34742dcba0fa",
+      "outbox_fingerprint": "2931848ba6eb5e5a3eb33365c3176f38",
+      "job_id": "06b21a61-1435-4c74-b840-e666e14891c1",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:06:25.004730+00:00"
+    },
+    {
+      "tenant_id": "aef3c77c-5e39-5f8d-9788-d1aea0ee2f2d",
+      "database": "v2bench_78b1ee4a_aef3c77c5e395f8d9788d1aea0ee2f2d",
+      "orders": 100000,
+      "outbox": 17411,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "18358246500758170420c8980e4a0fb9",
+      "outbox_fingerprint": "1676dc4350764e0e42a52f3532c6fb32",
+      "job_id": "8e95e8d9-0250-412e-826e-ed3700a8b8b9",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:06:44.595902+00:00"
+    },
+    {
+      "tenant_id": "af8c972b-ac9e-5877-8072-04e6f30df7ce",
+      "database": "v2bench_78b1ee4a_af8c972bac9e5877807204e6f30df7ce",
+      "orders": 100000,
+      "outbox": 17318,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "b2a7e0772131423ce2444c99c7d6af33",
+      "outbox_fingerprint": "e18f7f26e39851fd9167b2c4e88e8f10",
+      "job_id": "0720774a-48e8-4a2f-8980-b029522f99a3",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:07:05.029015+00:00"
+    },
+    {
+      "tenant_id": "b0655ca7-1ed0-5b53-ab1d-671ac5159f7c",
+      "database": "v2bench_78b1ee4a_b0655ca71ed05b53ab1d671ac5159f7c",
+      "orders": 100000,
+      "outbox": 17355,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "a43bcbee9954a536a86cd8f81973b5c5",
+      "outbox_fingerprint": "c521300e747646b773efc5ac82196049",
+      "job_id": "8caf3adb-602d-4f94-a03f-0d0bd25c79d5",
+      "revision": 2,
+      "archived_rows": 101439,
+      "verified_at": "2026-11-01T02:07:25.587493+00:00"
+    },
+    {
+      "tenant_id": "bd324714-e359-5e27-8f8b-3fd1839b91f5",
+      "database": "v2bench_78b1ee4a_bd324714e3595e278f8b3fd1839b91f5",
+      "orders": 100000,
+      "outbox": 17290,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "b67ba3c1fb423f2de52dbb3b49a99b66",
+      "outbox_fingerprint": "264239b3f20b62535a6ad5dc2a7f9939",
+      "job_id": "dc4596eb-91d9-4321-9a5e-776b8b1d23e6",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:07:45.253161+00:00"
+    },
+    {
+      "tenant_id": "be2ab0ab-b6b4-50e6-8550-b2363b12b79f",
+      "database": "v2bench_78b1ee4a_be2ab0abb6b450e68550b2363b12b79f",
+      "orders": 100000,
+      "outbox": 17408,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "9f1efda94cfc772c050846d0d3b227b2",
+      "outbox_fingerprint": "8b0810e7c8dc87a063caa3569a3424ac",
+      "job_id": "5b3c8f43-444f-4433-8c76-4b0e2ef55fcb",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:08:05.137504+00:00"
+    },
+    {
+      "tenant_id": "c13b449c-e4ea-5261-9a1e-4c175f1e842d",
+      "database": "v2bench_78b1ee4a_c13b449ce4ea52619a1e4c175f1e842d",
+      "orders": 100000,
+      "outbox": 17380,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "217e335d049956912c6f2b2a4372758c",
+      "outbox_fingerprint": "c3a7b47e754f16cf95ef76fc29df3851",
+      "job_id": "33100221-cb25-4eeb-b4b1-4293262b7d4f",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:08:26.019520+00:00"
+    },
+    {
+      "tenant_id": "c1e27c27-fa9c-5ff4-80d9-4a5a130fb45f",
+      "database": "v2bench_78b1ee4a_c1e27c27fa9c5ff480d94a5a130fb45f",
+      "orders": 100000,
+      "outbox": 17313,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "df0e1ec2a2ac643b4d6be1685db43ea4",
+      "outbox_fingerprint": "54d0f09489e6001195c6a5a51078c74d",
+      "job_id": "a88e82fa-23b7-4cc7-8326-778694b617d6",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:08:46.081721+00:00"
+    },
+    {
+      "tenant_id": "c20602c7-978f-5075-9d32-60022237ffb5",
+      "database": "v2bench_78b1ee4a_c20602c7978f50759d3260022237ffb5",
+      "orders": 100000,
+      "outbox": 17269,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "b62ffb10836adfb3f8723d586ec9ae9d",
+      "outbox_fingerprint": "9530bd66da2babbda049e0c12baa7b4e",
+      "job_id": "300972db-8946-4c2c-a3c6-fa5bf755b3c3",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:09:05.874458+00:00"
+    },
+    {
+      "tenant_id": "c2a15d63-322c-5bb0-8cf9-5d17632ca6f4",
+      "database": "v2bench_78b1ee4a_c2a15d63322c5bb08cf95d17632ca6f4",
+      "orders": 100000,
+      "outbox": 17311,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "c5433b5e889447b4b04df55abbb48765",
+      "outbox_fingerprint": "8c2732e00fd6d9fd621ab7e98976accf",
+      "job_id": "365ada46-4c6b-4b1f-9047-a8197e2a931e",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:09:25.951796+00:00"
+    },
+    {
+      "tenant_id": "c2ec2480-1cd8-55b4-bf42-f6f8b4bf931b",
+      "database": "v2bench_78b1ee4a_c2ec24801cd855b4bf42f6f8b4bf931b",
+      "orders": 100000,
+      "outbox": 17354,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "743f7fce81e9ed46b43b8842cb1137ca",
+      "outbox_fingerprint": "44e75139e409184f413feaef861b307f",
+      "job_id": "dd3392fd-7824-4657-815c-a4b793384f69",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:09:46.085134+00:00"
+    },
+    {
+      "tenant_id": "c53352cb-6828-55b3-91b0-03c679051bcb",
+      "database": "v2bench_78b1ee4a_c53352cb682855b391b003c679051bcb",
+      "orders": 100000,
+      "outbox": 17334,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "a41e5ca8d6a4477b3a8dbde7e3078496",
+      "outbox_fingerprint": "f7be8cf2011317cf7d4ae722afd836c5",
+      "job_id": "565ee3d8-5347-43ac-9c29-32e9c10726b5",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:10:05.615486+00:00"
+    },
+    {
+      "tenant_id": "c9a96cd0-0efe-5cca-8870-8f3c025b214a",
+      "database": "v2bench_78b1ee4a_c9a96cd00efe5cca88708f3c025b214a",
+      "orders": 100000,
+      "outbox": 17310,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "38c18b138696cc2f7dce76b4ecc0edc8",
+      "outbox_fingerprint": "18dc61fbc07f348f3376da3bd26fd4ca",
+      "job_id": "d6df0fb3-479c-4129-b8f3-ed7ef0072caf",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:10:26.308641+00:00"
+    },
+    {
+      "tenant_id": "cadfd283-7a1d-592f-be46-3694420be1a4",
+      "database": "v2bench_78b1ee4a_cadfd2837a1d592fbe463694420be1a4",
+      "orders": 100000,
+      "outbox": 17270,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "0683113f132d27b45036b33c45d523ac",
+      "outbox_fingerprint": "52cb56e0a3521ceec73b4ad3d6a270af",
+      "job_id": "3b28b8cc-8079-4209-b723-9cb286e8d301",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:10:45.174420+00:00"
+    },
+    {
+      "tenant_id": "ccd9dd9c-f166-5e71-b162-9fd30b0e1164",
+      "database": "v2bench_78b1ee4a_ccd9dd9cf1665e71b1629fd30b0e1164",
+      "orders": 100000,
+      "outbox": 17389,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "b6ed41f73d2182755072b0f4081aeab8",
+      "outbox_fingerprint": "8b0bd21f9b9aab7851473e9d4e1426ab",
+      "job_id": "928299bb-bd45-423d-9dcb-a64f67937e60",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:11:04.602943+00:00"
+    },
+    {
+      "tenant_id": "ce515b09-8229-5231-8f44-7845afef819d",
+      "database": "v2bench_78b1ee4a_ce515b09822952318f447845afef819d",
+      "orders": 100000,
+      "outbox": 17286,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "fb531dd81abbf935e92644d235d7f374",
+      "outbox_fingerprint": "17bdc811976df407c656f7b88ae9b393",
+      "job_id": "86b8179d-b54a-45bb-b4e2-6b3636fae5f1",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:11:25.870130+00:00"
+    },
+    {
+      "tenant_id": "d5089a83-9dbe-518e-b889-9a41c7fcb765",
+      "database": "v2bench_78b1ee4a_d5089a839dbe518eb8899a41c7fcb765",
+      "orders": 100000,
+      "outbox": 17312,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "5eab532c57049c62697f671c0c686e30",
+      "outbox_fingerprint": "d9030b534da601344a1c6291a8c9ae5f",
+      "job_id": "5180f9a8-95e9-4666-8eff-6cd64080d466",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:11:46.002218+00:00"
+    },
+    {
+      "tenant_id": "d5e3d790-f1b6-5bda-becb-1ce3372c304d",
+      "database": "v2bench_78b1ee4a_d5e3d790f1b65bdabecb1ce3372c304d",
+      "orders": 100000,
+      "outbox": 17397,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "34d15205473369afd8678d0a4a2ad906",
+      "outbox_fingerprint": "0aef5492422e393ea0d41320a96dbaf0",
+      "job_id": "10c55b9f-b602-4ece-ba8e-c5b32661be3f",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:12:05.939044+00:00"
+    },
+    {
+      "tenant_id": "da6796f9-d2ea-5b3f-b448-eddd173a4e26",
+      "database": "v2bench_78b1ee4a_da6796f9d2ea5b3fb448eddd173a4e26",
+      "orders": 100000,
+      "outbox": 17344,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "c4d952f53e466a01a24849d27efc390f",
+      "outbox_fingerprint": "91e32193547094d6c283d3e64a1cf99a",
+      "job_id": "01281cbf-0b83-42b7-8606-dad8e5aa2b03",
+      "revision": 2,
+      "archived_rows": 101439,
+      "verified_at": "2026-11-01T02:12:33.409873+00:00"
+    },
+    {
+      "tenant_id": "e0a9a8c0-8619-5bfe-ba5d-cbdc8da7889d",
+      "database": "v2bench_78b1ee4a_e0a9a8c086195bfeba5dcbdc8da7889d",
+      "orders": 100000,
+      "outbox": 17368,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "1fb55b6fcd5b9e59a16701b5339b2d07",
+      "outbox_fingerprint": "4f7b9c169c35deec1b60edcb6bf4bc25",
+      "job_id": "2ff80db0-32ba-47bd-b820-db4849de5000",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:12:57.653542+00:00"
+    },
+    {
+      "tenant_id": "e1c74745-9ac3-578b-8eee-b5e16ec48ac5",
+      "database": "v2bench_78b1ee4a_e1c747459ac3578b8eeeb5e16ec48ac5",
+      "orders": 100000,
+      "outbox": 17396,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "d49f329c2dfa3221c1cec9fa133c2946",
+      "outbox_fingerprint": "cee662f7a2993caeb4ca9bea36e4e49b",
+      "job_id": "bf4dbab9-dc2e-4738-b4ae-7019918f06db",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:13:32.438960+00:00"
+    },
+    {
+      "tenant_id": "e6b2806b-ff61-5717-94d4-1fda46d31e4e",
+      "database": "v2bench_78b1ee4a_e6b2806bff61571794d41fda46d31e4e",
+      "orders": 100000,
+      "outbox": 17285,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "66c43cb537b2ba448c3778fc5346fd82",
+      "outbox_fingerprint": "d9234c2f796523faadb1dcb5aec4e1cc",
+      "job_id": "c16181c9-1fb7-47b1-8142-b46d3bca5fc9",
+      "revision": 2,
+      "archived_rows": 101439,
+      "verified_at": "2026-11-01T02:14:16.140099+00:00"
+    },
+    {
+      "tenant_id": "ee4efcf5-6556-5e54-8527-44efa824b3a0",
+      "database": "v2bench_78b1ee4a_ee4efcf565565e54852744efa824b3a0",
+      "orders": 100000,
+      "outbox": 17328,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "c9c8afb09ab0720993c2fda37c50f256",
+      "outbox_fingerprint": "5b28dc2c389b40efc8b132323bce8c61",
+      "job_id": "7a4317ad-19ab-40b7-915d-0bf9871c6069",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:14:58.581292+00:00"
+    },
+    {
+      "tenant_id": "f3a4fe77-8341-5ff1-8b79-95144f273c17",
+      "database": "v2bench_78b1ee4a_f3a4fe7783415ff18b7995144f273c17",
+      "orders": 100000,
+      "outbox": 17353,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "3f72c247990aaccf116edab4e5d8331f",
+      "outbox_fingerprint": "23cb632854413ae8b9bd6ffb12d8b057",
+      "job_id": "99704d7e-b8bf-4f95-a486-992a8bdb66af",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:15:35.477108+00:00"
+    },
+    {
+      "tenant_id": "f3e18878-b78c-54f7-ad44-716c8b0ad397",
+      "database": "v2bench_78b1ee4a_f3e18878b78c54f7ad44716c8b0ad397",
+      "orders": 100000,
+      "outbox": 17319,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "6240f282736285eb17a9c900c43ab314",
+      "outbox_fingerprint": "bce4715d4a2957ae97a2e64154e62ba6",
+      "job_id": "0da66fb8-c07c-47ce-ad47-4c5fd02d4242",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:16:09.509346+00:00"
+    },
+    {
+      "tenant_id": "f8a59c6c-d463-5a0a-95dc-9ef5fae75d52",
+      "database": "v2bench_78b1ee4a_f8a59c6cd4635a0a95dc9ef5fae75d52",
+      "orders": 100000,
+      "outbox": 17406,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "d4c83f86f0fd46c254f7fefac829f5d1",
+      "outbox_fingerprint": "614557aff09c419f66f182e32366a4df",
+      "job_id": "1bd66629-387e-4488-82ad-5588fcd1573c",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:16:37.228922+00:00"
+    },
+    {
+      "tenant_id": "fa3ae9fb-54e9-5aa4-a1fc-4bd9304d7a4b",
+      "database": "v2bench_78b1ee4a_fa3ae9fb54e95aa4a1fc4bd9304d7a4b",
+      "orders": 100000,
+      "outbox": 17400,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "959add22b18b34ac732e9e73e8e795a3",
+      "outbox_fingerprint": "2bb378cbbb65db07c1c592a1560fc89b",
+      "job_id": "2c788664-c3dc-463e-abbb-8f34953d8240",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:17:07.211236+00:00"
+    },
+    {
+      "tenant_id": "ff1d5d71-08c4-56ad-a848-2df83d9c0c51",
+      "database": "v2bench_78b1ee4a_ff1d5d7108c456ada8482df83d9c0c51",
+      "orders": 100000,
+      "outbox": 17387,
+      "all_source_fields_unchanged": true,
+      "orders_fingerprint": "d6aef848c703988ca43ccdf4b9efa718",
+      "outbox_fingerprint": "dd7b4ac5e4c62d56ebec1bf8f7260065",
+      "job_id": "a1087ba4-464a-4103-aa6b-0ac1582da278",
+      "revision": 2,
+      "archived_rows": 101440,
+      "verified_at": "2026-11-01T02:17:35.232831+00:00"
+    }
+  ],
+  "local_artifact_sha256": {
+    "tenant-analytics-repair.json": "83227b8c75a584fbe9d21bbbc3e5d7e5a20a11bcde3db2c7ce78f2ac14499f86",
+    "restored-api-verification.json": "8afc3f8980c6a90a20a12d72e11a40aec01c7c5b082c090d5386389164610560",
+    "restored-performance.json": "dfecb676360d6f927e8d6e51197612c8c80bf63461f81b5e00f4354544704947",
+    "restoration-security-health-proof.json": "dd66a29aa4d7125ca494da5f2e480cea019fd2d1cfc08b2e2bc75fdff7249c7a",
+    "restoration-resource-proof.json": "85fa0c4aa7f8a4c25cbe9fe426a0b4fd7d8022b9089cbfbae86d50baffe13ae3"
+  }
+}

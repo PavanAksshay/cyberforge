@@ -2,7 +2,7 @@
 
 import hashlib
 import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
 from uuid import uuid4
@@ -275,3 +275,72 @@ def test_benchmark_write_and_invalid_catalog_are_denied(live_product, monkeypatc
         ).status_code
         == 409
     )
+
+
+def test_benchmark_write_gate_can_be_enabled_after_verified_repair(live_product, monkeypatch):
+    client, tid, settings = live_product
+    from astraroll.v2 import runtime
+
+    monkeypatch.setattr(settings, "benchmark_writes_enabled", True)
+    monkeypatch.setattr(
+        runtime,
+        "get_control_registry",
+        lambda: SimpleNamespace(
+            get_tenant=lambda _: SimpleNamespace(database_name="v2bench_verified")
+        ),
+    )
+    response = client.post(
+        f"/tenants/{tid}/ingest/csv",
+        content="product_id,amount,currency,status,created_at\nP,1.00,USD,shipped,2026-10-03T00:00:00Z",
+    )
+    assert response.status_code == 200, response.text
+    assert response.json()["accepted"] == 1 and response.json()["progress"]["stage"] == "AGGREGATED"
+
+
+def test_ordinary_order_routes_emit_recoverable_work_for_live_worker(
+    live_product, factory, redis_client, monkeypatch
+):
+    from astraroll.aggregation.bootstrap import bootstrap
+    from astraroll.v2.live_worker import LiveOutboxWorker, hints_key
+
+    client, tid, settings = live_product
+    monkeypatch.setattr(settings, "live_outbox_hints_enabled", True)
+    start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+    bootstrap(factory, tid, ["USD", "EUR"], start, start + timedelta(days=1))
+    from astraroll.v2.runtime import get_tenant_engine_manager
+
+    worker = LiveOutboxWorker(get_tenant_engine_manager(), redis_client, [tid])
+    created = client.post(
+        f"/tenants/{tid}/orders",
+        json={"product_id": str(uuid4()), "amount": "12.34", "currency": "USD"},
+    )
+    assert created.status_code == 201, created.text
+    oid = created.json()["id"]
+    assert redis_client.llen(hints_key()) == 1
+    worker.tick()
+    shipped = client.patch(
+        f"/tenants/{tid}/orders/{oid}", json={"expected_version": 1, "status": "shipped"}
+    )
+    assert shipped.status_code == 200, shipped.text
+    worker.tick()
+    second = client.post(
+        f"/tenants/{tid}/orders",
+        json={"product_id": str(uuid4()), "amount": "99.99", "currency": "USD"},
+    )
+    worker.tick()
+    cancelled = client.post(
+        f"/tenants/{tid}/orders/{second.json()['id']}/cancel", json={"expected_version": 1}
+    )
+    assert cancelled.status_code == 200, cancelled.text
+    worker.tick()
+    q = dict(
+        tenant_id=str(tid),
+        currency="USD",
+        start=start.isoformat(),
+        end=(start + timedelta(days=1)).isoformat(),
+    )
+    summary = client.get("/analytics/summary", params=q).json()
+    assert summary["total_order_count"] == 2 and summary["sales_amount"] == "12.34"
+    assert client.get("/analytics/verify", params=q).json()["status"] == "MATCH"
+    assert redis_client.xlen(settings.order_stream) == 4
+    assert redis_client.xpending(settings.order_stream, "astraroll-live-imports-v2")["pending"] == 0
