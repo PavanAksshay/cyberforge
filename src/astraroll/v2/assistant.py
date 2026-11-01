@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import re
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -20,6 +19,7 @@ from typing import Any
 from uuid import UUID
 
 import httpx
+from starlette.concurrency import run_in_threadpool
 
 from astraroll.analytics.contracts import (
     AnalyticsQuery,
@@ -27,6 +27,7 @@ from astraroll.analytics.contracts import (
     TrendsQuery,
 )
 from astraroll.analytics.reader import AnalyticsReader, AnalyticsUnavailable
+from astraroll.config import get_settings
 from astraroll.schemas import Currency
 
 log = logging.getLogger(__name__)
@@ -41,6 +42,7 @@ class AssistantResponse:
     endpoints_called: list[str]
     data: dict[str, Any]
     freshness: dict[str, Any] | None = None
+    provider_error: str | None = None
 
 
 GROQ_ANALYTICS_TOOLS = [
@@ -197,6 +199,11 @@ STRICT GROUNDING RULES:
 3. Placed and cancelled orders do NOT count as sales, but contribute to order volume.
 4. Always state the currency (e.g. $ USD, € EUR) and time window.
 5. Never extrapolate or hallucinate numbers not present in tool results.
+6. Use the selected currency and window for every tool. Never combine currencies.
+7. Product order counts include all statuses. For shipped average order value,
+   obtain the shipped count from status breakdown and divide shipped sales by it.
+8. Freshness is the recorded materialization time/revision, not proof of processing lag.
+9. Say when the available data cannot answer a question; do not invent causes or forecasts.
 
 STRICT FORMATTING RULE:
 Use clean plain text with standard indentation or bullet dashes.
@@ -312,7 +319,7 @@ def execute_grounded_intent(
             if not products:
                 lines.append("No shipped products recorded in this window.")
             else:
-                lines.append("| Rank | Product ID | Shipped Sales | Shipped Orders |")
+                lines.append("| Rank | Product ID | Shipped Sales | Orders (all statuses) |")
                 lines.append("| :--- | :--- | :--- | :--- |")
                 for rank, p in enumerate(products, 1):
                     amt = f"{currency} {p.sales_amount:,.2f}"
@@ -453,21 +460,24 @@ async def ask_assistant(
     end: str | None = None,
 ) -> AssistantResponse:
     """Orchestrate assistant query: Groq API when configured, or deterministic fallback."""
-    groq_api_key = os.environ.get("GROQ_API_KEY", "").strip()
-    if not groq_api_key:
-        return execute_grounded_intent(
-            query_str=query_str,
-            tenant_id=tenant_id,
-            reader=reader,
-            currency=currency,
-            start=start,
-            end=end,
-        )
+    settings = get_settings()
+    groq_api_key = settings.groq_api_key.get_secret_value().strip() if settings.groq_api_key else ""
 
-    model_name = os.environ.get("GROQ_MODEL", "openai/gpt-oss-120b").strip()
+    async def fallback(reason):
+        result = await run_in_threadpool(
+            execute_grounded_intent, query_str, tenant_id, reader, currency, start, end
+        )
+        result.provider_error = reason
+        return result
+
+    if not groq_api_key:
+        return await fallback("LLM is not configured; showing verified analytics without an LLM.")
+
+    model_name = settings.groq_model.strip()
     start_iso, end_iso = _default_window(start, end)
     endpoints_called: list[str] = []
     collected_data: dict[str, Any] = {}
+    freshness_info = None
 
     user_prompt = (
         f"Tenant ID: {tenant_id}\n"
@@ -486,129 +496,149 @@ async def ask_assistant(
                 "Authorization": f"Bearer {groq_api_key}",
                 "Content-Type": "application/json",
             }
-            body = {
-                "model": model_name,
-                "messages": messages,
-                "tools": GROQ_ANALYTICS_TOOLS,
-                "tool_choice": "auto",
-                "temperature": 0.1,
-            }
-
-            resp = await client.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers=headers,
-                json=body,
-            )
-
-            if resp.status_code != 200:
-                log.warning(
-                    "Groq API returned HTTP %s: %s; falling back", resp.status_code, resp.text
-                )
-                return execute_grounded_intent(query_str, tenant_id, reader, currency, start, end)
-
-            resp_json = resp.json()
-            choice = resp_json["choices"][0]
-            message = choice["message"]
-
-            tool_calls = message.get("tool_calls")
-            if not tool_calls:
-                return AssistantResponse(
-                    reply=strip_markdown_syntax(message.get("content", "")),
-                    intent="general",
-                    provider="groq",
-                    model=model_name,
-                    endpoints_called=[],
-                    data={},
-                )
-
-            messages.append(message)
-
-            for tc in tool_calls:
-                func_name = tc["function"]["name"]
-                args = json.loads(tc["function"]["arguments"])
-                t_curr = args.get("currency", currency)
-                t_start = start if start else args.get("start", start_iso)
-                t_end = end if end else args.get("end", end_iso)
-
-                q = AnalyticsQuery(tenant_id=tenant_id, currency=t_curr, start=t_start, end=t_end)
-
-                try:
-                    if func_name == "get_summary":
-                        endpoints_called.append("/analytics/summary")
-                        res = reader.summary(q)
-                        tool_output = res.value.model_dump(mode="json")
-                        collected_data["summary"] = tool_output
-
-                    elif func_name == "get_trends":
-                        endpoints_called.append("/analytics/trends")
-                        t_interval = args.get("interval", "day")
-                        tq = TrendsQuery(
-                            tenant_id=tenant_id,
-                            currency=t_curr,
-                            start=t_start,
-                            end=t_end,
-                            interval=t_interval,
-                        )
-                        res = reader.trends(tq)
-                        tool_output = [b.model_dump(mode="json") for b in res.value]
-                        collected_data["trends"] = tool_output
-
-                    elif func_name == "get_top_products":
-                        endpoints_called.append("/analytics/top-products")
-                        t_limit = args.get("limit", 5)
-                        tpq = TopProductsQuery(
-                            tenant_id=tenant_id,
-                            currency=t_curr,
-                            start=t_start,
-                            end=t_end,
-                            limit=t_limit,
-                        )
-                        res = reader.top_products(tpq)
-                        tool_output = [p.model_dump(mode="json") for p in res.value]
-                        collected_data["top_products"] = tool_output
-
-                    elif func_name == "get_status_breakdown":
-                        endpoints_called.append("/analytics/status-breakdown")
-                        res = reader.status_breakdown(q)
-                        tool_output = [s.model_dump(mode="json") for s in res.value]
-                        collected_data["status_breakdown"] = tool_output
-                    else:
-                        tool_output = {"error": f"Unknown tool {func_name}"}
-                except Exception as tool_err:
-                    log.warning("Tool %s execution failed: %s", func_name, tool_err)
-                    tool_output = {"error": str(tool_err)}
-
-                messages.append(
-                    {
-                        "role": "tool",
-                        "tool_call_id": tc["id"],
-                        "content": json.dumps(tool_output),
-                    }
-                )
-
-            second_resp = await client.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers=headers,
-                json={
+            # Models may request another lookup after reading a tool result.
+            for turn in range(5):
+                body = {
                     "model": model_name,
                     "messages": messages,
-                    "temperature": 0.2,
-                },
-            )
+                    "tools": GROQ_ANALYTICS_TOOLS,
+                    "tool_choice": "required" if turn == 0 else "auto",
+                    "parallel_tool_calls": False,
+                    "temperature": 0.1,
+                }
 
-            if second_resp.status_code == 200:
-                final_content = second_resp.json()["choices"][0]["message"]["content"]
-                return AssistantResponse(
-                    reply=strip_markdown_syntax(final_content),
-                    intent="groq_synthesis",
-                    provider="groq",
-                    model=model_name,
-                    endpoints_called=endpoints_called,
-                    data=collected_data,
+                resp = await client.post(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    headers=headers,
+                    json=body,
                 )
-            else:
-                return execute_grounded_intent(query_str, tenant_id, reader, currency, start, end)
+
+                if resp.status_code != 200:
+                    log.warning(
+                        "Groq API returned HTTP %s; using grounded fallback", resp.status_code
+                    )
+                    return await fallback(provider_failure(resp.status_code))
+
+                resp_json = resp.json()
+                choice = resp_json["choices"][0]
+                message = choice["message"]
+
+                tool_calls = message.get("tool_calls")
+                if not tool_calls:
+                    if not collected_data:
+                        return await fallback(
+                            "LLM did not retrieve verified data; showing analytics directly."
+                        )
+                    content = message.get("content")
+                    if not content or not content.strip():
+                        return await fallback(
+                            "LLM returned an empty answer; showing verified analytics."
+                        )
+                    return AssistantResponse(
+                        reply=strip_markdown_syntax(content),
+                        intent="groq_synthesis",
+                        provider="groq",
+                        model=model_name,
+                        endpoints_called=endpoints_called,
+                        data=collected_data,
+                        freshness=freshness_info,
+                    )
+
+                if len(tool_calls) + len(endpoints_called) > 8:
+                    return await fallback(
+                        "LLM exceeded the retrieval limit; showing analytics directly."
+                    )
+
+                messages.append(message)
+
+                for tc in tool_calls:
+                    func_name = tc["function"]["name"]
+                    args = json.loads(tc["function"]["arguments"])
+                    t_curr = (
+                        currency  # The server owns scope; model arguments cannot change filters.
+                    )
+                    t_start = start if start else args.get("start", start_iso)
+                    t_end = end if end else args.get("end", end_iso)
+
+                    q = AnalyticsQuery(
+                        tenant_id=tenant_id, currency=t_curr, start=t_start, end=t_end
+                    )
+
+                    try:
+                        if func_name == "get_summary":
+                            endpoints_called.append("/analytics/summary")
+                            res = await run_in_threadpool(reader.summary, q)
+                            tool_output = res.value.model_dump(mode="json")
+                            collected_data["summary"] = tool_output
+
+                        elif func_name == "get_trends":
+                            endpoints_called.append("/analytics/trends")
+                            t_interval = args.get("interval", "day")
+                            tq = TrendsQuery(
+                                tenant_id=tenant_id,
+                                currency=t_curr,
+                                start=t_start,
+                                end=t_end,
+                                interval=t_interval,
+                            )
+                            res = await run_in_threadpool(reader.trends, tq)
+                            tool_output = [b.model_dump(mode="json") for b in res.value]
+                            collected_data["trends"] = tool_output
+
+                        elif func_name == "get_top_products":
+                            endpoints_called.append("/analytics/top-products")
+                            t_limit = args.get("limit", 5)
+                            tpq = TopProductsQuery(
+                                tenant_id=tenant_id,
+                                currency=t_curr,
+                                start=t_start,
+                                end=t_end,
+                                limit=t_limit,
+                            )
+                            res = await run_in_threadpool(reader.top_products, tpq)
+                            tool_output = [p.model_dump(mode="json") for p in res.value]
+                            collected_data["top_products"] = tool_output
+
+                        elif func_name == "get_status_breakdown":
+                            endpoints_called.append("/analytics/status-breakdown")
+                            res = await run_in_threadpool(reader.status_breakdown, q)
+                            tool_output = [s.model_dump(mode="json") for s in res.value]
+                            collected_data["status_breakdown"] = tool_output
+                        else:
+                            return await fallback(
+                                "LLM requested an unsupported tool; showing analytics directly."
+                            )
+                        if res.freshness:
+                            freshness_info = res.freshness.model_dump(mode="json")
+                        tool_output = {
+                            "currency": currency,
+                            "start": t_start,
+                            "end": t_end,
+                            "data": tool_output,
+                            "freshness": freshness_info,
+                        }
+                    except Exception as tool_err:
+                        log.warning("Tool %s execution failed: %s", func_name, tool_err)
+                        tool_output = {"error": str(tool_err)}
+
+                    messages.append(
+                        {
+                            "role": "tool",
+                            "tool_call_id": tc["id"],
+                            "content": json.dumps(tool_output),
+                        }
+                    )
+
+            return await fallback("LLM retrieval limit reached; showing verified analytics.")
 
     except Exception as exc:
-        log.warning("Groq integration exception: %s. Falling back to rule engine.", exc)
-        return execute_grounded_intent(query_str, tenant_id, reader, currency, start, end)
+        log.warning("Groq integration failed (%s); using grounded fallback", type(exc).__name__)
+        return await fallback("LLM connection or response failed; showing verified analytics.")
+
+
+def provider_failure(status):
+    if status in (401, 403):
+        return "LLM authentication or model access failed; showing verified analytics."
+    if status == 429:
+        return "LLM rate limit reached; showing verified analytics. Try again later."
+    return f"LLM provider returned HTTP {status}; showing verified analytics."

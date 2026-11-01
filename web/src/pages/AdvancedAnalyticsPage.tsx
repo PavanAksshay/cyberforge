@@ -173,10 +173,10 @@ export const AdvancedAnalyticsPage: React.FC = () => {
 
       {/* Top Controls Bar */}
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-white bg-[#07261d] border border-slate-200/80 border-[#114f3c] shadow-sm gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-[#07261d] border border-[#114f3c] shadow-sm gap-4">
         {/* View Switcher Tabs */}
 
-        <div className="flex items-center rounded-xl bg-slate-100 dark:bg-slate-800 p-1 text-xs">
+        <div className="flex items-center rounded-xl bg-slate-100 dark:bg-[#0d3d2f] p-1 text-xs">
           <button
             onClick={() => setActiveView("trends")}
 
@@ -218,7 +218,7 @@ export const AdvancedAnalyticsPage: React.FC = () => {
 
         <div className="flex items-center space-x-3">
           {activeView === "trends" && (
-            <div className="flex items-center rounded-lg bg-slate-100 dark:bg-slate-800 p-0.5 text-xs">
+            <div className="flex items-center rounded-lg bg-slate-100 dark:bg-[#0d3d2f] p-0.5 text-xs">
               <button
                 onClick={() => setInterval("day")}
 
@@ -248,7 +248,7 @@ export const AdvancedAnalyticsPage: React.FC = () => {
           <button
             onClick={handleExportCsv}
 
-            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition"
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-[#0d3d2f] dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-semibold transition"
           >
             <Download className="w-3.5 h-3.5" />
 
@@ -274,7 +274,7 @@ export const AdvancedAnalyticsPage: React.FC = () => {
 
           {activeView === "trends" && (
             <div className="space-y-6">
-              <div className="p-5 rounded-2xl bg-white bg-[#07261d] border border-slate-200/80 border-[#114f3c] shadow-sm">
+              <div className="p-5 rounded-2xl bg-[#07261d] border border-[#114f3c] shadow-sm">
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h3 className="font-bold text-sm text-slate-900 dark:text-white">
@@ -304,7 +304,7 @@ export const AdvancedAnalyticsPage: React.FC = () => {
 
               {/* Table View */}
 
-              <div className="p-5 rounded-2xl bg-white bg-[#07261d] border border-slate-200/80 border-[#114f3c] shadow-sm">
+              <div className="p-5 rounded-2xl bg-[#07261d] border border-[#114f3c] shadow-sm">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-bold text-sm text-slate-900 dark:text-white">
                     Detailed Granular Buckets
@@ -317,7 +317,7 @@ export const AdvancedAnalyticsPage: React.FC = () => {
 
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs text-left">
-                    <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+                    <thead className="bg-slate-50 dark:bg-[#092c22] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[10px]">
                       <tr>
                         <th className="px-4 py-3 rounded-l-lg">
                           Interval Start (UTC)
@@ -334,7 +334,7 @@ export const AdvancedAnalyticsPage: React.FC = () => {
                         <tr
                           key={b.bucket_start}
 
-                          className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition"
+                          className="hover:bg-slate-50/50 dark:hover:bg-[#0d3d2f]/40 transition"
                         >
                           <td className="px-4 py-3 text-slate-700 dark:text-slate-300 font-sans">
                             {new Date(b.bucket_start).toLocaleString("en-US", {
@@ -370,10 +370,10 @@ export const AdvancedAnalyticsPage: React.FC = () => {
           )}
 
           {activeView === "products" && (
-            <div className="p-5 rounded-2xl bg-white bg-[#07261d] border border-slate-200/80 border-[#114f3c] shadow-sm space-y-4">
+            <div className="p-5 rounded-2xl bg-[#07261d] border border-[#114f3c] shadow-sm space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-sm text-slate-900 dark:text-white">
-                  Top 10 Global Products (Deterministically Tied)
+                  Top 10 Tenant Products
                 </h3>
 
                 <span className="text-xs text-slate-400">
@@ -417,7 +417,7 @@ export const AdvancedAnalyticsPage: React.FC = () => {
 
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs text-left">
-                    <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+                    <thead className="bg-slate-50 dark:bg-[#092c22] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[10px]">
                       <tr>
                         <th className="px-4 py-3 rounded-l-lg">
                           Lifecycle Status
@@ -438,7 +438,7 @@ export const AdvancedAnalyticsPage: React.FC = () => {
                         <tr
                           key={s.status}
 
-                          className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40 transition"
+                          className="hover:bg-slate-50/50 dark:hover:bg-[#0d3d2f]/40 transition"
                         >
                           <td className="px-4 py-3.5 font-bold uppercase text-slate-900 dark:text-white">
                             {s.status}

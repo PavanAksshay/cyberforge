@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useApp, AppProvider } from "./context/AppContext";
 import { Header } from "./components/Header";
 import { Sidebar, PageTab } from "./components/Sidebar";
@@ -14,6 +14,9 @@ const AppContent: React.FC = () => {
     useApp();
   const scopeKey = `${activeTenant?.id}:${currency}:${startDate}:${endDate}`;
   const [activeTab, setActiveTab] = useState<PageTab>("overview");
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }, [activeTab]);
 
   return (
     <div className="flex flex-col min-h-screen bg-transparent text-slate-100 transition-colors duration-200">

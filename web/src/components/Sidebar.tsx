@@ -111,7 +111,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange }) => {
     },
     {
       id: "operations",
-      label: "Tenant Ops & Freshness",
+      label: "Data Health",
       icon: <Activity className="w-5 h-5" />,
     },
     {

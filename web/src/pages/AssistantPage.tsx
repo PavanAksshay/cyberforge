@@ -24,6 +24,7 @@ interface ChatMessage {
   model?: string;
   endpoints?: string[];
   data?: Record<string, any>;
+  providerError?: string | null;
 }
 
 function cleanMarkdownText(str: string): string {
@@ -51,15 +52,12 @@ export const AssistantPage: React.FC = () => {
         `I answer questions directly grounded in your verified tenant database rollups.\n\n` +
         `- **Metric Semantics**: Sales strictly count *shipped* orders under AstraRoll V2 frozen rules.\n` +
         `- **Data Boundaries**: Grouped by UTC order creation date across your selected window.\n` +
-        `- **Engine**: Integrated with Groq LLaMA 3.3 API with deterministic grounded fallback.\n\n` +
+        `- **Engine**: Groq answers using retrieved analytics. If the provider is unavailable, the response is clearly labeled as verified analytics without an LLM.\n\n` +
         `Choose a prompt below or type your question!`,
       timestamp: new Date().toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
       }),
-      provider: "grounded_rule_engine",
-      model: "rule-based-grounded-v2",
-      endpoints: ["/analytics/summary"],
     },
   ]);
 
@@ -67,10 +65,11 @@ export const AssistantPage: React.FC = () => {
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const pending = useRef<AbortController>();
   useEffect(() => () => pending.current?.abort(), []);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageStreamRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const stream = messageStreamRef.current;
+    stream?.scrollTo({ top: stream.scrollHeight, behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -129,6 +128,7 @@ export const AssistantPage: React.FC = () => {
         model: resp.model,
         endpoints: resp.endpoints_called,
         data: resp.data,
+        providerError: resp.provider_error,
       };
 
       setMessages((prev) => [...prev, assistantMsg]);
@@ -157,7 +157,7 @@ export const AssistantPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] rounded-2xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
+    <div className="flex flex-col h-[calc(100dvh-280px)] min-h-[420px] max-h-[840px] rounded-2xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
       {/* Header bar */}
       <div className="flex items-center justify-between px-6 py-3.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-[#092c22]/50">
         <div className="flex items-center space-x-3">
@@ -188,7 +188,10 @@ export const AssistantPage: React.FC = () => {
       </div>
 
       {/* Messages Stream */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      <div
+        ref={messageStreamRef}
+        className="flex-1 min-h-0 overflow-y-auto p-6 space-y-6"
+      >
         {messages.map((m) => {
           const isUser = m.sender === "user";
           return (
@@ -260,12 +263,26 @@ export const AssistantPage: React.FC = () => {
                     })}
                 </div>
 
+                {m.providerError && (
+                  <p
+                    role="status"
+                    className="mt-3 rounded-lg border border-amber-800 bg-amber-950/40 p-2 text-xs text-amber-200"
+                  >
+                    {m.providerError}
+                  </p>
+                )}
+
                 {/* Metadata & Citations */}
                 {!isUser && (
                   <div className="pt-2 mt-2 border-t border-slate-200/60 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-400">
                     <div className="flex items-center space-x-2">
                       <span className="font-mono text-emerald-600 dark:text-emerald-400 font-medium">
-                        {m.model || "grounded-engine"}
+                        {m.provider === "groq"
+                          ? "Groq · "
+                          : m.provider
+                            ? "Verified fallback · "
+                            : ""}
+                        {m.model || "AstraRoll"}
                       </span>
                       <span>•</span>
                       <span>{m.timestamp}</span>
@@ -301,8 +318,6 @@ export const AssistantPage: React.FC = () => {
             </div>
           </div>
         )}
-
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Suggested Prompt Chips */}

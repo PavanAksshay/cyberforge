@@ -42,6 +42,7 @@ import {
 } from "../components/Charts";
 
 import { usePolling } from "../lib/usePolling";
+import { measureRetrieval } from "../lib/retrieval";
 
 import { FreshnessIndicator } from "../components/FreshnessIndicator";
 
@@ -71,7 +72,7 @@ export const OverviewPage: React.FC = () => {
     async (signal) => {
       if (!activeTenant) return null;
 
-      const [summary, trends, topProducts, statuses, telemetry] =
+      const [summary, measuredTrends, topProducts, statuses, telemetry] =
         await Promise.all([
           fetchSummary(
             activeTenant.id,
@@ -82,14 +83,16 @@ export const OverviewPage: React.FC = () => {
             signal,
           ),
 
-          fetchTrends(
-            activeTenant.id,
-            currency,
-            startDate,
-            endDate,
-            interval,
-            token,
-            signal,
+          measureRetrieval(() =>
+            fetchTrends(
+              activeTenant.id,
+              currency,
+              startDate,
+              endDate,
+              interval,
+              token,
+              signal,
+            ),
           ),
 
           fetchTopProducts(
@@ -114,7 +117,14 @@ export const OverviewPage: React.FC = () => {
           fetchTenantStatus(activeTenant.id, token, signal),
         ]);
 
-      return { summary, trends, topProducts, statuses, telemetry };
+      return {
+        summary,
+        trends: measuredTrends.data,
+        trendsRetrievalMs: measuredTrends.retrievalMs,
+        topProducts,
+        statuses,
+        telemetry,
+      };
     },
   );
 
@@ -122,8 +132,6 @@ export const OverviewPage: React.FC = () => {
 
   const { summary, trends, topProducts, statuses, telemetry } =
     queryState.data || {};
-
-  const queryLatencyMs = null;
 
   if (!activeTenant) {
     return (
@@ -224,13 +232,6 @@ export const OverviewPage: React.FC = () => {
                 {formatDateTime(lastMaterializedAt)}
               </strong>
             </div>
-
-            {queryLatencyMs !== null && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-mono font-bold bg-emerald-950/80 text-emerald-400 border border-emerald-800 shadow-sm">
-                <Zap className="w-3 h-3 mr-1 text-emerald-400" />
-                {queryLatencyMs} ms
-              </span>
-            )}
           </div>
         </div>
       </div>
@@ -330,13 +331,23 @@ export const OverviewPage: React.FC = () => {
             {/* Sales & Orders Time Series */}
 
             <div className="lg:col-span-2 p-5 rounded-2xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2">
                   <BarChart3 className="w-4 h-4 text-emerald-500" />
 
                   <h3 className="font-bold text-sm text-slate-900 dark:text-white">
                     Shipped Sales &amp; Volume Trends
                   </h3>
+                  {queryState.data && (
+                    <span
+                      className="inline-flex items-center gap-1 rounded-full border border-emerald-800 bg-emerald-950/60 px-2 py-1 text-[11px] font-mono text-emerald-300"
+                      title={`Last successful trends request, including network and response decoding. Retrieved ${lastFetchedAt?.toISOString() ?? ""}. This is not SQL execution time.`}
+                    >
+                      <Clock className="h-3 w-3" />
+                      Last retrieval:{" "}
+                      {queryState.data.trendsRetrievalMs.toFixed(1)} ms
+                    </span>
+                  )}
                 </div>
 
                 <div className="flex items-center rounded-lg bg-slate-100 dark:bg-slate-800 p-0.5 text-xs">

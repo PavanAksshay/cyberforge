@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     analytics_backend: Literal["unavailable", "postgres"] = "postgres"
     analytics_coverage_provider: str | None = "astraroll.aggregation.coverage:read_coverage"
     analytics_api_keys_json: SecretStr | None = None
+    groq_api_key: SecretStr | None = None
+    groq_model: str = "openai/gpt-oss-120b"
     coverage_max_age_seconds: int = Field(default=86400, ge=1)
 
 

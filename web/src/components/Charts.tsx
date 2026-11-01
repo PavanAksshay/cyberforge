@@ -789,7 +789,7 @@ export const DualAxisAreaBarChart: React.FC<DualAxisAreaBarChartProps> = ({
     <div className="space-y-4">
       {/* Top KPI Summary Ribbon */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-        <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+        <div className="p-3 rounded-xl bg-[#092c22] border border-[#114f3c]">
           <div className="text-[10px] uppercase font-bold text-slate-400">
             Total Period Sales
           </div>
@@ -797,7 +797,7 @@ export const DualAxisAreaBarChart: React.FC<DualAxisAreaBarChartProps> = ({
             {formatCurrency(totalSales, currency)}
           </div>
         </div>
-        <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+        <div className="p-3 rounded-xl bg-[#092c22] border border-[#114f3c]">
           <div className="text-[10px] uppercase font-bold text-slate-400">
             Total Volume
           </div>
@@ -805,15 +805,15 @@ export const DualAxisAreaBarChart: React.FC<DualAxisAreaBarChartProps> = ({
             {formatNumber(totalVolume)} orders
           </div>
         </div>
-        <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+        <div className="p-3 rounded-xl bg-[#092c22] border border-[#114f3c]">
           <div className="text-[10px] uppercase font-bold text-slate-400">
-            Average Ticket (AOV)
+            Sales / Total Orders
           </div>
           <div className="text-base font-extrabold text-slate-900 dark:text-white font-mono mt-0.5">
             {formatCurrency(avgTicket, currency)}
           </div>
         </div>
-        <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+        <div className="p-3 rounded-xl bg-[#092c22] border border-[#114f3c] flex items-center justify-between">
           <div>
             <div className="text-[10px] uppercase font-bold text-slate-400">
               Active View

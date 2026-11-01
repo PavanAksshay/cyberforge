@@ -1,5 +1,7 @@
 # AstraRoll V2 integrated product
 
+Latest UI/assistant fixes: [provider, timing and theme verification](docs/product-polish-verification.md).
+
 Current local application: **http://127.0.0.1:8000/**, with all 100 dedicated tenant
 databases restored. See [100-tenant restoration verification](docs/100-tenant-restoration.md)
 for exact counts, measured performance, recovery tests and reproducible commands.

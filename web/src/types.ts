@@ -153,6 +153,7 @@ export interface AssistantResponse {
   endpoints_called: string[];
   data: Record<string, any>;
   freshness?: Freshness | null;
+  provider_error?: string | null;
 }
 
 export interface OpsSummary {

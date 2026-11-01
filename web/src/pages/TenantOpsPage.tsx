@@ -20,18 +20,20 @@ export const TenantOpsPage: React.FC = () => {
   return (
     <div className="space-y-5">
       <h2 className="text-2xl font-black">
-        Tenant Operations · {tenants.length} authorized registry entries
+        Data Health · {tenants.length} authorized tenants
       </h2>
       <p>
-        Only the selected database is inspected. Registry membership does not
-        imply database health.
+        Diagnose missing or delayed analytics for the selected tenant: database
+        connectivity, worker heartbeat, unapplied events and verified date
+        coverage. Old source timestamps alone do not mean the pipeline is
+        behind.
       </p>
       <button
         className="bg-emerald-700 px-4 py-2 rounded-xl"
         onClick={triggerRefresh}
         disabled={state.loading}
       >
-        Synchronize Cluster Status
+        Refresh selected tenant
       </button>
       <FreshnessIndicator
         lastFetchedAt={state.fetchedAt}
@@ -49,7 +51,7 @@ export const TenantOpsPage: React.FC = () => {
           {state.error} · Counters unavailable, not zero.
         </p>
       )}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="max-h-[700px] overflow-y-auto space-y-1">
           {tenants.map((t) => (
             <button
@@ -63,7 +65,7 @@ export const TenantOpsPage: React.FC = () => {
             </button>
           ))}
         </div>
-        <section className="col-span-2 rounded-2xl bg-[#07261d] p-5 space-y-3">
+        <section className="lg:col-span-2 rounded-2xl bg-[#07261d] p-5 space-y-3 min-w-0">
           <h3 className="font-bold text-xl">Tenant Details</h3>
           {d && (
             <>
