@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from "react";
 import {
   Bot,
   Send,
@@ -10,14 +10,14 @@ import {
   AlertCircle,
   HelpCircle,
   Link as LinkIcon,
-} from 'lucide-react';
-import { useApp } from '../context/AppContext';
-import { askAssistant } from '../lib/api';
-import { AssistantResponse } from '../types';
+} from "lucide-react";
+import { useApp } from "../context/AppContext";
+import { askAssistant } from "../lib/api";
+import { AssistantResponse } from "../types";
 
 interface ChatMessage {
   id: string;
-  sender: 'user' | 'assistant';
+  sender: "user" | "assistant";
   content: string;
   timestamp: string;
   provider?: string;
@@ -27,15 +27,15 @@ interface ChatMessage {
 }
 
 function cleanMarkdownText(str: string): string {
-  if (!str) return '';
+  if (!str) return "";
   return str
-    .replace(/^#{1,6}\s*/gm, '')
-    .replace(/^>\s*(\[!.*?\])?\s*/gm, '')
-    .replace(/\*\*([^*]+)\*\*/g, '$1')
-    .replace(/\*([^*]+)\*/g, '$1')
-    .replace(/__([^_]+)__/g, '$1')
-    .replace(/`([^`]+)`/g, '$1')
-    .replace(/\u2011/g, '-')
+    .replace(/^#{1,6}\s*/gm, "")
+    .replace(/^>\s*(\[!.*?\])?\s*/gm, "")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/__([^_]+)__/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/\u2011/g, "-")
     .trim();
 }
 
@@ -44,8 +44,8 @@ export const AssistantPage: React.FC = () => {
 
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
-      id: 'welcome',
-      sender: 'assistant',
+      id: "welcome",
+      sender: "assistant",
       content:
         `### 👋 Hello! I am your AstraRoll Analytics AI Assistant.\n\n` +
         `I answer questions directly grounded in your verified tenant database rollups.\n\n` +
@@ -53,19 +53,24 @@ export const AssistantPage: React.FC = () => {
         `- **Data Boundaries**: Grouped by UTC order creation date across your selected window.\n` +
         `- **Engine**: Integrated with Groq LLaMA 3.3 API with deterministic grounded fallback.\n\n` +
         `Choose a prompt below or type your question!`,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      provider: 'grounded_rule_engine',
-      model: 'rule-based-grounded-v2',
-      endpoints: ['/analytics/summary'],
+      timestamp: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      provider: "grounded_rule_engine",
+      model: "rule-based-grounded-v2",
+      endpoints: ["/analytics/summary"],
     },
   ]);
 
-  const [inputQuery, setInputQuery] = useState<string>('');
+  const [inputQuery, setInputQuery] = useState<string>("");
   const [isTyping, setIsTyping] = useState<boolean>(false);
+  const pending = useRef<AbortController>();
+  useEffect(() => () => pending.current?.abort(), []);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -73,11 +78,11 @@ export const AssistantPage: React.FC = () => {
   }, [messages, isTyping]);
 
   const promptChips = [
-    'What is our total revenue and order volume?',
-    'Show me top selling products',
-    'What is our order status breakdown?',
-    'Show daily sales trends',
-    'How fresh is our aggregate data?',
+    "What is our total revenue and order volume?",
+    "Show me top selling products",
+    "What is our order status breakdown?",
+    "Show daily sales trends",
+    "How fresh is our aggregate data?",
   ];
 
   const handleSend = async (queryText?: string) => {
@@ -86,15 +91,20 @@ export const AssistantPage: React.FC = () => {
 
     const userMsg: ChatMessage = {
       id: String(Date.now()),
-      sender: 'user',
+      sender: "user",
       content: q.trim(),
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      timestamp: new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
     };
 
     setMessages((prev) => [...prev, userMsg]);
-    setInputQuery('');
+    setInputQuery("");
     setIsTyping(true);
 
+    const controller = new AbortController();
+    pending.current = controller;
     try {
       const resp: AssistantResponse = await askAssistant(
         activeTenant.id,
@@ -102,14 +112,19 @@ export const AssistantPage: React.FC = () => {
         currency,
         startDate,
         endDate,
-        token
+        token,
+        controller.signal,
       );
+      if (controller.signal.aborted) return;
 
       const assistantMsg: ChatMessage = {
         id: String(Date.now() + 1),
-        sender: 'assistant',
+        sender: "assistant",
         content: resp.reply,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
         provider: resp.provider,
         model: resp.model,
         endpoints: resp.endpoints_called,
@@ -118,20 +133,24 @@ export const AssistantPage: React.FC = () => {
 
       setMessages((prev) => [...prev, assistantMsg]);
     } catch (err: any) {
+      if (controller.signal.aborted) return;
       const errorMsg: ChatMessage = {
         id: String(Date.now() + 1),
-        sender: 'assistant',
-        content: `⚠️ **Analytics Query Error**: ${err.message || 'Unable to retrieve analytics response.'}`,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        sender: "assistant",
+        content: `⚠️ **Analytics Query Error**: ${err.message || "Unable to retrieve analytics response."}`,
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
       };
       setMessages((prev) => [...prev, errorMsg]);
     } finally {
-      setIsTyping(false);
+      if (!controller.signal.aborted) setIsTyping(false);
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
@@ -155,67 +174,90 @@ export const AssistantPage: React.FC = () => {
               </span>
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Strictly cited from authorized endpoints • Zero SQL hallucinations
+              Grounded in authorized rollups · model output may be imperfect
             </p>
           </div>
         </div>
 
         <div className="flex items-center space-x-2 text-xs text-slate-500">
           <ShieldCheck className="w-4 h-4 text-emerald-500" />
-          <span className="font-medium hidden sm:inline">V2 Policy Enforced</span>
+          <span className="font-medium hidden sm:inline">
+            V2 Policy Enforced
+          </span>
         </div>
       </div>
 
       {/* Messages Stream */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {messages.map((m) => {
-          const isUser = m.sender === 'user';
+          const isUser = m.sender === "user";
           return (
             <div
               key={m.id}
-              className={`flex items-start space-x-3 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`}
+              className={`flex items-start space-x-3 ${isUser ? "flex-row-reverse space-x-reverse" : ""}`}
             >
               {/* Avatar */}
               <div
                 className={`w-8 h-8 rounded-xl shrink-0 flex items-center justify-center shadow-sm ${
                   isUser
-                    ? 'bg-slate-900 dark:bg-slate-700 text-white'
-                    : 'bg-emerald-600 text-white shadow-emerald-600/20'
+                    ? "bg-slate-900 dark:bg-slate-700 text-white"
+                    : "bg-emerald-600 text-white shadow-emerald-600/20"
                 }`}
               >
-                {isUser ? <span className="text-xs font-bold">You</span> : <Bot className="w-4 h-4" />}
+                {isUser ? (
+                  <span className="text-xs font-bold">You</span>
+                ) : (
+                  <Bot className="w-4 h-4" />
+                )}
               </div>
 
               {/* Message Bubble */}
               <div
                 className={`max-w-2xl rounded-2xl p-4 space-y-2 text-xs leading-relaxed ${
                   isUser
-                    ? 'bg-emerald-600 text-white rounded-tr-none'
-                    : 'bg-slate-50 dark:bg-[#092c22] text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-800 rounded-tl-none'
+                    ? "bg-emerald-600 text-white rounded-tr-none"
+                    : "bg-slate-50 dark:bg-[#092c22] text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-800 rounded-tl-none"
                 }`}
               >
                 {/* Clean content with no markdown characters */}
                 <div className="space-y-2 text-xs leading-relaxed">
-                  {cleanMarkdownText(m.content).split('\n\n').map((para, i) => {
-                    const cleaned = cleanMarkdownText(para);
-                    if (!cleaned) return null;
-                    if (cleaned.startsWith('- ') || cleaned.includes('\n- ')) {
+                  {cleanMarkdownText(m.content)
+                    .split("\n\n")
+                    .map((para, i) => {
+                      const cleaned = cleanMarkdownText(para);
+                      if (!cleaned) return null;
+                      if (
+                        cleaned.startsWith("- ") ||
+                        cleaned.includes("\n- ")
+                      ) {
+                        return (
+                          <ul key={i} className="list-disc pl-4 space-y-1 my-1">
+                            {cleaned.split("\n").map((item, idx) => {
+                              const bulletText = cleanMarkdownText(
+                                item.replace(/^- \s*/, ""),
+                              );
+                              if (!bulletText) return null;
+                              return (
+                                <li
+                                  key={idx}
+                                  className="text-slate-800 dark:text-slate-200"
+                                >
+                                  {bulletText}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        );
+                      }
                       return (
-                        <ul key={i} className="list-disc pl-4 space-y-1 my-1">
-                          {cleaned.split('\n').map((item, idx) => {
-                            const bulletText = cleanMarkdownText(item.replace(/^- \s*/, ''));
-                            if (!bulletText) return null;
-                            return <li key={idx} className="text-slate-800 dark:text-slate-200">{bulletText}</li>;
-                          })}
-                        </ul>
+                        <p
+                          key={i}
+                          className="text-slate-800 dark:text-slate-200 whitespace-pre-line"
+                        >
+                          {cleaned}
+                        </p>
                       );
-                    }
-                    return (
-                      <p key={i} className="text-slate-800 dark:text-slate-200 whitespace-pre-line">
-                        {cleaned}
-                      </p>
-                    );
-                  })}
+                    })}
                 </div>
 
                 {/* Metadata & Citations */}
@@ -223,7 +265,7 @@ export const AssistantPage: React.FC = () => {
                   <div className="pt-2 mt-2 border-t border-slate-200/60 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-400">
                     <div className="flex items-center space-x-2">
                       <span className="font-mono text-emerald-600 dark:text-emerald-400 font-medium">
-                        {m.model || 'grounded-engine'}
+                        {m.model || "grounded-engine"}
                       </span>
                       <span>•</span>
                       <span>{m.timestamp}</span>
@@ -232,7 +274,7 @@ export const AssistantPage: React.FC = () => {
                     {m.endpoints && m.endpoints.length > 0 && (
                       <div className="flex items-center space-x-1">
                         <LinkIcon className="w-3 h-3 text-slate-400" />
-                        <span>Cited: {m.endpoints.join(', ')}</span>
+                        <span>Cited: {m.endpoints.join(", ")}</span>
                       </div>
                     )}
                   </div>
@@ -252,7 +294,9 @@ export const AssistantPage: React.FC = () => {
                 <span className="w-2 h-2 rounded-full bg-emerald-600 animate-bounce" />
                 <span className="w-2 h-2 rounded-full bg-emerald-600 animate-bounce [animation-delay:0.2s]" />
                 <span className="w-2 h-2 rounded-full bg-emerald-600 animate-bounce [animation-delay:0.4s]" />
-                <span className="ml-2 font-medium">Verifying authorized analytics...</span>
+                <span className="ml-2 font-medium">
+                  Verifying authorized analytics...
+                </span>
               </div>
             </div>
           </div>
@@ -302,4 +346,3 @@ export const AssistantPage: React.FC = () => {
     </div>
   );
 };
-

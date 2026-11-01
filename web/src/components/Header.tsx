@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Layers,
   ChevronDown,
@@ -10,9 +10,9 @@ import {
   Check,
   Building2,
   Database,
-} from 'lucide-react';
-import { useApp, DatePreset } from '../context/AppContext';
-import { Currency } from '../types';
+} from "lucide-react";
+import { useApp, DatePreset } from "../context/AppContext";
+import { Currency } from "../types";
 
 export const Header: React.FC = () => {
   const {
@@ -23,6 +23,9 @@ export const Header: React.FC = () => {
     tenants,
     activeTenant,
     setActiveTenant,
+    startDate,
+    endDate,
+    setCustomDates,
     datePreset,
     setDatePreset,
     autoRefreshInterval,
@@ -35,24 +38,34 @@ export const Header: React.FC = () => {
   const [tenantDropdownOpen, setTenantDropdownOpen] = useState(false);
   const [tokenModalOpen, setTokenModalOpen] = useState(false);
   const [tempToken, setTempToken] = useState(token);
-  const [isRotating, setIsRotating] = useState(false);
 
   const handleManualRefresh = () => {
-    setIsRotating(true);
     triggerRefresh();
-    setTimeout(() => setIsRotating(false), 600);
   };
 
   // Primary settlement currencies pre-aggregated in 100 tenant DBs
-  const currencies: Currency[] = ['USD', 'EUR'];
+  const currencies: Currency[] = ["USD", "EUR"];
   const presets: { id: DatePreset; label: string; tooltip: string }[] = [
-    { id: '24h', label: '24 Hours', tooltip: 'First 24 hours of dataset (Oct 1 - Oct 2)' },
-    { id: '3d', label: '3 Days', tooltip: 'First 3 days of dataset (Oct 1 - Oct 4)' },
-    { id: 'all', label: 'All 7 Days', tooltip: 'Full dataset coverage (Oct 1 - Oct 8)' },
+    {
+      id: "24h",
+      label: "24 Hours",
+      tooltip: "First 24 hours of dataset (Oct 1 - Oct 2)",
+    },
+    {
+      id: "3d",
+      label: "3 Days",
+      tooltip: "First 3 days of dataset (Oct 1 - Oct 4)",
+    },
+    {
+      id: "all",
+      label: "Covered Window",
+      tooltip:
+        "All currently verified coverage; exact UTC boundaries shown below",
+    },
   ];
 
   const formatTenantDisplayName = (name?: string) => {
-    if (!name) return 'Select Tenant';
+    if (!name) return "Select Tenant";
     const match = name.match(/\/ (\d+)$/);
     if (match) {
       return `Enterprise Tenant #${match[1]}`;
@@ -77,7 +90,7 @@ export const Header: React.FC = () => {
             </span>
           </div>
           <span className="text-xs font-medium text-emerald-400/80">
-            10M Record Physical Sharding Platform
+            Verified Tenant Analytics Platform
           </span>
         </div>
       </div>
@@ -112,17 +125,21 @@ export const Header: React.FC = () => {
                     }}
                     className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-xl transition ${
                       activeTenant?.id === t.id
-                        ? 'bg-emerald-600 text-white font-bold'
-                        : 'text-slate-300 hover:bg-[#0c382b]'
+                        ? "bg-emerald-600 text-white font-bold"
+                        : "text-slate-300 hover:bg-[#0c382b]"
                     }`}
                   >
                     <div className="text-left truncate mr-2">
-                      <div className="truncate font-medium">{formatTenantDisplayName(t.name)}</div>
+                      <div className="truncate font-medium">
+                        {formatTenantDisplayName(t.name)}
+                      </div>
                       <div className="text-[10px] text-emerald-300/70 font-mono truncate">
                         {t.id}
                       </div>
                     </div>
-                    {activeTenant?.id === t.id && <Check className="w-4 h-4 shrink-0 text-white" />}
+                    {activeTenant?.id === t.id && (
+                      <Check className="w-4 h-4 shrink-0 text-white" />
+                    )}
                   </button>
                 ))}
               </div>
@@ -138,8 +155,8 @@ export const Header: React.FC = () => {
               onClick={() => setCurrency(c)}
               className={`px-3 py-1.5 text-xs font-bold rounded-lg transition ${
                 currency === c
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'text-slate-300 hover:text-white'
+                  ? "bg-emerald-600 text-white shadow-sm"
+                  : "text-slate-300 hover:text-white"
               }`}
             >
               {c}
@@ -156,8 +173,8 @@ export const Header: React.FC = () => {
               title={p.tooltip}
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
                 datePreset === p.id
-                  ? 'bg-emerald-600 text-white shadow-sm'
-                  : 'text-slate-300 hover:text-white'
+                  ? "bg-emerald-600 text-white shadow-sm"
+                  : "text-slate-300 hover:text-white"
               }`}
             >
               {p.label}
@@ -176,10 +193,18 @@ export const Header: React.FC = () => {
             onChange={(e) => setAutoRefreshInterval(Number(e.target.value))}
             className="bg-transparent text-xs font-semibold text-slate-200 focus:outline-none cursor-pointer"
           >
-            <option value={0} className="bg-[#07261d] text-white">Auto-Refresh: Off</option>
-            <option value={5} className="bg-[#07261d] text-white">Auto-Refresh: 5s</option>
-            <option value={15} className="bg-[#07261d] text-white">Auto-Refresh: 15s</option>
-            <option value={30} className="bg-[#07261d] text-white">Auto-Refresh: 30s</option>
+            <option value={0} className="bg-[#07261d] text-white">
+              Auto-Refresh: Off
+            </option>
+            <option value={5} className="bg-[#07261d] text-white">
+              Auto-Refresh: 5s
+            </option>
+            <option value={15} className="bg-[#07261d] text-white">
+              Auto-Refresh: 15s
+            </option>
+            <option value={30} className="bg-[#07261d] text-white">
+              Auto-Refresh: 30s
+            </option>
           </select>
         </div>
 
@@ -189,7 +214,7 @@ export const Header: React.FC = () => {
           className="p-2 rounded-xl bg-[#082920] border border-[#114f3c] text-slate-300 hover:text-white hover:bg-[#0c382b] transition"
           title="Refresh analytics data"
         >
-          <RefreshCw className={`w-4 h-4 text-emerald-400 ${isRotating ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-4 h-4 text-emerald-400 `} />
         </button>
 
         {/* Auth Token Key Button */}
@@ -205,6 +230,54 @@ export const Header: React.FC = () => {
         </button>
       </div>
 
+      <div className="text-xs space-y-1">
+        <select
+          aria-label="Date range"
+          value={datePreset}
+          onChange={(e) => setDatePreset(e.target.value as DatePreset)}
+          className="bg-[#082920] p-1"
+        >
+          <option value="24h">First 24 covered hours</option>
+          <option value="3d">First 3 covered days</option>
+          <option value="all">All verified coverage</option>
+          <option value="custom" disabled>
+            Custom UTC window
+          </option>
+        </select>
+        <details>
+          <summary>
+            UTC [{startDate}, {endDate}) · Custom dates
+          </summary>
+          <label>
+            Start UTC
+            <input
+              aria-label="Start UTC"
+              type="datetime-local"
+              step="3600"
+              value={startDate.slice(0, 16)}
+              onChange={(e) =>
+                e.target.value &&
+                setCustomDates(e.target.value + ":00Z", endDate)
+              }
+              className="bg-[#082920]"
+            />
+          </label>
+          <label>
+            End UTC (exclusive)
+            <input
+              aria-label="End UTC"
+              type="datetime-local"
+              step="3600"
+              value={endDate.slice(0, 16)}
+              onChange={(e) =>
+                e.target.value &&
+                setCustomDates(startDate, e.target.value + ":00Z")
+              }
+              className="bg-[#082920]"
+            />
+          </label>
+        </details>
+      </div>
       {/* Token Modal */}
       {tokenModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
@@ -214,10 +287,28 @@ export const Header: React.FC = () => {
               <h3 className="font-bold text-base">API Authentication Token</h3>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed">
-              Pre-configured with verified demo key. Passed as <code className="text-emerald-400 font-mono">Authorization: Bearer &lt;token&gt;</code> to port 8000.
+              Enter an expiring server-issued key. Kept in this tab session and
+              sent as{" "}
+              <code className="text-emerald-400 font-mono">
+                Authorization: Bearer &lt;token&gt;
+              </code>{" "}
+              to this same-origin API.
             </p>
+            <label className="block text-sm">
+              Load local key file (read in browser only)
+              <input
+                aria-label="Local API key file"
+                type="file"
+                accept=".txt"
+                onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  if (f) setTempToken((await f.text()).trim());
+                }}
+              />
+            </label>
             <input
-              type="text"
+              aria-label="Bearer token"
+              type="password"
               value={tempToken}
               onChange={(e) => setTempToken(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-xl bg-[#051c15] border border-[#114f3c] font-mono text-xs text-emerald-300 focus:outline-none focus:border-emerald-500"

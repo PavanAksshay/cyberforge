@@ -1,4 +1,15 @@
-# AstraRoll V1 release candidate
+# AstraRoll V2 integrated product
+
+Current live-demo instructions and measured correctness evidence:
+[live product verification](docs/live-product-verification.md).
+The isolated write-enabled dashboard uses port **8001**. The preserved benchmark
+inspection UI uses **8000** with analytics deliberately unavailable: its expanded
+10,000,034-order source no longer matches the old rollups. The owner requested no repair.
+Do not run historical seed/population or global relay commands against these databases.
+
+The sections below retain the earlier V1 architecture/setup history. Use the linked
+V2 live-product guide for the current local application.
+
 
 Python 3.12+, FastAPI, PostgreSQL 16+, Redis 7+, SQLAlchemy and Alembic.
 The release combines Developer A's producer/API/outbox with Developer B's durable
@@ -22,7 +33,7 @@ use only aggregates, coverage and processing metadata in read-only REPEATABLE RE
 - Top products: positive sales only, sales DESC, order count DESC, product UUID ASC,
   all before SQL LIMIT (1..10). AOV in the internal reader divides by shipped count.
 - Migration chain: 0001_producer → 0002_producer_contract → 0003_aggregation →
-  **0004_coverage_precision**. Earlier revisions are preserved. Aggregate money is
+  **0004_coverage_precision** → **0005_tenant_access_paths**. Earlier revisions are preserved. Aggregate money is
   NUMERIC(38,2); source money remains NUMERIC(18,2).
 
 See [event/database contract](docs/contracts.md), [analytics](docs/analytics.md),

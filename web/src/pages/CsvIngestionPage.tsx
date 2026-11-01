@@ -1,508 +1,394 @@
-import React, { useState } from 'react';
-import {
-  UploadCloud,
-  FileText,
-  Download,
-  CheckCircle,
-  AlertTriangle,
-  ArrowRight,
-  Database,
-  Radio,
-  Cpu,
-  Layers,
-  Sparkles,
-  RefreshCw,
-} from 'lucide-react';
-import { useApp } from '../context/AppContext';
-import { ingestCsv, fetchSummary } from '../lib/api';
-import { IngestionResult } from '../types';
-import { formatCurrency, formatNumber, downloadCsv } from '../lib/utils';
+import React, { useEffect, useRef, useState } from "react";
+import { useApp } from "../context/AppContext";
+import { apiJson, ingestCsv, fetchSummary } from "../lib/api";
+import { IngestionResult } from "../types";
+import { formatCurrency, downloadCsv } from "../lib/utils";
 
+const sample =
+  "product_id,product_name,amount,currency,status,created_at\n" +
+  Array.from(
+    { length: 12 },
+    (_, i) =>
+      `DEMO-${(i % 6) + 1},Demo Product ${(i % 6) + 1},${i < 5 ? "100.00" : i === 5 ? "6.97" : "20.00"},USD,${i < 6 ? "shipped" : i < 10 ? "placed" : "cancelled"},2026-10-03T10:00:00Z`,
+  ).join("\n");
+const cents = (s: string) => BigInt(s.replace(".", ""));
 export const CsvIngestionPage: React.FC = () => {
-  const { activeTenant, currency, startDate, endDate, token, triggerRefresh } = useApp();
-
-  const [csvContent, setCsvContent] = useState<string>('');
-  const [dragActive, setDragActive] = useState<boolean>(false);
-  const [dryRun, setDryRun] = useState<boolean>(false);
-  const [triggerRelay, setTriggerRelay] = useState<boolean>(true);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [result, setResult] = useState<IngestionResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  // Delta tracking
-  const [beforeSales, setBeforeSales] = useState<string | null>(null);
-  const [beforeOrders, setBeforeOrders] = useState<number | null>(null);
-  const [afterSales, setAfterSales] = useState<string | null>(null);
-  const [afterOrders, setAfterOrders] = useState<number | null>(null);
-
-  const sampleCsv = `product_id,amount,currency,status,created_at
-PROD-PREMIUM-LAPTOP,1299.99,USD,shipped,2026-10-20T10:00:00Z
-PROD-4K-MONITOR,450.00,USD,shipped,2026-10-20T11:00:00Z
-PROD-WIRELESS-MOUSE,49.50,USD,placed,2026-10-20T12:00:00Z
-PROD-MECH-KEYBOARD,120.00,USD,shipped,2026-10-21T09:00:00Z
-PROD-USB-C-DOCK,189.00,USD,shipped,2026-10-21T14:30:00Z
-PROD-HEADPHONES,249.99,USD,placed,2026-10-22T08:15:00Z
-PROD-DESK-PAD,29.99,USD,shipped,2026-10-22T16:45:00Z
-PROD-WEBCAM-HD,89.00,USD,cancelled,2026-10-23T11:20:00Z
-PROD-STAND-UP-DESK,599.00,USD,shipped,2026-10-23T15:00:00Z
-PROD-ERGONOMIC-CHAIR,349.50,USD,shipped,2026-10-24T10:30:00Z`;
-
-  const handleDownloadTemplate = () => {
-    downloadCsv('astraroll_orders_template.csv', sampleCsv);
-  };
-
-  const handleLoadSample = () => {
-    setCsvContent(sampleCsv);
+  const { activeTenant, currency, startDate, endDate, token, triggerRefresh } =
+    useApp();
+  const [csv, setCsv] = useState(""),
+    [dryRun, setDryRun] = useState(false),
+    [process, setProcess] = useState(true),
+    [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<IngestionResult | null>(null),
+    [stage, setStage] = useState("READY"),
+    [details, setDetails] = useState(""),
+    [error, setError] = useState<string | null>(null);
+  const [delta, setDelta] = useState<{
+    before: string;
+    after: string;
+    orders: number;
+  } | null>(null);
+  const abort = useRef<AbortController>();
+  useEffect(() => {
+    abort.current?.abort();
     setResult(null);
+    setStage("READY");
+    setDetails("");
+    setDelta(null);
     setError(null);
-  };
-
-  const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true);
-    } else if (e.type === 'dragleave') {
-      setDragActive(false);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0];
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          setCsvContent(event.target.result as string);
-        }
-      };
-      reader.readAsText(file);
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          setCsvContent(event.target.result as string);
-        }
-      };
-      reader.readAsText(file);
-    }
-  };
-
-  const handleIngest = async () => {
+    setBusy(false);
+    return () => abort.current?.abort();
+  }, [activeTenant?.id, currency, startDate, endDate, token]);
+  async function resume() {
     if (!activeTenant) return;
-    if (!csvContent.trim()) {
-      setError('Please provide CSV data to ingest.');
-      return;
-    }
-
-    setIsSubmitting(true);
+    abort.current?.abort();
+    const controller = new AbortController();
+    abort.current = controller;
+    const signal = controller.signal;
+    setBusy(true);
     setError(null);
-
     try {
-      // 1. Fetch baseline summary before ingestion
-      if (!dryRun) {
-        const preSum = await fetchSummary(activeTenant.id, currency, startDate, endDate, token).catch(
-          () => null
+      const saved =
+        result ||
+        JSON.parse(
+          sessionStorage.getItem(`astraroll_import_${activeTenant.id}`) ||
+            "null",
         );
-        if (preSum) {
-          setBeforeSales(preSum.sales_amount);
-          setBeforeOrders(preSum.total_order_count);
-        }
-      }
-
-      // 2. Submit ingestion
-      const res = await ingestCsv(activeTenant.id, csvContent, dryRun, triggerRelay, token);
-      setResult(res);
-
-      // 3. If live commit, refresh dashboard metrics and capture post-ingestion state
-      if (!dryRun && res.accepted > 0) {
-        triggerRefresh();
-        setTimeout(async () => {
-          const postSum = await fetchSummary(activeTenant.id, currency, startDate, endDate, token).catch(
-            () => null
-          );
-          if (postSum) {
-            setAfterSales(postSum.sales_amount);
-            setAfterOrders(postSum.total_order_count);
-          }
-        }, 800);
-      }
-    } catch (err: any) {
-      setError(err.message || 'Ingestion failed');
+      if (!saved?.imported_order_ids?.length)
+        throw new Error("No committed import receipt in this tab");
+      setResult(saved);
+      const p = await apiJson(
+        `/tenants/${activeTenant.id}/ingest/progress`,
+        token,
+        signal,
+        { order_ids: saved.imported_order_ids, advance: true },
+      );
+      if (signal.aborted) return;
+      setStage(p.stage);
+      setDetails(
+        p.processing_error
+          ? `PENDING at ${p.processing_error.stage}: ${p.processing_error.message}`
+          : "Recovery checked durable event/projection state. Refresh analytics; no reconstructed before/after delta is claimed.",
+      );
+      triggerRefresh();
+    } catch (e) {
+      if (!signal.aborted) setError(String(e));
     } finally {
-      setIsSubmitting(false);
+      if (!signal.aborted) setBusy(false);
     }
-  };
-
+  }
+  async function submit() {
+    if (!activeTenant) return;
+    abort.current?.abort();
+    const controller = new AbortController();
+    abort.current = controller;
+    const signal = controller.signal;
+    setBusy(true);
+    setError(null);
+    setDelta(null);
+    setResult(null);
+    setDetails("Validating and checking the current authorized snapshot…");
+    setStage("VALIDATING");
+    try {
+      const tenant = activeTenant.id;
+      const before = dryRun
+        ? null
+        : await fetchSummary(
+            tenant,
+            currency,
+            startDate,
+            endDate,
+            token,
+            signal,
+          ).catch(() => null);
+      const res = await ingestCsv(tenant, csv, dryRun, process, token, signal);
+      if (signal.aborted) return;
+      setResult(res);
+      if (!dryRun && res.accepted)
+        sessionStorage.setItem(
+          `astraroll_import_${tenant}`,
+          JSON.stringify(res),
+        );
+      if (dryRun) {
+        setStage("VALIDATED");
+        setDetails("Validation only. No orders or events committed.");
+        return;
+      }
+      if (!res.accepted) {
+        setStage(res.duplicates ? "DUPLICATE" : "REJECTED");
+        setDetails(
+          `No new orders. ${res.duplicates} duplicate IDs; ${res.rejected} rejected rows.`,
+        );
+        return;
+      }
+      setStage("COMMITTED");
+      let progress = res.progress;
+      const deadline = Date.now() + 30000;
+      do {
+        if (signal.aborted) return;
+        if (progress) {
+          setStage(progress.stage);
+          setDetails(
+            `${res.accepted} orders committed · ${progress.published_count}/${progress.event_count} events published · ${progress.processed_count} durable receipts.`,
+          );
+        }
+        if (progress?.stages?.AGGREGATED || !process) break;
+        progress = await apiJson(
+          `/tenants/${tenant}/ingest/progress`,
+          token,
+          signal,
+          { order_ids: res.imported_order_ids, advance: true },
+        );
+        if (progress.processing_error) {
+          setDetails(
+            `PENDING at ${progress.processing_error.stage}: ${progress.processing_error.message}`,
+          );
+          break;
+        }
+        if (!progress.stages.AGGREGATED)
+          await new Promise<void>((resolve, reject) => {
+            const t = setTimeout(resolve, 1000);
+            signal.addEventListener(
+              "abort",
+              () => {
+                clearTimeout(t);
+                reject(new DOMException("Aborted", "AbortError"));
+              },
+              { once: true },
+            );
+          });
+      } while (Date.now() < deadline);
+      if (signal.aborted) return;
+      const orders = progress?.orders || [];
+      const windowOrders = orders.filter(
+        (o: any) =>
+          new Date(o.created_at) >= new Date(startDate) &&
+          new Date(o.created_at) < new Date(endDate),
+      );
+      const matching = windowOrders.filter((o: any) => o.currency === currency);
+      if (!windowOrders.length) {
+        setStage(progress?.stages?.AGGREGATED ? "AGGREGATED" : "PENDING");
+        setDetails(
+          `${res.accepted} orders committed, but 0 are included in the current dashboard date range. UTC [${startDate}, ${endDate}).`,
+        );
+      } else if (!matching.length) {
+        setStage(progress?.stages?.AGGREGATED ? "AGGREGATED" : "PENDING");
+        setDetails(
+          `${res.accepted} orders committed in ${Object.keys(res.totals_by_currency).join(", ")}. The ${currency} dashboard is not expected to increase. No currency conversion is performed.`,
+        );
+      } else if (progress?.stages?.AGGREGATED && before) {
+        let after = await fetchSummary(
+          tenant,
+          currency,
+          startDate,
+          endDate,
+          token,
+          signal,
+        );
+        const expected = matching
+          .filter((o: any) => o.status === "shipped")
+          .reduce((n: bigint, o: any) => n + cents(o.amount), 0n);
+        let actual = cents(after.sales_amount) - cents(before.sales_amount),
+          count = after.total_order_count - before.total_order_count;
+        for (
+          let attempt = 0;
+          attempt < 4 && (actual !== expected || count !== matching.length);
+          attempt++
+        ) {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          if (signal.aborted) return;
+          after = await fetchSummary(
+            tenant,
+            currency,
+            startDate,
+            endDate,
+            token,
+            signal,
+          );
+          actual = cents(after.sales_amount) - cents(before.sales_amount);
+          count = after.total_order_count - before.total_order_count;
+        }
+        setDelta({
+          before: before.sales_amount,
+          after: after.sales_amount,
+          orders: count,
+        });
+        if (actual === expected && count === matching.length) {
+          setStage("VISIBLE");
+          setDetails(
+            `Verified with identical tenant, ${currency}, UTC window and shipped-only semantics: +${count} orders, +${formatCurrency(`${actual / 100n}.${(actual % 100n).toString().padStart(2, "0")}`, currency)} shipped sales.`,
+          );
+        } else {
+          setStage("PENDING");
+          setDetails(
+            `Durable aggregation receipts exist, but exact API delta is not verified. Expected ${matching.length} orders; concurrent changes or coverage require investigation.`,
+          );
+        }
+      } else {
+        setStage("PENDING");
+        setDetails(
+          res.processing_error
+            ? `Pending at ${res.processing_error.stage}: ${res.processing_error.message}`
+            : "Orders committed; waiting for aggregation and a covered API snapshot. No visibility claim is made.",
+        );
+      }
+      triggerRefresh();
+    } catch (e) {
+      if (signal.aborted) return;
+      setError(e instanceof Error ? e.message : String(e));
+      setStage("FAILED");
+    } finally {
+      if (!signal.aborted) setBusy(false);
+    }
+  }
   return (
     <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="p-5 rounded-2xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-            Transactional CSV Ingestion Pipeline
-          </h2>
-          <p className="text-sm sm:text-base text-slate-300 mt-1 leading-relaxed">
-            Atomically insert orders into tenant database with transactional outbox event emission and live rollup propagation.
-          </p>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={handleDownloadTemplate}
-            className="flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-sm font-bold shadow-sm transition"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>Download Template</span>
-          </button>
-          <button
-            onClick={handleLoadSample}
-            className="flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 dark:hover:bg-emerald-900 text-emerald-600 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-700 text-sm font-bold shadow-sm transition"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Load Demo Orders</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Architecture Flow Visualizer */}
-      <div className="p-5 rounded-2xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 shadow-sm">
-        <div className="text-sm sm:text-base font-black uppercase tracking-wider text-emerald-400 mb-4">
-          End-to-End Transactional Pipeline Stages
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700 text-center space-y-1">
-            <div className="w-9 h-9 mx-auto rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-black text-sm sm:text-base border border-emerald-500/40 shadow-sm">
-              1
-            </div>
-            <div className="font-black text-sm sm:text-base text-slate-800 dark:text-white mt-1">
-              CSV Validation
-            </div>
-            <div className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
-              Client & server parsing, type & boundary checks
-            </div>
-          </div>
-
-          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700 text-center space-y-1">
-            <div className="w-9 h-9 mx-auto rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-black text-sm sm:text-base border border-emerald-500/40 shadow-sm">
-              2
-            </div>
-            <div className="font-black text-sm sm:text-base text-slate-800 dark:text-white mt-1">
-              Tenant PostgreSQL
-            </div>
-            <div className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
-              Atomic write: <code>orders</code> + <code>outbox_events</code>
-            </div>
-          </div>
-
-          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700 text-center space-y-1">
-            <div className="w-9 h-9 mx-auto rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-black text-sm sm:text-base border border-emerald-500/40 shadow-sm">
-              3
-            </div>
-            <div className="font-black text-sm sm:text-base text-slate-800 dark:text-white mt-1">
-              MultiTenantRelay
-            </div>
-            <div className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
-              Streams unpublished events to Redis Stream
-            </div>
-          </div>
-
-          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700 text-center space-y-1">
-            <div className="w-9 h-9 mx-auto rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-black text-sm sm:text-base border border-emerald-500/40 shadow-sm">
-              4
-            </div>
-            <div className="font-black text-sm sm:text-base text-slate-800 dark:text-white mt-1">
-              Aggregation Worker
-            </div>
-            <div className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
-              Consumes stream, applies rollups, XACKs
-            </div>
-          </div>
-
-          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700 text-center space-y-1">
-            <div className="w-9 h-9 mx-auto rounded-xl bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-black text-sm sm:text-base border border-emerald-500/40 shadow-sm">
-              5
-            </div>
-            <div className="font-black text-sm sm:text-base text-slate-800 dark:text-white mt-1">
-              Dashboard Live
-            </div>
-            <div className="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
-              Analytics API reflects incremental delta
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Upload Zone & Editor */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Dropzone */}
-        <div
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
-          className={`flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-dashed transition duration-200 ${
-            dragActive
-              ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/30'
-              : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-[#07261d]'
-          }`}
+      <section className="p-6 rounded-2xl bg-[#07261d] border border-[#114f3c] space-y-4">
+        <h2 className="text-2xl font-black">
+          Transactional CSV Ingestion Pipeline
+        </h2>
+        <button
+          className="px-3 py-2 bg-emerald-900 rounded-xl"
+          disabled={busy}
+          onClick={resume}
         >
-          <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 mb-3">
-            <UploadCloud className="w-8 h-8" />
-          </div>
-          <p className="font-black text-base sm:text-lg text-slate-800 dark:text-white">
-            Drag and drop orders CSV file here
-          </p>
-          <p className="text-sm text-slate-300 mt-1.5 mb-5 leading-relaxed">
-            Supports UTF-8 CSV with product_id, amount, currency, status, created_at
-          </p>
-          <label className="cursor-pointer px-5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-sm font-bold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition">
-            Browse File
+          Resume Last Committed Import
+        </button>
+        <p>
+          VALIDATED → COMMITTED → PUBLISHED → CONSUMED → AGGREGATED → VISIBLE.
+          Each stage requires backend evidence.
+        </p>
+        <p className="text-sm text-emerald-300">
+          Dashboard: {currency} · UTC [{startDate}, {endDate}). Source currency
+          is preserved.
+        </p>
+        <p>
+          Benchmark tenants are read-only. Use an isolated live demo tenant for
+          imports.
+        </p>
+        <div className="flex gap-4">
+          <button
+            onClick={() => setCsv(sample)}
+            className="px-4 py-2 rounded-xl bg-emerald-700"
+          >
+            Load Demo Orders (12)
+          </button>
+          <button onClick={() => downloadCsv("astraroll-template.csv", sample)}>
+            Download Template
+          </button>
+          <input
+            type="file"
+            accept=".csv,text/csv"
+            aria-label="CSV file"
+            onChange={async (e) => {
+              const f = e.target.files?.[0];
+              if (f) setCsv(await f.text());
+            }}
+          />
+        </div>
+        <textarea
+          aria-label="CSV content"
+          value={csv}
+          onChange={(e) => setCsv(e.target.value)}
+          className="w-full h-64 p-4 rounded-xl bg-[#03150f] border border-emerald-900 font-mono text-sm"
+          placeholder="product_id,amount,currency,status,created_at (optional product_name, order_id)"
+        />
+        <div className="flex gap-6">
+          <label>
             <input
-              type="file"
-              accept=".csv,text/csv"
-              onChange={handleFileChange}
-              className="hidden"
-            />
+              type="checkbox"
+              checked={dryRun}
+              onChange={(e) => setDryRun(e.target.checked)}
+            />{" "}
+            Dry run
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={process}
+              onChange={(e) => setProcess(e.target.checked)}
+            />{" "}
+            Attempt bounded relay & consumer
           </label>
         </div>
-
-        {/* Raw CSV Text Area */}
-        <div className="flex flex-col p-5 rounded-2xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
-          <div className="flex items-center justify-between">
-            <label className="text-sm sm:text-base font-black text-slate-700 dark:text-white flex items-center space-x-2">
-              <FileText className="w-3.5 h-3.5 text-emerald-500" />
-              <span>CSV Editor / Direct Input</span>
-            </label>
-            <span className="text-xs sm:text-sm text-emerald-400 font-mono font-bold">
-              {csvContent.split('\n').filter((l) => l.trim()).length} lines
-            </span>
-          </div>
-
-          <textarea
-            rows={8}
-            value={csvContent}
-            onChange={(e) => setCsvContent(e.target.value)}
-            placeholder="product_id,amount,currency,status,created_at&#10;PROD-1,100.00,USD,shipped,2026-10-20T12:00:00Z"
-            className="w-full flex-1 p-4 text-sm font-mono leading-relaxed rounded-2xl bg-slate-50 dark:bg-[#041a13] border border-slate-200 dark:border-[#0d3d2f] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
-          />
-
-          {/* Controls & Submit */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-            <div className="flex items-center space-x-5 text-sm sm:text-base">
-              <label className="flex items-center space-x-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={dryRun}
-                  onChange={(e) => setDryRun(e.target.checked)}
-                  className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                />
-                <span className="font-semibold text-slate-700 dark:text-slate-300">
-                  Dry Run Preview Only
-                </span>
-              </label>
-
-              <label className="flex items-center space-x-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={triggerRelay}
-                  onChange={(e) => setTriggerRelay(e.target.checked)}
-                  className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                />
-                <span className="font-semibold text-slate-700 dark:text-slate-300">
-                  Trigger Instant Relay & Consumer
-                </span>
-              </label>
-            </div>
-
-            <button
-              onClick={handleIngest}
-              disabled={isSubmitting || !csvContent.trim()}
-              className="flex items-center space-x-2 px-7 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-black text-sm sm:text-base shadow-lg shadow-emerald-600/30 transition hover:scale-[1.02]"
-            >
-              {isSubmitting ? (
-                <>
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                  <span>Processing Batch...</span>
-                </>
-              ) : (
-                <>
-                  <UploadCloud className="w-3.5 h-3.5" />
-                  <span>{dryRun ? 'Validate & Preview' : 'Ingest Orders Atomically'}</span>
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Error message */}
-      {error && (
-        <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-400 text-xs">
-          <strong>Ingestion Error:</strong> {error}
-        </div>
-      )}
-
-      {/* Live Delta Tracker Banner */}
-      {!dryRun && (beforeSales !== null || afterSales !== null) && (
-        <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-white dark:from-emerald-950/30 dark:via-teal-950/20 dark:to-[#07261d] border border-emerald-200 dark:border-emerald-800 shadow-sm space-y-3 animate-in fade-in">
-          <div className="flex items-center space-x-2 text-emerald-800 dark:text-emerald-300 font-bold text-xs uppercase tracking-wider">
-            <CheckCircle className="w-4 h-4 text-emerald-600" />
-            <span>Verified End-to-End Freshness Delta</span>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono text-xs">
-            <div className="p-3 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-emerald-100 dark:border-emerald-900/50">
-              <div className="text-[10px] text-slate-500 uppercase font-sans">
-                Shipped Sales Before
-              </div>
-              <div className="text-base font-bold text-slate-700 dark:text-slate-300 mt-1">
-                {formatCurrency(beforeSales || '0.00', currency)}
-              </div>
-            </div>
-
-            <div className="p-3 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-emerald-100 dark:border-emerald-900/50">
-              <div className="text-[10px] text-slate-500 uppercase font-sans">
-                Shipped Sales After Ingestion
-              </div>
-              <div className="text-base font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-                {formatCurrency(afterSales || '0.00', currency)}
-              </div>
-            </div>
-
-            <div className="p-3 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-emerald-100 dark:border-emerald-900/50">
-              <div className="text-[10px] text-slate-500 uppercase font-sans">
-                Orders Volume Delta
-              </div>
-              <div className="text-base font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-                {beforeOrders !== null && afterOrders !== null
-                  ? `+${afterOrders - beforeOrders} orders`
-                  : 'Updated'}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Ingestion Results Summary & Preview Table */}
+        <button
+          disabled={busy || !csv.trim()}
+          onClick={submit}
+          className="bg-emerald-600 rounded-xl px-6 py-3 font-bold disabled:opacity-50"
+        >
+          {busy
+            ? "Processing Batch…"
+            : dryRun
+              ? "Validate & Preview"
+              : "Ingest Orders Atomically"}
+        </button>
+      </section>
+      <section
+        className="p-5 rounded-2xl bg-[#062118] border border-emerald-900 space-y-3"
+        aria-live="polite"
+      >
+        <h3 className="text-lg font-bold" data-testid="ingestion-stage">
+          {stage}
+        </h3>
+        <p>{details}</p>
+        {error && (
+          <p role="alert" className="text-rose-400">
+            {error}
+          </p>
+        )}
+        {delta && (
+          <p>
+            Shipped sales before {formatCurrency(delta.before, currency)} ·
+            after {formatCurrency(delta.after, currency)} · Orders volume delta
+            +{delta.orders}
+          </p>
+        )}
+      </section>
       {result && (
-        <div className="p-5 rounded-2xl bg-white dark:bg-[#07261d] border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="w-4 h-4 text-emerald-500" />
-              <h3 className="font-bold text-sm text-slate-900 dark:text-white">
-                Ingestion Summary {result.dry_run && '(Dry Run)'}
-              </h3>
-            </div>
-            <span className="text-xs text-slate-400">
-              Total Processed: {result.total_rows} rows
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700">
-              <span className="text-[10px] text-slate-400 font-sans block">Accepted Orders</span>
-              <strong className="text-emerald-600 dark:text-emerald-400 text-sm">
-                {result.accepted}
-              </strong>
-            </div>
-
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700">
-              <span className="text-[10px] text-slate-400 font-sans block">Rejected / Errors</span>
-              <strong className="text-rose-600 dark:text-rose-400 text-sm">
-                {result.rejected}
-              </strong>
-            </div>
-
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700">
-              <span className="text-[10px] text-slate-400 font-sans block">Duplicate IDs</span>
-              <strong className="text-amber-600 dark:text-amber-400 text-sm">
-                {result.duplicates}
-              </strong>
-            </div>
-
-            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/80 dark:border-slate-700">
-              <span className="text-[10px] text-slate-400 font-sans block">Shipped Sales Added</span>
-              <strong className="text-emerald-600 dark:text-emerald-400 text-sm">
-                {formatCurrency(result.total_sales, currency)}
-              </strong>
-            </div>
-          </div>
-
-          {/* Row Errors if any */}
-          {result.errors.length > 0 && (
-            <div className="p-4 rounded-xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/60 space-y-1.5 text-xs text-rose-700 dark:text-rose-400">
-              <div className="font-bold">Validation Errors Detected:</div>
-              {result.errors.map((e, idx) => (
-                <div key={idx} className="font-mono text-[11px]">
-                  Line {e.line_number} [{e.column}]: {e.message}
-                </div>
+        <section className="p-5 rounded-2xl bg-[#07261d] border border-emerald-900 space-y-4">
+          <h3 className="font-bold text-xl">
+            Ingestion Summary {result.dry_run ? "(Dry Run)" : ""}
+          </h3>
+          <p>
+            {result.accepted} accepted · {result.rejected} rejected ·{" "}
+            {result.duplicates} duplicates
+          </p>
+          {Object.entries(result.totals_by_currency).map(([code, v]) => (
+            <p key={code}>
+              {code}: {v.order_count} orders · shipped sales{" "}
+              {formatCurrency(v.sales_amount, code)} · face amount{" "}
+              {formatCurrency(v.total_amount, code)}
+            </p>
+          ))}
+          {result.errors.map((e, i) => (
+            <p key={i} className="text-rose-400">
+              Line {e.line_number} [{e.column}]: {e.message}
+            </p>
+          ))}
+          <table className="w-full text-sm">
+            <thead>
+              <tr>
+                <th>Product / SKU</th>
+                <th>Amount</th>
+                <th>Currency</th>
+                <th>Status</th>
+                <th>Created UTC</th>
+              </tr>
+            </thead>
+            <tbody>
+              {result.preview_rows.map((r) => (
+                <tr key={r.line_number}>
+                  <td>{r.raw_product_id}</td>
+                  <td>{formatCurrency(r.amount, r.currency)}</td>
+                  <td>{r.currency}</td>
+                  <td>{r.status}</td>
+                  <td>{r.created_at}</td>
+                </tr>
               ))}
-            </div>
-          )}
-
-          {/* Preview Table */}
-          {result.preview_rows.length > 0 && (
-            <div>
-              <div className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
-                Sample Parsed Records ({result.preview_rows.length} shown)
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs text-left font-mono">
-                  <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 uppercase text-[10px]">
-                    <tr>
-                      <th className="px-3 py-2 rounded-l-lg">Line</th>
-                      <th className="px-3 py-2">Order ID</th>
-                      <th className="px-3 py-2">Product ID</th>
-                      <th className="px-3 py-2">Amount</th>
-                      <th className="px-3 py-2">Currency</th>
-                      <th className="px-3 py-2 rounded-r-lg">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
-                    {result.preview_rows.map((r, i) => (
-                      <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/40">
-                        <td className="px-3 py-2 font-sans text-slate-400">{r.line_number}</td>
-                        <td className="px-3 py-2 text-slate-600 dark:text-slate-400 truncate max-w-[120px]">
-                          {r.order_id}
-                        </td>
-                        <td className="px-3 py-2 text-slate-900 dark:text-white font-sans font-medium">
-                          {r.raw_product_id}
-                        </td>
-                        <td className="px-3 py-2 font-bold">{formatCurrency(r.amount, currency)}</td>
-                        <td className="px-3 py-2">{r.currency}</td>
-                        <td className="px-3 py-2">
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase font-sans ${
-                              r.status === 'shipped'
-                                ? 'bg-teal-100 text-teal-700 dark:bg-teal-950/60 dark:text-teal-400'
-                                : r.status === 'placed'
-                                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400'
-                                : 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-400'
-                            }`}
-                          >
-                            {r.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-        </div>
+            </tbody>
+          </table>
+        </section>
       )}
     </div>
   );
 };
-

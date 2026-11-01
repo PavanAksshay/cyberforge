@@ -1,6 +1,13 @@
-import psycopg
-from concurrent.futures import ThreadPoolExecutor, as_completed
+"""Archived synthetic-scale helper, NOT a release-data migration.
+
+Do not run against preserved databases: this bypasses outbox and rollup maintenance.
+The live correctness pass never invokes this utility.
+"""
+
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+import psycopg
 
 TARGET_ORDERS = 100000
 
@@ -31,8 +38,10 @@ def populate_tenant(tenant_id, db_name):
 
             # Batch insert orders
             cur.execute(f"""
-                INSERT INTO orders (id, tenant_id, amount, currency, status, version, created_at, updated_at, product_id)
-                SELECT 
+                INSERT INTO orders
+                (id, tenant_id, amount, currency, status, version,
+                 created_at, updated_at, product_id)
+                SELECT
                     gen_random_uuid(),
                     '{tid_str}'::uuid,
                     (random() * 800 + 10)::numeric(18,2),
@@ -47,14 +56,16 @@ def populate_tenant(tenant_id, db_name):
 
             # Batch insert projections
             cur.execute(f"""
-                INSERT INTO order_projections (tenant_id, order_id, last_applied_version, canonical_snapshot, updated_at)
-                SELECT 
-                    tenant_id, 
-                    id, 
-                    version, 
-                    json_build_object('id', id, 'tenant_id', tenant_id, 'amount', amount, 'currency', currency, 'status', status, 'product_id', product_id)::jsonb, 
+                INSERT INTO order_projections
+                (tenant_id, order_id, last_applied_version, canonical_snapshot, updated_at)
+                SELECT
+                    tenant_id,
+                    id,
+                    version,
+                    json_build_object('id', id, 'tenant_id', tenant_id, 'amount', amount,
+                      'currency', currency, 'status', status, 'product_id', product_id)::jsonb,
                     updated_at
-                FROM orders 
+                FROM orders
                 WHERE tenant_id = '{tid_str}'::uuid
                 ON CONFLICT (tenant_id, order_id) DO NOTHING;
             """)
@@ -69,7 +80,8 @@ def main():
     total_tenants = len(tenants)
     print(f"Discovered {total_tenants} tenants from control registry.")
     print(
-        f"Target per tenant: {TARGET_ORDERS:,} orders. Total target: {total_tenants * TARGET_ORDERS:,} orders."
+        f"Target per tenant: {TARGET_ORDERS:,} orders. "
+        f"Total target: {total_tenants * TARGET_ORDERS:,} orders."
     )
 
     start_all = time.time()
@@ -86,21 +98,24 @@ def main():
                 diff = final - initial
                 total_new_orders += diff
                 print(
-                    f"[{completed:3d}/{total_tenants}] Tenant {tid_str[:8]}... DB {db[:30]}...: {initial:,} -> {final:,} orders (+{diff:,}) in {elapsed:.2f}s ({status})"
+                    f"[{completed:3d}/{total_tenants}] Tenant {tid_str[:8]}... "
+                    f"DB {db[:30]}...: {initial:,} -> {final:,} orders "
+                    f"(+{diff:,}) in {elapsed:.2f}s ({status})"
                 )
             except Exception as e:
                 print(f"ERROR on tenant {tid} ({db}): {e}")
 
     total_time = time.time() - start_all
-    print(f"\n=======================================================")
+    print("\n=======================================================")
     print(
         f"POPULATION COMPLETE: {completed}/{total_tenants} tenants processed in {total_time:.1f}s."
     )
     print(f"Total new orders inserted: {total_new_orders:,}")
     print(
-        f"Overall database orders: {total_tenants * TARGET_ORDERS:,} rows across {total_tenants} databases."
+        f"Overall database orders: {total_tenants * TARGET_ORDERS:,} rows "
+        f"across {total_tenants} databases."
     )
-    print(f"=======================================================")
+    print("=======================================================")
 
 
 if __name__ == "__main__":

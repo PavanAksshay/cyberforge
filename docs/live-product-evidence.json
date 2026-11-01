@@ -1,0 +1,256 @@
+{
+  "initial_12_order_acceptance": {
+    "before": {
+      "total_order_count": 0,
+      "sales_amount": "0.00",
+      "tenant_id": "7f4a4e1d-af00-43b9-bf94-105b2334b1e0",
+      "start": "2026-10-01T00:00:00Z",
+      "end": "2026-10-08T00:00:00Z",
+      "currency": "USD",
+      "metric_semantics": "created_at_shipped_sales_v2",
+      "freshness": {
+        "checkpoint": null,
+        "last_processed_at": "2026-11-01T00:44:54.505873Z",
+        "tenant_revision": 1
+      }
+    },
+    "after": {
+      "total_order_count": 12,
+      "sales_amount": "506.97",
+      "tenant_id": "7f4a4e1d-af00-43b9-bf94-105b2334b1e0",
+      "start": "2026-10-01T00:00:00Z",
+      "end": "2026-10-08T00:00:00Z",
+      "currency": "USD",
+      "metric_semantics": "created_at_shipped_sales_v2",
+      "freshness": {
+        "checkpoint": null,
+        "last_processed_at": "2026-11-01T00:45:18.762789Z",
+        "tenant_revision": 13
+      }
+    },
+    "delta_orders": 12,
+    "delta_sales": "506.97",
+    "parity": {
+      "tenant_id": "7f4a4e1d-af00-43b9-bf94-105b2334b1e0",
+      "currency": "USD",
+      "start": "2026-10-01T00:00:00+00:00",
+      "end": "2026-10-08T00:00:00+00:00",
+      "database_name": "live_demo_t_7f4a4e1daf0043b9bf94105b2334b1e0",
+      "verified_at": "2026-11-01T00:45:18.815576+00:00",
+      "duration_ms": 4.693,
+      "status": "MATCH",
+      "api": {
+        "total_orders": 12,
+        "total_shipped_sales": "506.97"
+      },
+      "rollup": {
+        "total_orders": 12,
+        "total_shipped_sales": "506.97"
+      },
+      "raw_orders": {
+        "total_orders": 12,
+        "total_shipped_sales": "506.97"
+      },
+      "data_source": "authorized tenant database, raw orders + hourly rollups; API reader",
+      "explanation": "Independent SQL comparison at a stable aggregate revision"
+    },
+    "outbox_events": 20,
+    "durable_receipts": 20,
+    "pending_ack": 0,
+    "duplicate_orders": 12,
+    "cross_tenant_status": 403,
+    "unauthenticated_status": 401
+  },
+  "repeatable_acceptance": {
+    "before": {
+      "total_order_count": 48,
+      "sales_amount": "2027.88",
+      "tenant_id": "7f4a4e1d-af00-43b9-bf94-105b2334b1e0",
+      "start": "2026-10-01T00:00:00Z",
+      "end": "2026-10-08T00:00:00Z",
+      "currency": "USD",
+      "metric_semantics": "created_at_shipped_sales_v2",
+      "freshness": {
+        "checkpoint": null,
+        "last_processed_at": "2026-11-01T01:01:11.891090Z",
+        "tenant_revision": 61
+      }
+    },
+    "after": {
+      "total_order_count": 60,
+      "sales_amount": "2534.85",
+      "tenant_id": "7f4a4e1d-af00-43b9-bf94-105b2334b1e0",
+      "start": "2026-10-01T00:00:00Z",
+      "end": "2026-10-08T00:00:00Z",
+      "currency": "USD",
+      "metric_semantics": "created_at_shipped_sales_v2",
+      "freshness": {
+        "checkpoint": null,
+        "last_processed_at": "2026-11-01T01:05:10.738011Z",
+        "tenant_revision": 73
+      }
+    },
+    "delta_orders": 12,
+    "delta_sales": "506.97",
+    "parity": {
+      "tenant_id": "7f4a4e1d-af00-43b9-bf94-105b2334b1e0",
+      "currency": "USD",
+      "start": "2026-10-01T00:00:00+00:00",
+      "end": "2026-10-08T00:00:00+00:00",
+      "database_name": "live_demo_t_7f4a4e1daf0043b9bf94105b2334b1e0",
+      "verified_at": "2026-11-01T01:05:10.783771+00:00",
+      "duration_ms": 5.534,
+      "status": "MATCH",
+      "api": {
+        "total_orders": 60,
+        "total_shipped_sales": "2534.85"
+      },
+      "rollup": {
+        "total_orders": 60,
+        "total_shipped_sales": "2534.85"
+      },
+      "raw_orders": {
+        "total_orders": 60,
+        "total_shipped_sales": "2534.85"
+      },
+      "data_source": "authorized tenant database, raw orders + hourly rollups; API reader",
+      "explanation": "Independent SQL comparison at a stable aggregate revision"
+    },
+    "outbox_events": 20,
+    "durable_receipts": 20,
+    "pending_ack": 0,
+    "duplicate_orders": 12,
+    "cross_tenant_status": 403,
+    "unauthenticated_status": 401,
+    "request_to_visible_ms": 396.506
+  },
+  "direct_sql_oracles": [
+    {
+      "currency": "USD",
+      "shapes": [
+        "summary",
+        "trends-hour",
+        "trends-day",
+        "top-products",
+        "status-breakdown"
+      ],
+      "result": "MATCH"
+    },
+    {
+      "currency": "EUR",
+      "shapes": [
+        "summary",
+        "trends-hour",
+        "trends-day",
+        "top-products",
+        "status-breakdown"
+      ],
+      "result": "MATCH"
+    }
+  ],
+  "browser_polling": {
+    "before": {
+      "summary": 13,
+      "trends": 11,
+      "top-products": 8,
+      "status-breakdown": 8
+    },
+    "after": {
+      "summary": 33,
+      "trends": 31,
+      "top-products": 28,
+      "status-breakdown": 28
+    },
+    "additional_real_requests": {
+      "summary": 20,
+      "trends": 20,
+      "top-products": 20,
+      "status-breakdown": 20
+    },
+    "profile": "browser auto-refresh 5s; no scripted analytics requests during interval"
+  },
+  "real_redis_outage_recovery": {
+    "before": {
+      "total_order_count": 36,
+      "sales_amount": "1520.91",
+      "tenant_id": "7f4a4e1d-af00-43b9-bf94-105b2334b1e0",
+      "start": "2026-10-01T00:00:00Z",
+      "end": "2026-10-08T00:00:00Z",
+      "currency": "USD",
+      "metric_semantics": "created_at_shipped_sales_v2",
+      "freshness": {
+        "checkpoint": null,
+        "last_processed_at": "2026-11-01T00:57:08.563987Z",
+        "tenant_revision": 49
+      }
+    },
+    "after": {
+      "total_order_count": 48,
+      "sales_amount": "2027.88",
+      "tenant_id": "7f4a4e1d-af00-43b9-bf94-105b2334b1e0",
+      "start": "2026-10-01T00:00:00Z",
+      "end": "2026-10-08T00:00:00Z",
+      "currency": "USD",
+      "metric_semantics": "created_at_shipped_sales_v2",
+      "freshness": {
+        "checkpoint": null,
+        "last_processed_at": "2026-11-01T01:01:11.891090Z",
+        "tenant_revision": 61
+      }
+    },
+    "delta_orders": 12,
+    "delta_sales": "506.97",
+    "pending_events": 0,
+    "pending_ack": 0,
+    "broker": "actual clean shutdown/save and restart of isolated Redis 56381",
+    "browser_observation": "PENDING at PUBLISHED: TimeoutError, then AGGREGATED via Resume Last Committed Import"
+  },
+  "protected_data": {
+    "comparison": "MATCH",
+    "databases": 100,
+    "v2_orders": 10000034,
+    "baseline_sha256": "aa529251dbc20b79fd75e8e9f759e13a7ccabbf97a9ff54de71cce6b325adb48",
+    "after_sha256": "aa529251dbc20b79fd75e8e9f759e13a7ccabbf97a9ff54de71cce6b325adb48",
+    "order_fingerprint_fields": [
+      "id",
+      "version",
+      "status",
+      "amount",
+      "created_at",
+      "updated_at"
+    ],
+    "other_compared_fields": [
+      "sum(version)",
+      "sum(amount)",
+      "order_count",
+      "outbox_count",
+      "projection_count",
+      "aggregate_revision"
+    ],
+    "source": {
+      "orders": 10000000,
+      "outbox": 17333300,
+      "postmaster_started": "2026-10-31 20:37:52.841385+05:30"
+    }
+  },
+  "known_preserved_benchmark_mismatch": {
+    "tenant_id": "0457061c-db4d-553e-9b3c-ba32ec9e5f57",
+    "currency": "USD",
+    "start": "2026-10-01T00:00:00Z",
+    "end": "2026-10-08T00:00:00Z",
+    "raw_order_count": 14141,
+    "raw_shipped_sales": "3146407.04",
+    "api_and_rollup_order_count": 5004,
+    "api_and_rollup_sales": "1325416.36",
+    "action": "Owner declined derived-data repair. Benchmark analytics now return 503."
+  },
+  "browser_observations": [
+    "USD import: VISIBLE; before $506.97, after $1013.94, delta +12 / $506.97.",
+    "EUR selected / USD import: AGGREGATED; explains EUR not expected to increase; previews remain USD $.",
+    "Outside window: 12 orders committed, but 0 included in current dashboard date range.",
+    "Real isolated Redis outage: PENDING at PUBLISHED, TimeoutError; Resume Last Committed Import then AGGREGATED.",
+    "Run Verification: MATCH with independent raw order SQL, rollup SQL and API results, UTC window and duration.",
+    "Operations: actual isolated database, 72 orders/projections, 120 events, pending=0, real receipt logs.",
+    "Auto-refresh 5s: 20 additional successful requests to each of four analytics shapes between recorded observations."
+  ]
+}

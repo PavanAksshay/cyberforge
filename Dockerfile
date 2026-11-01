@@ -9,5 +9,6 @@ COPY alembic.ini ./
 COPY alembic ./alembic
 COPY tests ./tests
 COPY docs ./docs
+COPY web/dist ./web/dist
 USER app
 CMD ["uvicorn", "astraroll.api:app", "--host", "0.0.0.0", "--port", "8000"]

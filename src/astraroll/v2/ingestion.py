@@ -13,7 +13,7 @@ from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
-from uuid import NAMESPACE_DNS, UUID, uuid4, uuid5
+from uuid import NAMESPACE_DNS, UUID, uuid5
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -50,6 +50,7 @@ class ParsedOrderRow:
     currency: str
     status: str
     created_at: datetime
+    product_name: str | None = None
 
 
 def resolve_product_uuid(raw_id: str) -> UUID:
@@ -69,9 +70,10 @@ class IngestionResult:
     errors: list[dict]
     preview_rows: list[dict]
     imported_order_ids: list[str]
-    total_sales: str
-    total_amount: str
+    total_sales: str | None
+    total_amount: str | None
     dry_run: bool
+    totals_by_currency: dict
 
 
 def parse_iso_datetime(dt_str: str) -> datetime | None:
@@ -94,6 +96,7 @@ def parse_iso_datetime(dt_str: str) -> datetime | None:
 def validate_and_parse_csv(
     content: str,
     max_rows: int = 10000,
+    id_namespace: UUID = NAMESPACE_DNS,
 ) -> tuple[list[ParsedOrderRow], list[RowError]]:
     """Validate CSV header and parse rows into typed structures."""
     errors: list[RowError] = []
@@ -168,12 +171,20 @@ def validate_and_parse_csv(
         amt_raw = row[amt_idx].strip() if amt_idx < len(row) else ""
         try:
             amount = Decimal(amt_raw)
-            if amount <= 0:
+            if (
+                not amount.is_finite()
+                or amount <= 0
+                or amount.as_tuple().exponent < -2
+                or amount >= Decimal("10000000000000000")
+            ):
                 row_errors.append(
                     RowError(
                         line_number=line_num,
                         column="amount",
-                        message="amount must be strictly positive",
+                        message=(
+                            "amount must be finite, positive, below 10^16 "
+                            "and have at most 2 decimal places"
+                        ),
                         raw_value=amt_raw,
                     )
                 )
@@ -222,7 +233,7 @@ def validate_and_parse_csv(
                         )
                     )
         if order_id is None:
-            order_id = uuid4()
+            order_id = uuid5(id_namespace, f"csv:{content.strip()}:{line_num}")
 
         # Optional Status
         status = "placed"
@@ -276,6 +287,11 @@ def validate_and_parse_csv(
                     currency=currency,
                     status=status,
                     created_at=created_at,
+                    product_name=(
+                        row[col_map["product_name"]].strip()[:200]
+                        if "product_name" in col_map and col_map["product_name"] < len(row)
+                        else None
+                    ),
                 )
             )
 
@@ -297,7 +313,7 @@ def ingest_csv_data(
     - Zero writes when dry_run=True.
     - Accurately tracks shipped sales vs total amount.
     """
-    parsed_rows, errors = validate_and_parse_csv(content, max_rows=max_rows)
+    parsed_rows, errors = validate_and_parse_csv(content, max_rows=max_rows, id_namespace=tenant_id)
 
     # Prepare preview of first 10 rows
     preview = [
@@ -310,6 +326,7 @@ def ingest_csv_data(
             "currency": r.currency,
             "status": r.status,
             "created_at": r.created_at.isoformat(),
+            "product_name": r.product_name,
         }
         for r in parsed_rows[:10]
     ]
@@ -321,18 +338,43 @@ def ingest_csv_data(
         if r.status == "shipped":
             total_shipped_sales += r.amount
 
+    def totals(rows):
+        grouped = {}
+        for row in rows:
+            value = grouped.setdefault(
+                row.currency,
+                {
+                    "order_count": 0,
+                    "sales_amount": Decimal("0.00"),
+                    "total_amount": Decimal("0.00"),
+                },
+            )
+            value["order_count"] += 1
+            value["total_amount"] += row.amount
+            if row.status == "shipped":
+                value["sales_amount"] += row.amount
+        return {
+            c: {k: (f"{v:.2f}" if isinstance(v, Decimal) else v) for k, v in value.items()}
+            for c, value in grouped.items()
+        }
+
     if dry_run or not parsed_rows:
         return IngestionResult(
-            total_rows=len(parsed_rows) + len(errors),
+            total_rows=len(parsed_rows) + len({e.line_number for e in errors}),
             accepted=len(parsed_rows),
-            rejected=len(errors),
+            rejected=len({e.line_number for e in errors}),
             duplicates=0,
             errors=[asdict(e) for e in errors],
             preview_rows=preview,
             imported_order_ids=[str(r.order_id) for r in parsed_rows[:50]],
-            total_sales=str(total_shipped_sales),
-            total_amount=str(total_batch_amount),
+            total_sales=str(total_shipped_sales)
+            if len({r.currency for r in parsed_rows}) <= 1
+            else None,
+            total_amount=str(total_batch_amount)
+            if len({r.currency for r in parsed_rows}) <= 1
+            else None,
             dry_run=True,
+            totals_by_currency=totals(parsed_rows),
         )
 
     # Live commit path
@@ -353,6 +395,7 @@ def ingest_csv_data(
     actual_shipped_sales = Decimal("0.00")
     actual_batch_amount = Decimal("0.00")
 
+    committed_rows = []
     for r in parsed_rows:
         if r.order_id in existing_ids:
             duplicates_count += 1
@@ -370,7 +413,7 @@ def ingest_csv_data(
             status=initial_status,
             version=version,
             created_at=r.created_at,
-            updated_at=r.created_at,
+            updated_at=datetime.now(UTC),
         )
         session.add(order)
         record_event(session, order, "order.created", None)
@@ -380,10 +423,12 @@ def ingest_csv_data(
             before = OrderRead.model_validate(order)
             order.status = r.status
             order.version += 1
-            order.updated_at = r.created_at
+            order.updated_at = datetime.now(UTC)
             event_type = "order.cancelled" if r.status == "cancelled" else "order.updated"
             record_event(session, order, event_type, before)
 
+        existing_ids.add(r.order_id)
+        committed_rows.append(r)
         imported_ids.append(str(r.order_id))
         accepted_count += 1
         actual_batch_amount += r.amount
@@ -393,14 +438,19 @@ def ingest_csv_data(
     session.flush()
 
     return IngestionResult(
-        total_rows=len(parsed_rows) + len(errors),
+        total_rows=len(parsed_rows) + len({e.line_number for e in errors}),
         accepted=accepted_count,
-        rejected=len(errors),
+        rejected=len({e.line_number for e in errors}),
         duplicates=duplicates_count,
         errors=[asdict(e) for e in errors],
         preview_rows=preview,
-        imported_order_ids=imported_ids[:50],
-        total_sales=str(actual_shipped_sales),
-        total_amount=str(actual_batch_amount),
+        imported_order_ids=imported_ids,
+        total_sales=str(actual_shipped_sales)
+        if len({r.currency for r in committed_rows}) <= 1
+        else None,
+        total_amount=str(actual_batch_amount)
+        if len({r.currency for r in committed_rows}) <= 1
+        else None,
         dry_run=False,
+        totals_by_currency=totals(committed_rows),
     )

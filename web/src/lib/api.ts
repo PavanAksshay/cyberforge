@@ -8,21 +8,24 @@ import {
   IngestionResult,
   TenantStatus,
   Interval,
-} from '../types';
+} from "../types";
 
-const API_BASE = '';
+const API_BASE = "";
 
-const DEFAULT_AUTH_TOKEN = 'smoke-test-admin-key-astraroll-v2';
+const DEFAULT_AUTH_TOKEN = "";
 
 export function extractErrorMessage(errPayload: any, fallback: string): string {
   if (!errPayload) return fallback;
-  if (typeof errPayload === 'string') return errPayload;
-  if (typeof errPayload.detail === 'string') return errPayload.detail;
-  if (errPayload.detail && typeof errPayload.detail.message === 'string') return errPayload.detail.message;
+  if (typeof errPayload === "string") return errPayload;
+  if (typeof errPayload.detail === "string") return errPayload.detail;
+  if (errPayload.detail && typeof errPayload.detail.message === "string")
+    return errPayload.detail.message;
   if (Array.isArray(errPayload.detail) && errPayload.detail.length > 0) {
-    return errPayload.detail.map((e: any) => e.msg || e.message || JSON.stringify(e)).join(', ');
+    return errPayload.detail
+      .map((e: any) => e.msg || e.message || JSON.stringify(e))
+      .join(", ");
   }
-  if (typeof errPayload.message === 'string') return errPayload.message;
+  if (typeof errPayload.message === "string") return errPayload.message;
   try {
     return JSON.stringify(errPayload);
   } catch {
@@ -30,49 +33,49 @@ export function extractErrorMessage(errPayload: any, fallback: string): string {
   }
 }
 
-
 function getHeaders(token?: string): Record<string, string> {
-  const headers: Record<string, string> = { Accept: 'application/json' };
-  const active = token || (typeof window !== 'undefined' ? localStorage.getItem('astraroll_token') : null) || DEFAULT_AUTH_TOKEN;
+  const headers: Record<string, string> = { Accept: "application/json" };
+  const active =
+    token ||
+    (typeof window !== "undefined"
+      ? sessionStorage.getItem("astraroll_token")
+      : null) ||
+    DEFAULT_AUTH_TOKEN;
   if (active) {
-    headers['Authorization'] = `Bearer ${active}`;
+    headers["Authorization"] = `Bearer ${active}`;
   }
   return headers;
 }
 
-export async function fetchTenants(token?: string): Promise<Tenant[]> {
-  const res = await fetch(`${API_BASE}/tenants`, { headers: getHeaders(token) });
+export async function fetchTenants(
+  token?: string,
+  signal?: AbortSignal,
+): Promise<Tenant[]> {
+  const res = await fetch(`${API_BASE}/tenants`, {
+    headers: getHeaders(token),
+    signal,
+    cache: "no-store",
+  });
   if (!res.ok) {
-    if (res.status === 401 || res.status === 403 || res.status === 503) {
-      return [
-        {
-          id: '00000000-0000-0000-0000-000000000001',
-          name: 'Primary Enterprise Tenant',
-          created_at: new Date().toISOString(),
-        },
-      ];
-    }
-    throw new Error(`Failed to fetch tenants: ${res.statusText}`);
+    throw new Error(`Tenant registry ${res.status}: ${res.statusText}`);
   }
   return await res.json();
 }
 
-export async function fetchTenantStatus(tenantId: string, token?: string): Promise<TenantStatus> {
-  const res = await fetch(`${API_BASE}/tenants/${tenantId}/status`, { headers: getHeaders(token) });
+export async function fetchTenantStatus(
+  tenantId: string,
+  token?: string,
+  signal?: AbortSignal,
+): Promise<TenantStatus> {
+  const res = await fetch(`${API_BASE}/tenants/${tenantId}/status`, {
+    headers: getHeaders(token),
+    signal,
+    cache: "no-store",
+  });
   if (res.ok) {
     return await res.json();
   }
-  return {
-    tenant_id: tenantId,
-    name: 'Tenant DB',
-    status: 'active',
-    database_name: `astraroll_tenant_${tenantId.slice(0, 8)}`,
-    schema_version: '0005_tenant_access_paths',
-    order_count: 0,
-    total_outbox: 0,
-    unpublished_outbox: 0,
-    is_healthy: true,
-  };
+  throw new Error(`Tenant telemetry request failed (${res.status})`);
 }
 
 export async function fetchSummary(
@@ -80,7 +83,8 @@ export async function fetchSummary(
   currency: string,
   start: string,
   end: string,
-  token?: string
+  token?: string,
+  signal?: AbortSignal,
 ): Promise<SummaryResponse> {
   const params = new URLSearchParams({
     tenant_id: tenantId,
@@ -88,12 +92,20 @@ export async function fetchSummary(
     start,
     end,
   });
-  const res = await fetch(`${API_BASE}/analytics/summary?${params.toString()}`, {
-    headers: getHeaders(token),
-  });
+  const res = await fetch(
+    `${API_BASE}/analytics/summary?${params.toString()}`,
+    {
+      headers: getHeaders(token),
+      signal,
+      cache: "no-store",
+    },
+  );
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(extractErrorMessage(err, `Summary request failed (${res.status})`));
+    throw new Error(
+      `${res.status}: ` +
+        extractErrorMessage(err, `Summary request failed (${res.status})`),
+    );
   }
   return await res.json();
 }
@@ -103,8 +115,9 @@ export async function fetchTrends(
   currency: string,
   start: string,
   end: string,
-  interval: Interval = 'day',
-  token?: string
+  interval: Interval = "day",
+  token?: string,
+  signal?: AbortSignal,
 ): Promise<TrendsResponse> {
   const params = new URLSearchParams({
     tenant_id: tenantId,
@@ -115,10 +128,15 @@ export async function fetchTrends(
   });
   const res = await fetch(`${API_BASE}/analytics/trends?${params.toString()}`, {
     headers: getHeaders(token),
+    signal,
+    cache: "no-store",
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(extractErrorMessage(err, `Trends request failed (${res.status})`));
+    throw new Error(
+      `${res.status}: ` +
+        extractErrorMessage(err, `Trends request failed (${res.status})`),
+    );
   }
   return await res.json();
 }
@@ -129,7 +147,8 @@ export async function fetchTopProducts(
   start: string,
   end: string,
   limit: number = 10,
-  token?: string
+  token?: string,
+  signal?: AbortSignal,
 ): Promise<TopProductsResponse> {
   const params = new URLSearchParams({
     tenant_id: tenantId,
@@ -138,14 +157,39 @@ export async function fetchTopProducts(
     end,
     limit: String(limit),
   });
-  const res = await fetch(`${API_BASE}/analytics/top-products?${params.toString()}`, {
-    headers: getHeaders(token),
-  });
+  const res = await fetch(
+    `${API_BASE}/analytics/top-products?${params.toString()}`,
+    {
+      headers: getHeaders(token),
+      signal,
+      cache: "no-store",
+    },
+  );
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(extractErrorMessage(err, `Top products request failed (${res.status})`));
+    throw new Error(
+      `${res.status}: ` +
+        extractErrorMessage(err, `Top products request failed (${res.status})`),
+    );
   }
-  return await res.json();
+  const data: TopProductsResponse = await res.json();
+  if (data.products.length) {
+    try {
+      const names = await apiJson(
+        `/tenants/${tenantId}/products?product_ids=${data.products.map((p) => p.product_id).join(",")}`,
+        token,
+        signal,
+      );
+      data.products = data.products.map((p) => ({
+        ...p,
+        product_name: names[p.product_id]?.product_name,
+        sku: names[p.product_id]?.sku,
+      }));
+    } catch (e) {
+      if (signal?.aborted) throw e;
+    }
+  }
+  return data;
 }
 
 export async function fetchStatusBreakdown(
@@ -153,7 +197,8 @@ export async function fetchStatusBreakdown(
   currency: string,
   start: string,
   end: string,
-  token?: string
+  token?: string,
+  signal?: AbortSignal,
 ): Promise<StatusBreakdownResponse> {
   const params = new URLSearchParams({
     tenant_id: tenantId,
@@ -161,12 +206,23 @@ export async function fetchStatusBreakdown(
     start,
     end,
   });
-  const res = await fetch(`${API_BASE}/analytics/status-breakdown?${params.toString()}`, {
-    headers: getHeaders(token),
-  });
+  const res = await fetch(
+    `${API_BASE}/analytics/status-breakdown?${params.toString()}`,
+    {
+      headers: getHeaders(token),
+      signal,
+      cache: "no-store",
+    },
+  );
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(extractErrorMessage(err, `Status breakdown request failed (${res.status})`));
+    throw new Error(
+      `${res.status}: ` +
+        extractErrorMessage(
+          err,
+          `Status breakdown request failed (${res.status})`,
+        ),
+    );
   }
   return await res.json();
 }
@@ -176,22 +232,30 @@ export async function ingestCsv(
   csvContent: string,
   dryRun: boolean = false,
   triggerRelay: boolean = true,
-  token?: string
+  token?: string,
+  signal?: AbortSignal,
 ): Promise<IngestionResult> {
   const params = new URLSearchParams({
     dry_run: String(dryRun),
     trigger_relay: String(triggerRelay),
   });
   const headers = getHeaders(token);
-  headers['Content-Type'] = 'text/csv';
-  const res = await fetch(`${API_BASE}/tenants/${tenantId}/ingest/csv?${params.toString()}`, {
-    method: 'POST',
-    headers,
-    body: csvContent,
-  });
+  headers["Content-Type"] = "text/csv";
+  const res = await fetch(
+    `${API_BASE}/tenants/${tenantId}/ingest/csv?${params.toString()}`,
+    {
+      method: "POST",
+      headers,
+      body: csvContent,
+      signal,
+    },
+  );
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(extractErrorMessage(err, `Ingestion failed (${res.status})`));
+    throw new Error(
+      `${res.status}: ` +
+        extractErrorMessage(err, `Ingestion failed (${res.status})`),
+    );
   }
   return await res.json();
 }
@@ -199,13 +263,14 @@ export async function ingestCsv(
 export async function askAssistant(
   tenantId: string,
   query: string,
-  currency: string = 'USD',
+  currency: string = "USD",
   start?: string,
   end?: string,
-  token?: string
+  token?: string,
+  signal?: AbortSignal,
 ): Promise<AssistantResponse> {
   const headers = getHeaders(token);
-  headers['Content-Type'] = 'application/json';
+  headers["Content-Type"] = "application/json";
   const body: Record<string, any> = {
     query,
     currency,
@@ -213,13 +278,41 @@ export async function askAssistant(
   if (start) body.start = start;
   if (end) body.end = end;
   const res = await fetch(`${API_BASE}/tenants/${tenantId}/assistant`, {
-    method: 'POST',
+    method: "POST",
     headers,
     body: JSON.stringify(body),
+    signal,
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(extractErrorMessage(err, `Assistant request failed (${res.status})`));
+    throw new Error(
+      `${res.status}: ` +
+        extractErrorMessage(err, `Assistant request failed (${res.status})`),
+    );
   }
   return await res.json();
+}
+
+export async function apiJson(
+  path: string,
+  token?: string,
+  signal?: AbortSignal,
+  body?: unknown,
+) {
+  const res = await fetch(path, {
+    headers: {
+      ...getHeaders(token),
+      ...(body ? { "Content-Type": "application/json" } : {}),
+    },
+    signal,
+    cache: "no-store",
+    method: body ? "POST" : "GET",
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok)
+    throw new Error(
+      `${res.status}: ` +
+        extractErrorMessage(await res.json().catch(() => null), res.statusText),
+    );
+  return res.json();
 }

@@ -2,17 +2,18 @@ import logging
 import os
 from contextlib import asynccontextmanager
 from dataclasses import asdict
+from pathlib import Path
 from time import perf_counter
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Depends, FastAPI, File, HTTPException, Query, Request, UploadFile
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
-from sqlalchemy import func, select, text
+from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from astraroll.analytics.auth import (
@@ -25,7 +26,7 @@ from astraroll.analytics.reader import AnalyticsReader, get_analytics_reader
 from astraroll.analytics.routes import router as analytics_router
 from astraroll.config import get_settings
 from astraroll.db import get_session_factory
-from astraroll.models import Order, OutboxEvent, Tenant
+from astraroll.models import Order, Tenant
 from astraroll.operations import record_latency
 from astraroll.operations import router as operations_router
 from astraroll.orders import (
@@ -46,6 +47,8 @@ from astraroll.schemas import (
     TenantCreate,
     TenantRead,
 )
+from astraroll.v2.live_routes import protect_benchmark
+from astraroll.v2.live_routes import router as live_router
 from astraroll.v2.router import (
     TenantDatabaseUnavailable,
     TenantInactiveError,
@@ -83,6 +86,8 @@ app.add_middleware(
 )
 app.include_router(analytics_router)
 app.include_router(operations_router)
+
+app.include_router(live_router)
 
 
 @app.middleware("http")
@@ -244,7 +249,7 @@ def tenant_get(tenant_id: UUID, db: DB):
     "/tenants/{tenant_id}/orders",
     response_model=OrderRead,
     status_code=201,
-    dependencies=[Depends(get_authorized_path_tenant)],
+    dependencies=[Depends(get_authorized_path_tenant), Depends(protect_benchmark)],
 )
 def order_create(tenant_id: UUID, data: OrderCreate, db: DB):
     settings = get_settings()
@@ -315,7 +320,7 @@ def order_get(tenant_id: UUID, order_id: UUID, db: DB):
 @app.patch(
     "/tenants/{tenant_id}/orders/{order_id}",
     response_model=OrderRead,
-    dependencies=[Depends(get_authorized_path_tenant)],
+    dependencies=[Depends(get_authorized_path_tenant), Depends(protect_benchmark)],
 )
 def order_update(tenant_id: UUID, order_id: UUID, data: OrderUpdate, db: DB):
     settings = get_settings()
@@ -339,7 +344,7 @@ def order_update(tenant_id: UUID, order_id: UUID, data: OrderUpdate, db: DB):
 @app.post(
     "/tenants/{tenant_id}/orders/{order_id}/cancel",
     response_model=OrderRead,
-    dependencies=[Depends(get_authorized_path_tenant)],
+    dependencies=[Depends(get_authorized_path_tenant), Depends(protect_benchmark)],
 )
 def order_cancel(tenant_id: UUID, order_id: UUID, data: OrderCancel, db: DB):
     settings = get_settings()
@@ -358,145 +363,6 @@ def order_cancel(tenant_id: UUID, order_id: UUID, data: OrderCancel, db: DB):
             mutate_order(db, tenant_id, order_id, data.expected_version)
         )
     return result
-
-
-@app.get(
-    "/tenants/{tenant_id}/status",
-)
-def tenant_status(
-    tenant_id: UUID,
-    db: DB,
-    principal: Annotated[AuthenticatedPrincipal, Depends(get_authenticated_principal)],
-):
-    if not principal.is_admin and tenant_id not in principal.tenant_ids:
-        raise HTTPException(403, "Tenant access denied")
-    settings = get_settings()
-    if settings.deployment_mode == "database_per_tenant":
-        from astraroll.v2.runtime import get_control_registry, get_tenant_engine_manager
-
-        record = get_control_registry().get_tenant(tenant_id)
-        if not record:
-            raise NotFound("Tenant not found")
-
-        order_count = 0
-        total_outbox = 0
-        unpublished_outbox = 0
-        is_healthy = False
-        try:
-            with get_tenant_engine_manager().session(tenant_id) as session:
-                order_count = (
-                    session.scalar(select(func.count(Order.id)).where(Order.tenant_id == tenant_id))
-                    or 0
-                )
-                total_outbox = (
-                    session.scalar(
-                        select(func.count(OutboxEvent.id)).where(OutboxEvent.tenant_id == tenant_id)
-                    )
-                    or 0
-                )
-                unpublished_outbox = (
-                    session.scalar(
-                        select(func.count(OutboxEvent.id)).where(
-                            OutboxEvent.tenant_id == tenant_id,
-                            OutboxEvent.published_at.is_(None),
-                        )
-                    )
-                    or 0
-                )
-                is_healthy = True
-        except Exception:
-            is_healthy = False
-
-        return {
-            "tenant_id": str(tenant_id),
-            "name": record.name,
-            "status": record.status,
-            "database_name": record.database_name if principal.is_admin else "protected",
-            "schema_version": record.schema_version,
-            "order_count": order_count,
-            "total_outbox": total_outbox,
-            "unpublished_outbox": unpublished_outbox,
-            "is_healthy": is_healthy,
-            "last_verified_at": record.last_verified_at.isoformat()
-            if record.last_verified_at
-            else None,
-        }
-
-    require_tenant(db, tenant_id)
-    tenant = db.get(Tenant, tenant_id)
-    order_count = db.scalar(select(func.count(Order.id)).where(Order.tenant_id == tenant_id)) or 0
-    return {
-        "tenant_id": str(tenant_id),
-        "name": tenant.name,
-        "status": "active",
-        "database_name": "shared_archival" if principal.is_admin else "protected",
-        "schema_version": "0005_tenant_access_paths",
-        "order_count": order_count,
-        "total_outbox": 0,
-        "unpublished_outbox": 0,
-        "is_healthy": True,
-    }
-
-
-@app.post(
-    "/tenants/{tenant_id}/ingest/csv",
-    dependencies=[Depends(get_authorized_path_tenant)],
-)
-async def order_import_csv(
-    tenant_id: UUID,
-    db: DB,
-    request: Request,
-    dry_run: bool = Query(False),
-    trigger_relay: bool = Query(True),
-    file: UploadFile | None = File(None),
-):
-    settings = get_settings()
-    MAX_CSV_BYTES = 5 * 1024 * 1024
-    content: str = ""
-    if file is not None:
-        raw_bytes = await file.read(MAX_CSV_BYTES + 1)
-        if len(raw_bytes) > MAX_CSV_BYTES:
-            raise HTTPException(413, "CSV payload exceeds 5MB limit")
-        content = raw_bytes.decode("utf-8", errors="replace")
-    else:
-        raw_bytes = await request.body()
-        if len(raw_bytes) > MAX_CSV_BYTES:
-            raise HTTPException(413, "CSV payload exceeds 5MB limit")
-        content = raw_bytes.decode("utf-8", errors="replace")
-
-    if not content.strip():
-        raise HTTPException(400, "Empty CSV content provided")
-
-    from astraroll.v2.ingestion import ingest_csv_data
-
-    if settings.deployment_mode == "database_per_tenant":
-        from astraroll.v2.runtime import get_tenant_engine_manager
-
-        with get_tenant_engine_manager().session(tenant_id) as tenant_db:
-            with tenant_db.begin():
-                result = ingest_csv_data(tenant_db, tenant_id, content, dry_run=dry_run)
-
-        # Trigger relay & consumer if live run and accepted rows exist
-        if not dry_run and trigger_relay and result.accepted > 0:
-            try:
-                from redis import Redis
-
-                from astraroll.v2.runtime import get_multi_tenant_consumer, get_multi_tenant_relay
-
-                with Redis.from_url(settings.redis_url, socket_timeout=2) as r:
-                    relay = get_multi_tenant_relay(r)
-                    relay.relay_tenant(tenant_id)
-                    consumer = get_multi_tenant_consumer(r)
-                    consumer.init_group()
-                    consumer.process_batch()
-            except Exception as exc:
-                log.warning("Background relay/consumer trigger notice: %s", exc)
-
-        return asdict(result)
-
-    with db.begin():
-        result = ingest_csv_data(db, tenant_id, content, dry_run=dry_run)
-    return asdict(result)
 
 
 class AssistantQueryRequest(InputModel):
@@ -538,9 +404,12 @@ def ops_summary(
         try:
             from astraroll.v2.runtime import get_control_registry
 
-            active_tenants = len(get_control_registry().list_active_tenants())
+            records = get_control_registry().list_active_tenants()
+            active_tenants = sum(
+                principal.is_admin or r.tenant_id in principal.tenant_ids for r in records
+            )
         except Exception:
-            pass
+            raise HTTPException(503, "Control registry telemetry unavailable") from None
 
     return {
         "status": "operational",
@@ -548,6 +417,8 @@ def ops_summary(
         "active_tenants": active_tenants,
         "analytics_backend": settings.analytics_backend,
         "benchmark_milestone": {
+            "kind": "archived_measurement",
+            "measured_commit": "9af9abdf554ac3d58a6e37b224891b66566d85cb",
             "tenants": 100,
             "orders_per_tenant": 10000,
             "total_orders": 1000000,
@@ -559,19 +430,7 @@ def ops_summary(
             "status_breakdown_p95_ms": 157.0,
             "architecture": "database_per_tenant_v2",
         },
-        "scale_10m": {
-            "tenants": 100,
-            "orders_per_tenant": 100000,
-            "total_orders": 10000000,
-            "projected_targets": {
-                "query_speed_p95_ms": 195.0,
-                "freshness_sec": 4.5,
-                "database_safety_degradation_pct": 5.2,
-                "correctness": "100% exact SQL parity",
-                "growth_factor_vs_1m": 1.08,
-            },
-            "status": "populated",
-        },
+        "telemetry_note": ("Archived 1M measurements at 9af9abd; not current live measurements."),
     }
 
 
@@ -586,8 +445,10 @@ if os.path.isdir(static_dir):
     async def serve_spa(full_path: str):
         if full_path.startswith(("analytics", "tenants", "health", "ops", "docs", "openapi.json")):
             raise HTTPException(404, "Endpoint not found")
-        target_file = os.path.join(static_dir, full_path)
-        if full_path and os.path.isfile(target_file):
+        target_file = Path(static_dir, full_path).resolve()
+        if not target_file.is_relative_to(Path(static_dir).resolve()):
+            raise HTTPException(404, "File not found")
+        if full_path and target_file.is_file():
             return FileResponse(target_file)
         index_file = os.path.join(static_dir, "index.html")
         if os.path.isfile(index_file):

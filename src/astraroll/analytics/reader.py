@@ -67,26 +67,31 @@ class AnalyticsReader(Protocol):
 
 
 class UnavailableAnalyticsReader:
+    def __init__(self, reason="Aggregate reader is not integrated"):
+        self.reason = reason
+
     def capabilities(self) -> ReaderCapabilities:
-        raise AnalyticsUnavailable("Aggregate reader is not integrated")
+        raise AnalyticsUnavailable(self.reason)
 
     def summary(self, query: AnalyticsQuery) -> ReadResult[SummaryMetrics]:
-        raise AnalyticsUnavailable("Aggregate reader is not integrated")
+        raise AnalyticsUnavailable(self.reason)
 
     def trends(self, query: TrendsQuery) -> ReadResult[list[TrendMetrics]]:
-        raise AnalyticsUnavailable("Aggregate reader is not integrated")
+        raise AnalyticsUnavailable(self.reason)
 
     def top_products(self, query: TopProductsQuery) -> ReadResult[list[ProductMetrics]]:
-        raise AnalyticsUnavailable("Aggregate reader is not integrated")
+        raise AnalyticsUnavailable(self.reason)
 
     def status_breakdown(self, query: AnalyticsQuery) -> ReadResult[list[StatusMetrics]]:
-        raise AnalyticsUnavailable("Aggregate reader is not integrated")
+        raise AnalyticsUnavailable(self.reason)
 
 
 def get_analytics_reader() -> AnalyticsReader:
     from astraroll.config import get_settings
 
     settings = get_settings()
+    if settings.analytics_read_block_reason:
+        return UnavailableAnalyticsReader(settings.analytics_read_block_reason)
     if settings.analytics_backend == "postgres":
         if settings.deployment_mode == "database_per_tenant":
             from astraroll.v2.runtime import get_v2_analytics_adapter

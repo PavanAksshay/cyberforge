@@ -1,0 +1,13 @@
+product_id,product_name,amount,currency,status,created_at
+DEMO-1,Demo Product 1,100.00,USD,shipped,2026-10-03T10:00:00Z
+DEMO-2,Demo Product 2,100.00,USD,shipped,2026-10-03T10:00:00Z
+DEMO-3,Demo Product 3,100.00,USD,shipped,2026-10-03T10:00:00Z
+DEMO-4,Demo Product 4,100.00,USD,shipped,2026-10-03T10:00:00Z
+DEMO-5,Demo Product 5,100.00,USD,shipped,2026-10-03T10:00:00Z
+DEMO-6,Demo Product 6,6.97,USD,shipped,2026-10-03T10:00:00Z
+DEMO-1,Demo Product 1,20.00,USD,placed,2026-10-03T10:00:00Z
+DEMO-2,Demo Product 2,20.00,USD,placed,2026-10-03T10:00:00Z
+DEMO-3,Demo Product 3,20.00,USD,placed,2026-10-03T10:00:00Z
+DEMO-4,Demo Product 4,20.00,USD,placed,2026-10-03T10:00:00Z
+DEMO-5,Demo Product 5,20.00,USD,cancelled,2026-10-03T10:00:00Z
+DEMO-6,Demo Product 6,20.00,USD,cancelled,2026-10-03T10:00:00Z

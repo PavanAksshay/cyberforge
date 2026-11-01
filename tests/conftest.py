@@ -16,6 +16,13 @@ from astraroll.db import get_engine
 from astraroll.models import Tenant
 
 
+@pytest.fixture(autouse=True)
+def clean_test_api_keys(monkeypatch):
+    # Ensure default unit tests that expect unconfigured keys see None
+    if "ANALYTICS_API_KEYS_JSON" not in os.environ:
+        monkeypatch.setattr(get_settings(), "analytics_api_keys_json", None)
+
+
 @pytest.fixture(scope="session")
 def isolated_engine():
     if os.environ.get("RUN_INTEGRATION") != "1":
