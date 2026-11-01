@@ -1,0 +1,22 @@
+{
+  "scope": "one fault-injection metadata encoding correction; verified against actual Redis/outbox/processed event",
+  "tenant_id": "0457061c-db4d-553e-9b3c-ba32ec9e5f57",
+  "database": "v2bench_78b1ee4a_0457061cdb4d553e9b3cba32ec9e5f57",
+  "before": {
+    "tenant_id": "0457061c-db4d-553e-9b3c-ba32ec9e5f57",
+    "revision": 7,
+    "last_successful_apply_at": "2026-10-31T19:33:35.261638+00:00",
+    "last_successful_stream_id": "\\x313739333437353231353036332d30"
+  },
+  "after": {
+    "tenant_id": "0457061c-db4d-553e-9b3c-ba32ec9e5f57",
+    "revision": 7,
+    "last_successful_apply_at": "2026-10-31T19:33:35.261638+00:00",
+    "last_successful_stream_id": "1793475215063-0"
+  },
+  "event_id": "f7909bad-d7ad-4c6a-b176-4def8814d914",
+  "redis_stream": "bench:v2:release:1b725d3176b2406fba657df55c14acfd",
+  "redis_id": "1793475215063-0",
+  "affected_rows": 1,
+  "raw_artifact_sha256": "576a78640198e8bbe2fb8aa73765020c5fa8bf3527cf77760e9079781059e701"
+}

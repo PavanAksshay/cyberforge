@@ -1,0 +1,3115 @@
+{
+  "phase": "all_targets_individually_verified",
+  "databases": 100,
+  "orders": 1000000,
+  "outbox_events": 1733742,
+  "database_bytes": 4189384776,
+  "targets": [
+    {
+      "database": "v2bench_78b1ee4a_0457061cdb4d553e9b3cba32ec9e5f57",
+      "seconds": 4.483279699999912,
+      "snapshot": {
+        "tenant_id": "0457061c-db4d-553e-9b3c-ba32ec9e5f57",
+        "orders": 10000,
+        "outbox_events": 17371,
+        "last_order_id": "1980a3fd-45a0-7930-e302-55de304afcae",
+        "orders_sha256": "e082b30292849bf9d1109e6bc7bb41ea3020021e617415f5fed5b3d67ba9cbd4",
+        "outbox_sha256": "837a62a3fcbf48333071b58fe0fbc2aa4bbb860346ac87ebf19e6f99afaa2197",
+        "statuses": {
+          "shipped": 5347,
+          "cancelled": 2024,
+          "placed": 2629
+        },
+        "currencies": {
+          "EUR": {
+            "count": 4996,
+            "shipped_sales": "1328922.32"
+          },
+          "USD": {
+            "count": 5004,
+            "shipped_sales": "1322503.78"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 42168803
+    },
+    {
+      "database": "v2bench_78b1ee4a_0a5f419c450d56d0aea5f6a5b6a11a29",
+      "seconds": 12.02807380000013,
+      "snapshot": {
+        "tenant_id": "0a5f419c-450d-56d0-aea5-f6a5b6a11a29",
+        "orders": 10000,
+        "outbox_events": 17389,
+        "last_order_id": "19aa7e5b-6c2e-f342-12b0-07adc59d5c44",
+        "orders_sha256": "cd70391c5e7de61a6ad3e346b2a1f4f632d16e1cfcd52455a89a824e4caf06de",
+        "outbox_sha256": "52607ea200ff88fc7a002c5cedfc37c46c3b66ed76160bf6f3d681789b64d80e",
+        "statuses": {
+          "shipped": 5436,
+          "placed": 2611,
+          "cancelled": 1953
+        },
+        "currencies": {
+          "USD": {
+            "count": 5057,
+            "shipped_sales": "1377434.34"
+          },
+          "EUR": {
+            "count": 4943,
+            "shipped_sales": "1346150.28"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 42078691
+    },
+    {
+      "database": "v2bench_78b1ee4a_0a97cff769ea5e6fadec33681b041eed",
+      "seconds": 11.889915500001734,
+      "snapshot": {
+        "tenant_id": "0a97cff7-69ea-5e6f-adec-33681b041eed",
+        "orders": 10000,
+        "outbox_events": 17280,
+        "last_order_id": "19a3cd63-504f-c9eb-4014-49afd2d783a4",
+        "orders_sha256": "d926832342c787cf65286c88bc38d098be919e1f966ba06b0bc902aba3ac1bcd",
+        "outbox_sha256": "7d66f52fbbf57028164dd53db69b1fec37bc8f4c7397c32803e0bc7e43af1983",
+        "statuses": {
+          "placed": 2720,
+          "shipped": 5285,
+          "cancelled": 1995
+        },
+        "currencies": {
+          "EUR": {
+            "count": 4964,
+            "shipped_sales": "1309061.58"
+          },
+          "USD": {
+            "count": 5036,
+            "shipped_sales": "1347338.26"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41759203
+    },
+    {
+      "database": "v2bench_78b1ee4a_0cb398ed3c9a55248dd63eff835c3a71",
+      "seconds": 12.564523200000622,
+      "snapshot": {
+        "tenant_id": "0cb398ed-3c9a-5524-8dd6-3eff835c3a71",
+        "orders": 10000,
+        "outbox_events": 17334,
+        "last_order_id": "198d2385-49d4-587b-ba45-65840429296e",
+        "orders_sha256": "6e7101122ad3e31a4dfb93defd42ecd09b240ff07f94173c8d6429c1f048a3da",
+        "outbox_sha256": "75d3981be6606ac78b886783eeff85749c4db35d085681a1817779a95f1f2ee8",
+        "statuses": {
+          "placed": 2666,
+          "shipped": 5362,
+          "cancelled": 1972
+        },
+        "currencies": {
+          "USD": {
+            "count": 4949,
+            "shipped_sales": "1332557.71"
+          },
+          "EUR": {
+            "count": 5051,
+            "shipped_sales": "1347150.98"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41890275
+    },
+    {
+      "database": "v2bench_78b1ee4a_0f3acb7245665bfe85680df70c33a4d0",
+      "seconds": 21.915856800000256,
+      "snapshot": {
+        "tenant_id": "0f3acb72-4566-5bfe-8568-0df70c33a4d0",
+        "orders": 10000,
+        "outbox_events": 17287,
+        "last_order_id": "1948001e-5f1f-2964-bc78-cd6a02aebe68",
+        "orders_sha256": "aab7a892dcd567dc87c3882c7716660053ac01d4dc086cf565da5e6ca83527a3",
+        "outbox_sha256": "7fa32153ca0ec99402009937f9397265de75614727d6d1d6684b4db268c2eca8",
+        "statuses": {
+          "shipped": 5284,
+          "placed": 2713,
+          "cancelled": 2003
+        },
+        "currencies": {
+          "USD": {
+            "count": 5064,
+            "shipped_sales": "1339090.42"
+          },
+          "EUR": {
+            "count": 4936,
+            "shipped_sales": "1286085.78"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41705999
+    },
+    {
+      "database": "v2bench_78b1ee4a_11bc94caf0d35d2fa2dc2941d97af464",
+      "seconds": 12.64092890000029,
+      "snapshot": {
+        "tenant_id": "11bc94ca-f0d3-5d2f-a2dc-2941d97af464",
+        "orders": 10000,
+        "outbox_events": 17332,
+        "last_order_id": "1983bbcb-77c8-4669-d5c8-56b66b12ed8f",
+        "orders_sha256": "bbc7e13af9b6599b57e2c17cc951abfc5064c822a9b040d90c209ecc65f0ec4d",
+        "outbox_sha256": "f3f5b4154fe0d8ca2b9ee1a30d1257a37f7c58a3b4d3faddcea35036e4cc880a",
+        "statuses": {
+          "cancelled": 2018,
+          "shipped": 5314,
+          "placed": 2668
+        },
+        "currencies": {
+          "USD": {
+            "count": 4977,
+            "shipped_sales": "1330700.34"
+          },
+          "EUR": {
+            "count": 5023,
+            "shipped_sales": "1350338.20"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41869839
+    },
+    {
+      "database": "v2bench_78b1ee4a_139175ecca6f59e9a4e0e9d91f6c71db",
+      "seconds": 12.17773379999926,
+      "snapshot": {
+        "tenant_id": "139175ec-ca6f-59e9-a4e0-e9d91f6c71db",
+        "orders": 10000,
+        "outbox_events": 17336,
+        "last_order_id": "1954a43e-782e-8395-0588-2eb629d3fa54",
+        "orders_sha256": "dfd8eedbda7f32e22016bde81fa81e360ef5ddc1374b17a680e47c233f567c43",
+        "outbox_sha256": "832c2c49dd7e29479ad1e420afd3196d822820da88d5abedea2a5c6cf67479db",
+        "statuses": {
+          "placed": 2664,
+          "cancelled": 2021,
+          "shipped": 5315
+        },
+        "currencies": {
+          "USD": {
+            "count": 5034,
+            "shipped_sales": "1341130.40"
+          },
+          "EUR": {
+            "count": 4966,
+            "shipped_sales": "1311568.16"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41873891
+    },
+    {
+      "database": "v2bench_78b1ee4a_13d873fae94155ddafa99fddbb2004e5",
+      "seconds": 12.355650499999683,
+      "snapshot": {
+        "tenant_id": "13d873fa-e941-55dd-afa9-9fddbb2004e5",
+        "orders": 10000,
+        "outbox_events": 17319,
+        "last_order_id": "19def9b1-62c9-3df2-93dc-0f2746a3fa58",
+        "orders_sha256": "f6ed6b7aef046bd1e5455a26549d599b97d6d5446dafa3b47f09d2da9905dd5b",
+        "outbox_sha256": "333ada782ad4f9cc81fe605e795c8b979c5d8a98ecb9b8332dab9405d9206106",
+        "statuses": {
+          "shipped": 5340,
+          "placed": 2681,
+          "cancelled": 1979
+        },
+        "currencies": {
+          "EUR": {
+            "count": 4972,
+            "shipped_sales": "1335829.68"
+          },
+          "USD": {
+            "count": 5028,
+            "shipped_sales": "1346737.67"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41955811
+    },
+    {
+      "database": "v2bench_78b1ee4a_15065bacf1ea5073a60cbe8759a8d198",
+      "seconds": 12.157559900000706,
+      "snapshot": {
+        "tenant_id": "15065bac-f1ea-5073-a60c-be8759a8d198",
+        "orders": 10000,
+        "outbox_events": 17348,
+        "last_order_id": "196105d3-3069-9bc5-49af-cbbab61504dd",
+        "orders_sha256": "cbfba466eba56456aea288fa8e76878f41513c10c658673112896046885fd070",
+        "outbox_sha256": "af850ba13bfc2fc4c8f2db6183f189c0fbe7a3a8a2a39221ec2e00112b51ebaf",
+        "statuses": {
+          "placed": 2652,
+          "shipped": 5304,
+          "cancelled": 2044
+        },
+        "currencies": {
+          "EUR": {
+            "count": 4954,
+            "shipped_sales": "1283869.38"
+          },
+          "USD": {
+            "count": 5046,
+            "shipped_sales": "1320126.08"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41845263
+    },
+    {
+      "database": "v2bench_78b1ee4a_163340ffdb4f5ef5a7e9987f69495907",
+      "seconds": 10.494595400001344,
+      "snapshot": {
+        "tenant_id": "163340ff-db4f-5ef5-a7e9-987f69495907",
+        "orders": 10000,
+        "outbox_events": 17353,
+        "last_order_id": "197fd55e-a9ec-7212-5455-e26bf6887c6b",
+        "orders_sha256": "eb9fdc40b2c6e31baff309a23c0399e41926d494c30587acd385e16e961a6c1b",
+        "outbox_sha256": "8345d6c5d9bb577d6576fe28d848227d54db7af3744463f0b586b8ed431c8b87",
+        "statuses": {
+          "placed": 2647,
+          "cancelled": 1969,
+          "shipped": 5384
+        },
+        "currencies": {
+          "USD": {
+            "count": 5029,
+            "shipped_sales": "1367772.81"
+          },
+          "EUR": {
+            "count": 4971,
+            "shipped_sales": "1344558.88"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41902607
+    },
+    {
+      "database": "v2bench_78b1ee4a_167cd95c8df15d3fbf8d7dd56c1be201",
+      "seconds": 12.676092899999276,
+      "snapshot": {
+        "tenant_id": "167cd95c-8df1-5d3f-bf8d-7dd56c1be201",
+        "orders": 10000,
+        "outbox_events": 17315,
+        "last_order_id": "1956740f-2b34-098d-03ec-f84cecccc870",
+        "orders_sha256": "307e42d560b207ffba4d28977aae6aae52647f08a965d527a10370328c8b31c3",
+        "outbox_sha256": "82ac46da255b3c4afb3bddf849e07b02b1818a23221e6fa47e2cbe18230fdf99",
+        "statuses": {
+          "cancelled": 1998,
+          "placed": 2685,
+          "shipped": 5317
+        },
+        "currencies": {
+          "USD": {
+            "count": 4965,
+            "shipped_sales": "1352028.68"
+          },
+          "EUR": {
+            "count": 5035,
+            "shipped_sales": "1331482.24"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41873891
+    },
+    {
+      "database": "v2bench_78b1ee4a_191c42befc19534abe0d010069a7596d",
+      "seconds": 10.547960899999453,
+      "snapshot": {
+        "tenant_id": "191c42be-fc19-534a-be0d-010069a7596d",
+        "orders": 10000,
+        "outbox_events": 17303,
+        "last_order_id": "19c37bd5-635d-8bfc-8f63-4b331e6eeeee",
+        "orders_sha256": "42dd261867847cdbe1587cc50d3b46d535bb6571b3e4e2100d4e8078462c30f2",
+        "outbox_sha256": "11fb5fe4b22010272d04f3b8c64e72aebb1cedd8de6896a19fad97031d79bd28",
+        "statuses": {
+          "shipped": 5297,
+          "placed": 2697,
+          "cancelled": 2006
+        },
+        "currencies": {
+          "EUR": {
+            "count": 4998,
+            "shipped_sales": "1363515.28"
+          },
+          "USD": {
+            "count": 5002,
+            "shipped_sales": "1284243.16"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41828879
+    },
+    {
+      "database": "v2bench_78b1ee4a_1d3c76f582ef5dcfa6faa2d937591318",
+      "seconds": 12.437487900000633,
+      "snapshot": {
+        "tenant_id": "1d3c76f5-82ef-5dcf-a6fa-a2d937591318",
+        "orders": 10000,
+        "outbox_events": 17287,
+        "last_order_id": "19597e2d-798d-42f2-284c-829a9f94e300",
+        "orders_sha256": "2a434106959929d881c34c0e473d898cb09ca54175c56c4e03e946a1e2e76554",
+        "outbox_sha256": "d06748696ddeb2f4cda0894e0b3717cc5ccf972ab2edb361f502f16958bf77a1",
+        "statuses": {
+          "shipped": 5279,
+          "placed": 2713,
+          "cancelled": 2008
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5074,
+            "shipped_sales": "1317957.94"
+          },
+          "USD": {
+            "count": 4926,
+            "shipped_sales": "1302348.22"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41804303
+    },
+    {
+      "database": "v2bench_78b1ee4a_1eb4465bfd9951409eb8f590088b4f07",
+      "seconds": 12.453647499998624,
+      "snapshot": {
+        "tenant_id": "1eb4465b-fd99-5140-9eb8-f590088b4f07",
+        "orders": 10000,
+        "outbox_events": 17305,
+        "last_order_id": "19960a13-90aa-bbfa-e192-d8b9de5b6efe",
+        "orders_sha256": "0e13d6960c1d1e8b753fae47f8eb190d1c2ad504c4656d9340a3266b7d10e4f9",
+        "outbox_sha256": "11c62dbe04c306a3cb2ae32d6a97449128ba53385e7d53d72a3175918c29a0e4",
+        "statuses": {
+          "shipped": 5274,
+          "cancelled": 2031,
+          "placed": 2695
+        },
+        "currencies": {
+          "USD": {
+            "count": 4983,
+            "shipped_sales": "1306248.30"
+          },
+          "EUR": {
+            "count": 5017,
+            "shipped_sales": "1327721.68"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41787919
+    },
+    {
+      "database": "v2bench_78b1ee4a_1f7d8833987a59498e32ccb4863e2483",
+      "seconds": 12.203607100000227,
+      "snapshot": {
+        "tenant_id": "1f7d8833-987a-5949-8e32-ccb4863e2483",
+        "orders": 10000,
+        "outbox_events": 17310,
+        "last_order_id": "1a29c7af-949e-2877-4778-75dcb26117ad",
+        "orders_sha256": "252859a24983b51f857b8a73c88ad9b0fc73f537b4c1f9313952727c231e10b4",
+        "outbox_sha256": "4125ff3be5386d36b03c0a6561ba9389613a0655b438a517b7f42c0adb2b42ea",
+        "statuses": {
+          "cancelled": 2056,
+          "placed": 2690,
+          "shipped": 5254
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5063,
+            "shipped_sales": "1337113.42"
+          },
+          "USD": {
+            "count": 4937,
+            "shipped_sales": "1285566.14"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41820687
+    },
+    {
+      "database": "v2bench_78b1ee4a_21955e5a743b5f52b1a656ac17442bb6",
+      "seconds": 12.8525910999997,
+      "snapshot": {
+        "tenant_id": "21955e5a-743b-5f52-b1a6-56ac17442bb6",
+        "orders": 10000,
+        "outbox_events": 17345,
+        "last_order_id": "193649f1-53ed-41cb-bc80-a984316dbf95",
+        "orders_sha256": "044e7a07bc7b4749b1fe74c313f8643d3cf220505cff81060a1f3ebbe848e3d9",
+        "outbox_sha256": "a582eae91d8433aeae04a8d10e8a3a67011cff09402ff5f90a43176f070c4a68",
+        "statuses": {
+          "shipped": 5343,
+          "cancelled": 2002,
+          "placed": 2655
+        },
+        "currencies": {
+          "EUR": {
+            "count": 4935,
+            "shipped_sales": "1296813.06"
+          },
+          "USD": {
+            "count": 5065,
+            "shipped_sales": "1351970.12"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41837071
+    },
+    {
+      "database": "v2bench_78b1ee4a_2340f11aebbe53a18607a6c32c64c74f",
+      "seconds": 11.083826600000975,
+      "snapshot": {
+        "tenant_id": "2340f11a-ebbe-53a1-8607-a6c32c64c74f",
+        "orders": 10000,
+        "outbox_events": 17418,
+        "last_order_id": "19b18fb2-56c0-59c2-41c7-05ae0a9c7385",
+        "orders_sha256": "f2eb9988b33a88c63ab9a1d177c975421fb856e14dc3bbd4f06ef82e83c93484",
+        "outbox_sha256": "7f6589249f8010590175803333ec0fdd55267e1c75102f0ce2e3f337670a8de6",
+        "statuses": {
+          "placed": 2582,
+          "shipped": 5363,
+          "cancelled": 2055
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5028,
+            "shipped_sales": "1349036.04"
+          },
+          "USD": {
+            "count": 4972,
+            "shipped_sales": "1345514.21"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41984527
+    },
+    {
+      "database": "v2bench_78b1ee4a_26bedd088ae05f44a09f63fd1e8226d0",
+      "seconds": 11.185613900001044,
+      "snapshot": {
+        "tenant_id": "26bedd08-8ae0-5f44-a09f-63fd1e8226d0",
+        "orders": 10000,
+        "outbox_events": 17386,
+        "last_order_id": "1a09bf71-a84f-4409-f5c6-1df501bb13d5",
+        "orders_sha256": "0ce6f6fb6cfe8fe0f618e02adeb877cf8f4c19ed6e2e6b13896072070daae328",
+        "outbox_sha256": "03bb770949d12d1df500ad0a4d1fb03ea3d18c7f66e3a380e86f858df06c1594",
+        "statuses": {
+          "cancelled": 2054,
+          "shipped": 5332,
+          "placed": 2614
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5035,
+            "shipped_sales": "1341274.58"
+          },
+          "USD": {
+            "count": 4965,
+            "shipped_sales": "1306953.63"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41947619
+    },
+    {
+      "database": "v2bench_78b1ee4a_27b0ae9365ad5e12bb21bd06d338ce37",
+      "seconds": 22.98352159999922,
+      "snapshot": {
+        "tenant_id": "27b0ae93-65ad-5e12-bb21-bd06d338ce37",
+        "orders": 10000,
+        "outbox_events": 17403,
+        "last_order_id": "19886ef5-f64d-a543-329e-86ba0ab8b7d7",
+        "orders_sha256": "17ec728a71772e6b91d883f2241564a9b45bf2b98d3e9c4c0e43f7e666d7a8d3",
+        "outbox_sha256": "af9c2163de2571e91fca60b603821a553175d8dfd8d2f00c54d17681861afe03",
+        "statuses": {
+          "shipped": 5332,
+          "placed": 2597,
+          "cancelled": 2071
+        },
+        "currencies": {
+          "USD": {
+            "count": 4975,
+            "shipped_sales": "1322626.89"
+          },
+          "EUR": {
+            "count": 5025,
+            "shipped_sales": "1348586.90"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41935375
+    },
+    {
+      "database": "v2bench_78b1ee4a_2a0a4cade6115f819c7f1a1f2f4ececb",
+      "seconds": 12.174484700000903,
+      "snapshot": {
+        "tenant_id": "2a0a4cad-e611-5f81-9c7f-1a1f2f4ececb",
+        "orders": 10000,
+        "outbox_events": 17368,
+        "last_order_id": "1992c84d-ab56-201b-0199-cdd83e8ae424",
+        "orders_sha256": "9c9ab7e48858b25b310a7be7e84274507b2fcb367e8a240f3b48ca37d890ff5a",
+        "outbox_sha256": "24005db7361085b93b9c567ad63ce935e27b0bab51b1c0bf7380ea0e2b791f56",
+        "statuses": {
+          "placed": 2632,
+          "cancelled": 2006,
+          "shipped": 5362
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5007,
+            "shipped_sales": "1314988.84"
+          },
+          "USD": {
+            "count": 4993,
+            "shipped_sales": "1373868.11"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41853455
+    },
+    {
+      "database": "v2bench_78b1ee4a_2aa2914bfe11517a8271aee944e5aecb",
+      "seconds": 23.426269300000058,
+      "snapshot": {
+        "tenant_id": "2aa2914b-fe11-517a-8271-aee944e5aecb",
+        "orders": 10000,
+        "outbox_events": 17364,
+        "last_order_id": "195d1d13-cc7a-bf19-15a7-40c57f07ce5f",
+        "orders_sha256": "d0d937ff207eee977b4a96488741c686784007fc92794eec606f2918aeb55784",
+        "outbox_sha256": "495752348b2b9f474ebe9b3a671f75626ca17d60de31f0cd53710cb41bf28553",
+        "statuses": {
+          "shipped": 5366,
+          "placed": 2636,
+          "cancelled": 1998
+        },
+        "currencies": {
+          "EUR": {
+            "count": 4939,
+            "shipped_sales": "1334120.00"
+          },
+          "USD": {
+            "count": 5061,
+            "shipped_sales": "1343262.73"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41878031
+    },
+    {
+      "database": "v2bench_78b1ee4a_2c1af2d1d2175b75afe9b5123daeef63",
+      "seconds": 12.181012400000327,
+      "snapshot": {
+        "tenant_id": "2c1af2d1-d217-5b75-afe9-b5123daeef63",
+        "orders": 10000,
+        "outbox_events": 17404,
+        "last_order_id": "196ca826-b3e9-0d07-a534-50a476340e6a",
+        "orders_sha256": "721e17be9fbb746b5dc5b67399fab634cca8c9305361ea41fa6eb217be89720f",
+        "outbox_sha256": "38d6c9239e157e761ef4bfa4cdd735f95026cb122bdb7b3baab7fd18aed8b575",
+        "statuses": {
+          "shipped": 5393,
+          "cancelled": 2011,
+          "placed": 2596
+        },
+        "currencies": {
+          "USD": {
+            "count": 4977,
+            "shipped_sales": "1320189.45"
+          },
+          "EUR": {
+            "count": 5023,
+            "shipped_sales": "1373282.58"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41894415
+    },
+    {
+      "database": "v2bench_78b1ee4a_2c8d5c82e44053689b7321b2e567c4f1",
+      "seconds": 12.317905199999586,
+      "snapshot": {
+        "tenant_id": "2c8d5c82-e440-5368-9b73-21b2e567c4f1",
+        "orders": 10000,
+        "outbox_events": 17346,
+        "last_order_id": "19a3a979-d674-f0cc-d0a0-a9065358b4d3",
+        "orders_sha256": "bb7a3bd93ac997ea37d5f6c9737ed144bd9ab1266f891b2d707019dd37e4505b",
+        "outbox_sha256": "374f4ef618dbbd12e55a9d685e7fd5f7195dbe1f414c604e0e334b7b3318a7a1",
+        "statuses": {
+          "placed": 2654,
+          "shipped": 5255,
+          "cancelled": 2091
+        },
+        "currencies": {
+          "USD": {
+            "count": 5040,
+            "shipped_sales": "1334807.40"
+          },
+          "EUR": {
+            "count": 4960,
+            "shipped_sales": "1313060.74"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41791971
+    },
+    {
+      "database": "v2bench_78b1ee4a_2d2aee37a2145ad982d22771904472b7",
+      "seconds": 12.84679850000066,
+      "snapshot": {
+        "tenant_id": "2d2aee37-a214-5ad9-82d2-2771904472b7",
+        "orders": 10000,
+        "outbox_events": 17247,
+        "last_order_id": "19e0a551-b813-66ec-603d-47077eba6ef9",
+        "orders_sha256": "8b535518cdd7f7d1c13e1efa1278aa345b63d104293e456dfd795e3a7a9700e8",
+        "outbox_sha256": "03298ec0cdcbc824e0c535c353ee8f6680df43265b0a94d9ecd5a418b18dda64",
+        "statuses": {
+          "placed": 2753,
+          "shipped": 5241,
+          "cancelled": 2006
+        },
+        "currencies": {
+          "USD": {
+            "count": 4975,
+            "shipped_sales": "1306441.76"
+          },
+          "EUR": {
+            "count": 5025,
+            "shipped_sales": "1303338.00"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41759203
+    },
+    {
+      "database": "v2bench_78b1ee4a_2d6a653fcc2050869c2233760a871cde",
+      "seconds": 10.74442270000145,
+      "snapshot": {
+        "tenant_id": "2d6a653f-cc20-5086-9c22-33760a871cde",
+        "orders": 10000,
+        "outbox_events": 17334,
+        "last_order_id": "19286388-8932-fcbc-3026-b0527efd0120",
+        "orders_sha256": "87f5c0f642e1661bb95838cd72633d13f0e7d382e1a4187da583791e79251b91",
+        "outbox_sha256": "2984e5e58c7aec2fc46b58d244f05d00182ea6acbd7864d45530f1d024c9b137",
+        "statuses": {
+          "placed": 2666,
+          "shipped": 5328,
+          "cancelled": 2006
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5041,
+            "shipped_sales": "1333224.68"
+          },
+          "USD": {
+            "count": 4959,
+            "shipped_sales": "1302300.00"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41779727
+    },
+    {
+      "database": "v2bench_78b1ee4a_2fcc3b08e9d75b81b19f259637947e99",
+      "seconds": 12.450518600000578,
+      "snapshot": {
+        "tenant_id": "2fcc3b08-e9d7-5b81-b19f-259637947e99",
+        "orders": 10000,
+        "outbox_events": 17285,
+        "last_order_id": "19f859fb-e6e8-9aea-bc24-60b8fe07a1a5",
+        "orders_sha256": "453a9126e7c47c4343486463e3cc15cdf6e87eafb4f23a8649e84dc92ec14e28",
+        "outbox_sha256": "d76d3252e0e5eb7c5455cf89381d53cfc7ce06448de2042bfb016601c0237481",
+        "statuses": {
+          "shipped": 5233,
+          "cancelled": 2052,
+          "placed": 2715
+        },
+        "currencies": {
+          "EUR": {
+            "count": 4972,
+            "shipped_sales": "1315172.08"
+          },
+          "USD": {
+            "count": 5028,
+            "shipped_sales": "1336576.58"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41873891
+    },
+    {
+      "database": "v2bench_78b1ee4a_339751a5200157cea2fe4e2a1b0c46e8",
+      "seconds": 13.505751400000008,
+      "snapshot": {
+        "tenant_id": "339751a5-2001-57ce-a2fe-4e2a1b0c46e8",
+        "orders": 10000,
+        "outbox_events": 17344,
+        "last_order_id": "196c6693-83bc-7843-f621-256dd98ecbb4",
+        "orders_sha256": "a98c89310df67e28eda634c8e8840778cfae1d58e457ae712baf396813a3d423",
+        "outbox_sha256": "3f5ad1279d4445f36ae9affd7f8641d5adeed80f82abddfc9f40fabde747d8d6",
+        "statuses": {
+          "shipped": 5298,
+          "placed": 2656,
+          "cancelled": 2046
+        },
+        "currencies": {
+          "EUR": {
+            "count": 4976,
+            "shipped_sales": "1322375.84"
+          },
+          "USD": {
+            "count": 5024,
+            "shipped_sales": "1307435.28"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41882083
+    },
+    {
+      "database": "v2bench_78b1ee4a_3963b8e0cba65449b31457d9c4b1ef57",
+      "seconds": 11.022428399999626,
+      "snapshot": {
+        "tenant_id": "3963b8e0-cba6-5449-b314-57d9c4b1ef57",
+        "orders": 10000,
+        "outbox_events": 17316,
+        "last_order_id": "198d7a70-544b-2fe0-9823-5f5d20d0be91",
+        "orders_sha256": "e8a836a5ce889fca50cf3e9f8bc8c0571692bade4d3a18d360de9b3210e6f7f7",
+        "outbox_sha256": "3a970f04dc9c48cdc2bab3507d091ab0d9f40b4e20260d02e8591059b7e9ec20",
+        "statuses": {
+          "shipped": 5310,
+          "placed": 2684,
+          "cancelled": 2006
+        },
+        "currencies": {
+          "USD": {
+            "count": 5055,
+            "shipped_sales": "1312784.18"
+          },
+          "EUR": {
+            "count": 4945,
+            "shipped_sales": "1339375.50"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41882083
+    },
+    {
+      "database": "v2bench_78b1ee4a_3c49f71a086d51ed92b0f8550e20b206",
+      "seconds": 12.801875099999961,
+      "snapshot": {
+        "tenant_id": "3c49f71a-086d-51ed-92b0-f8550e20b206",
+        "orders": 10000,
+        "outbox_events": 17254,
+        "last_order_id": "1a2b1dda-dedf-cfe0-ab01-64b6c76b2cbd",
+        "orders_sha256": "71e0b3b4e52268f811b82f5525a85274fb730e5d650f97ec73255091e326594d",
+        "outbox_sha256": "0c9e3c0fb8925525913c895913778950213ede78ad0ecefc98b6b0b22d2136f2",
+        "statuses": {
+          "shipped": 5294,
+          "placed": 2746,
+          "cancelled": 1960
+        },
+        "currencies": {
+          "EUR": {
+            "count": 4998,
+            "shipped_sales": "1325486.20"
+          },
+          "USD": {
+            "count": 5002,
+            "shipped_sales": "1339429.98"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41697807
+    },
+    {
+      "database": "v2bench_78b1ee4a_3f37125b62065ccb986486f6264b8b2a",
+      "seconds": 12.43942000000061,
+      "snapshot": {
+        "tenant_id": "3f37125b-6206-5ccb-9864-86f6264b8b2a",
+        "orders": 10000,
+        "outbox_events": 17290,
+        "last_order_id": "19b0206d-c8b9-5667-fbc1-e30a49d25913",
+        "orders_sha256": "f77c4a3ca3d191a42b738049ccf7f193da61e6c9fbf204d4828a571d4c8aef2a",
+        "outbox_sha256": "a49792d748dd891a20c9fe430f5d9191e6474397b20076c94f0909fdde1e5392",
+        "statuses": {
+          "shipped": 5284,
+          "cancelled": 2006,
+          "placed": 2710
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5030,
+            "shipped_sales": "1332180.32"
+          },
+          "USD": {
+            "count": 4970,
+            "shipped_sales": "1288379.59"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41873891
+    },
+    {
+      "database": "v2bench_78b1ee4a_44756501bf515dbf881b02895b329d1a",
+      "seconds": 12.260434399999212,
+      "snapshot": {
+        "tenant_id": "44756501-bf51-5dbf-881b-02895b329d1a",
+        "orders": 10000,
+        "outbox_events": 17453,
+        "last_order_id": "1970e7de-1d34-7aa2-be8e-a7a27346747f",
+        "orders_sha256": "25d4ba1c490d73fb2c366827be24d1548fd28fed1e35fdc62f538ccef4e23df0",
+        "outbox_sha256": "050f5d30dbc04ded5f6f014564cfcc93fff77f7ae6c8a43d81bc7df5b91476da",
+        "statuses": {
+          "cancelled": 2024,
+          "shipped": 5429,
+          "placed": 2547
+        },
+        "currencies": {
+          "USD": {
+            "count": 4957,
+            "shipped_sales": "1377177.94"
+          },
+          "EUR": {
+            "count": 5043,
+            "shipped_sales": "1358992.28"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 42029539
+    },
+    {
+      "database": "v2bench_78b1ee4a_460bd96c7b0d5786a721e62217c1e3e3",
+      "seconds": 12.457575099999303,
+      "snapshot": {
+        "tenant_id": "460bd96c-7b0d-5786-a721-e62217c1e3e3",
+        "orders": 10000,
+        "outbox_events": 17362,
+        "last_order_id": "19929dab-d960-8a8d-2420-caaa941eb37b",
+        "orders_sha256": "002f967fe0a9d9493ae77989a63ce4d580273038490911a72d571a40a6ba4e97",
+        "outbox_sha256": "83c6c4c63c0467b38bfaf0ddc33213145064478087b6a161609fbc65e6eeb751",
+        "statuses": {
+          "shipped": 5335,
+          "cancelled": 2027,
+          "placed": 2638
+        },
+        "currencies": {
+          "USD": {
+            "count": 5061,
+            "shipped_sales": "1343027.12"
+          },
+          "EUR": {
+            "count": 4939,
+            "shipped_sales": "1328181.58"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41955811
+    },
+    {
+      "database": "v2bench_78b1ee4a_468d91ce258c58fd923dfce7f1c16094",
+      "seconds": 11.134017000000313,
+      "snapshot": {
+        "tenant_id": "468d91ce-258c-58fd-923d-fce7f1c16094",
+        "orders": 10000,
+        "outbox_events": 17320,
+        "last_order_id": "195c2014-e78b-4958-cee3-c0728e095c56",
+        "orders_sha256": "8550b72cfcc49bba74a46285a70e1b39833322fd943853d672ee8764eccdf635",
+        "outbox_sha256": "78887e01f0abeeae6d8b8975df1859145fd537a0198e2bc4b23cfa7f5a72b612",
+        "statuses": {
+          "shipped": 5343,
+          "cancelled": 1977,
+          "placed": 2680
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5048,
+            "shipped_sales": "1313368.70"
+          },
+          "USD": {
+            "count": 4952,
+            "shipped_sales": "1347304.24"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41845263
+    },
+    {
+      "database": "v2bench_78b1ee4a_4cfa14c385a45c58949b80d243abe0ca",
+      "seconds": 12.640671600000132,
+      "snapshot": {
+        "tenant_id": "4cfa14c3-85a4-5c58-949b-80d243abe0ca",
+        "orders": 10000,
+        "outbox_events": 17323,
+        "last_order_id": "19c7e23d-8818-1903-b9fb-ca031ba9d862",
+        "orders_sha256": "c706bfc103c707fcbda26ee1a9707bcc1a19c36e09b9860fa514701498cbe43d",
+        "outbox_sha256": "6873515a2adc7f2047eb28389f1f0bfcf1c92d3766a9628b1eab1f27ffe3353e",
+        "statuses": {
+          "shipped": 5336,
+          "placed": 2677,
+          "cancelled": 1987
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5014,
+            "shipped_sales": "1354162.92"
+          },
+          "USD": {
+            "count": 4986,
+            "shipped_sales": "1330121.45"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41882083
+    },
+    {
+      "database": "v2bench_78b1ee4a_4f060a2441205aaeb783440f7ae81e77",
+      "seconds": 12.977651300001526,
+      "snapshot": {
+        "tenant_id": "4f060a24-4120-5aae-b783-440f7ae81e77",
+        "orders": 10000,
+        "outbox_events": 17314,
+        "last_order_id": "19b362b3-47d3-a34a-2a76-9f0669c4e8b8",
+        "orders_sha256": "da7272574e6dcc345576234e6ea54a1f621a3d2be0e09a1789f3ecf63e5a8398",
+        "outbox_sha256": "b039a2f06f0594472609bf65028bd8274a22b87c7ad06318a933d870b095cf59",
+        "statuses": {
+          "placed": 2686,
+          "shipped": 5346,
+          "cancelled": 1968
+        },
+        "currencies": {
+          "USD": {
+            "count": 4907,
+            "shipped_sales": "1357676.27"
+          },
+          "EUR": {
+            "count": 5093,
+            "shipped_sales": "1335900.02"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41939427
+    },
+    {
+      "database": "v2bench_78b1ee4a_4ff2c88507465d7f970e69696c138fb9",
+      "seconds": 12.704334599999129,
+      "snapshot": {
+        "tenant_id": "4ff2c885-0746-5d7f-970e-69696c138fb9",
+        "orders": 10000,
+        "outbox_events": 17336,
+        "last_order_id": "19a570f9-2d35-53b6-1cbc-86548cea472e",
+        "orders_sha256": "7c8bb0ee9fb4c460eb74f2d6a92eabf0db714a210b03c7f84f0adce0035371db",
+        "outbox_sha256": "4f14a352203b4bc3f23b1501fbae2f7132e4df03e443c5a0df33ba62bba6f3ce",
+        "statuses": {
+          "placed": 2664,
+          "shipped": 5303,
+          "cancelled": 2033
+        },
+        "currencies": {
+          "EUR": {
+            "count": 4966,
+            "shipped_sales": "1315298.16"
+          },
+          "USD": {
+            "count": 5034,
+            "shipped_sales": "1321586.38"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41931235
+    },
+    {
+      "database": "v2bench_78b1ee4a_5295ac39c9895084a72375a81b0859bd",
+      "seconds": 11.724539300001197,
+      "snapshot": {
+        "tenant_id": "5295ac39-c989-5084-a723-75a81b0859bd",
+        "orders": 10000,
+        "outbox_events": 17328,
+        "last_order_id": "19875c2d-ab19-1e6c-e14f-c6ac2e6f0ca7",
+        "orders_sha256": "35e21728bbab26728981bd67111087d667e152391d79b6768a0bc71dfea236e3",
+        "outbox_sha256": "3cfab09a52bc48d981539d690abc22422cf3c701768cf7fa10de6294abf2b789",
+        "statuses": {
+          "shipped": 5309,
+          "placed": 2672,
+          "cancelled": 2019
+        },
+        "currencies": {
+          "USD": {
+            "count": 4981,
+            "shipped_sales": "1320155.98"
+          },
+          "EUR": {
+            "count": 5019,
+            "shipped_sales": "1313915.54"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41832931
+    },
+    {
+      "database": "v2bench_78b1ee4a_53351722b98e5b5abcb200b39d2eaa81",
+      "seconds": 21.19464230000085,
+      "snapshot": {
+        "tenant_id": "53351722-b98e-5b5a-bcb2-00b39d2eaa81",
+        "orders": 10000,
+        "outbox_events": 17338,
+        "last_order_id": "19372cb9-ee7d-fa9c-3974-4e693c2ceb49",
+        "orders_sha256": "794aff32105624018a8fa752c64c2ffb5cb352ea11b4567c4d1846b950309fe9",
+        "outbox_sha256": "3dcdc8d337940447fb197e7214baad781a5d7c5ff10f0146bf51e8cf127d423c",
+        "statuses": {
+          "placed": 2662,
+          "shipped": 5358,
+          "cancelled": 1980
+        },
+        "currencies": {
+          "EUR": {
+            "count": 4975,
+            "shipped_sales": "1303543.26"
+          },
+          "USD": {
+            "count": 5025,
+            "shipped_sales": "1385843.74"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41955811
+    },
+    {
+      "database": "v2bench_78b1ee4a_5ceba82bc3c85b4eb364993c55b8122a",
+      "seconds": 14.433015099999466,
+      "snapshot": {
+        "tenant_id": "5ceba82b-c3c8-5b4e-b364-993c55b8122a",
+        "orders": 10000,
+        "outbox_events": 17313,
+        "last_order_id": "195921bf-44d7-9150-ca4a-447604e116f8",
+        "orders_sha256": "ab406b23a6ca5447c09706dbf3a464f104d986d39d294879a3c8831befd82a45",
+        "outbox_sha256": "10dde68fada3da10bf9669ed30373633eb792a501ca873875dbde0763cfef107",
+        "statuses": {
+          "shipped": 5267,
+          "placed": 2687,
+          "cancelled": 2046
+        },
+        "currencies": {
+          "USD": {
+            "count": 4922,
+            "shipped_sales": "1312626.17"
+          },
+          "EUR": {
+            "count": 5078,
+            "shipped_sales": "1344886.90"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41890275
+    },
+    {
+      "database": "v2bench_78b1ee4a_5fe10171634d55debb1e06c35e77699f",
+      "seconds": 13.745770199999242,
+      "snapshot": {
+        "tenant_id": "5fe10171-634d-55de-bb1e-06c35e77699f",
+        "orders": 10000,
+        "outbox_events": 17302,
+        "last_order_id": "1934999a-f176-d2df-f14c-99be1f0bbcda",
+        "orders_sha256": "454df64e9fc479f07a93d84031537607a6e6417b33c0765e676dd059a44224ba",
+        "outbox_sha256": "054e8a3cc770a43ab10beee6528f6ba0c77c72767813d6dadc457b040157e5fa",
+        "statuses": {
+          "shipped": 5324,
+          "placed": 2698,
+          "cancelled": 1978
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5017,
+            "shipped_sales": "1308972.42"
+          },
+          "USD": {
+            "count": 4983,
+            "shipped_sales": "1366425.73"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41849315
+    },
+    {
+      "database": "v2bench_78b1ee4a_62abe6b5f37b56cd902c41de81b4bff1",
+      "seconds": 18.81759670000065,
+      "snapshot": {
+        "tenant_id": "62abe6b5-f37b-56cd-902c-41de81b4bff1",
+        "orders": 10000,
+        "outbox_events": 17283,
+        "last_order_id": "19bbd97f-992f-00d3-a21e-783eb9ab4aa6",
+        "orders_sha256": "7aa2db516532615b6cb84eec9615fa6c26789b68f736596e8d7896c48bfc0ca0",
+        "outbox_sha256": "af15f14313f1c4d0e36aef48462876786815020c8c72ed88f7254db1c35bcb5a",
+        "statuses": {
+          "cancelled": 2006,
+          "shipped": 5277,
+          "placed": 2717
+        },
+        "currencies": {
+          "EUR": {
+            "count": 4989,
+            "shipped_sales": "1327817.26"
+          },
+          "USD": {
+            "count": 5011,
+            "shipped_sales": "1305955.02"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41751011
+    },
+    {
+      "database": "v2bench_78b1ee4a_65b2978aeaa158d5b9a45e9c07448938",
+      "seconds": 18.833867699999246,
+      "snapshot": {
+        "tenant_id": "65b2978a-eaa1-58d5-b9a4-5e9c07448938",
+        "orders": 10000,
+        "outbox_events": 17259,
+        "last_order_id": "1968e8ac-e24a-8e52-7734-fa5e28336097",
+        "orders_sha256": "f45428acef52f952e80756d9e9fb9038e84d9c0eb91c373f937f0cd06789b8a3",
+        "outbox_sha256": "f1bff4f3da49fe00e399541e27f1118f5a042d3d9fa95fba3e670a28733aa69a",
+        "statuses": {
+          "shipped": 5217,
+          "placed": 2741,
+          "cancelled": 2042
+        },
+        "currencies": {
+          "EUR": {
+            "count": 4883,
+            "shipped_sales": "1244023.94"
+          },
+          "USD": {
+            "count": 5117,
+            "shipped_sales": "1358636.20"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41730575
+    },
+    {
+      "database": "v2bench_78b1ee4a_67dfff80b36c58cdb4f19694f82e4ae0",
+      "seconds": 19.328579200000604,
+      "snapshot": {
+        "tenant_id": "67dfff80-b36c-58cd-b4f1-9694f82e4ae0",
+        "orders": 10000,
+        "outbox_events": 17381,
+        "last_order_id": "197cc8e2-9311-0702-3920-0daa1ed8c179",
+        "orders_sha256": "335a483407be6511cc1260baee4fd86bbfb28203e71719bf6b46ecb045f2979a",
+        "outbox_sha256": "2a329828572405ef6a942e9a93f88465baea688c217a92ca2dd4fcaffa70cbe9",
+        "statuses": {
+          "cancelled": 1996,
+          "shipped": 5385,
+          "placed": 2619
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5077,
+            "shipped_sales": "1355306.60"
+          },
+          "USD": {
+            "count": 4923,
+            "shipped_sales": "1321215.85"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41918991
+    },
+    {
+      "database": "v2bench_78b1ee4a_6885b2347fd7521fa64427dc31f8a39a",
+      "seconds": 22.642380699999194,
+      "snapshot": {
+        "tenant_id": "6885b234-7fd7-521f-a644-27dc31f8a39a",
+        "orders": 10000,
+        "outbox_events": 17337,
+        "last_order_id": "199a3a70-9e7c-497e-215d-c08c0a27d03a",
+        "orders_sha256": "f9d00c6eba3e182fa583eb9967e7b30e6357cabeca275b544368b74b197084d4",
+        "outbox_sha256": "381fa3d4124462463e50cd023f63bae9255751c3f918c20d129a658849dee015",
+        "statuses": {
+          "shipped": 5346,
+          "cancelled": 1991,
+          "placed": 2663
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5059,
+            "shipped_sales": "1330310.68"
+          },
+          "USD": {
+            "count": 4941,
+            "shipped_sales": "1339484.06"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41763343
+    },
+    {
+      "database": "v2bench_78b1ee4a_69f7be45da0552a4ba8fcfd175dfd971",
+      "seconds": 22.507240799999636,
+      "snapshot": {
+        "tenant_id": "69f7be45-da05-52a4-ba8f-cfd175dfd971",
+        "orders": 10000,
+        "outbox_events": 17282,
+        "last_order_id": "1a4d36f2-d8b0-aaac-9a42-4bba26ed9901",
+        "orders_sha256": "a60d832603d56ce22ab7b4aa8e882549ae3c879368dc29886c5530b2a09262cc",
+        "outbox_sha256": "a597c86d7a74fa2cb372a0f02258c5e3ebd17eb9afbe627d0ad9292d297f0039",
+        "statuses": {
+          "shipped": 5306,
+          "placed": 2718,
+          "cancelled": 1976
+        },
+        "currencies": {
+          "EUR": {
+            "count": 4910,
+            "shipped_sales": "1296560.58"
+          },
+          "USD": {
+            "count": 5090,
+            "shipped_sales": "1356706.34"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41890275
+    },
+    {
+      "database": "v2bench_78b1ee4a_6a2437889d9e5a759c15fbf48342a8b4",
+      "seconds": 23.120324800000162,
+      "snapshot": {
+        "tenant_id": "6a243788-9d9e-5a75-9c15-fbf48342a8b4",
+        "orders": 10000,
+        "outbox_events": 17360,
+        "last_order_id": "19f45282-b95e-b6d1-992a-e46d6391f072",
+        "orders_sha256": "e1f1c797972c5658efd02f83fd5cb06c6f063d89a5fed47ab7027d08b0855656",
+        "outbox_sha256": "cc48482325bad8778e55995a46447624d71b748469690035edc0ae23ee3dfc86",
+        "statuses": {
+          "cancelled": 1983,
+          "placed": 2640,
+          "shipped": 5377
+        },
+        "currencies": {
+          "EUR": {
+            "count": 4960,
+            "shipped_sales": "1310266.94"
+          },
+          "USD": {
+            "count": 5040,
+            "shipped_sales": "1354431.79"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41832931
+    },
+    {
+      "database": "v2bench_78b1ee4a_6b774053b99d5c869741fbd696bf899f",
+      "seconds": 20.660392200001297,
+      "snapshot": {
+        "tenant_id": "6b774053-b99d-5c86-9741-fbd696bf899f",
+        "orders": 10000,
+        "outbox_events": 17328,
+        "last_order_id": "19b7586d-478d-770b-13cf-fedc9084153b",
+        "orders_sha256": "79e0464e527ce3418a80216dda41c39b6280033cb1fb67e889cfcaa382e332da",
+        "outbox_sha256": "d52387444d081fc10e4aa106363990e1cff0a1b4e0328fc9187d2bb8fba08901",
+        "statuses": {
+          "shipped": 5315,
+          "cancelled": 2013,
+          "placed": 2672
+        },
+        "currencies": {
+          "USD": {
+            "count": 5021,
+            "shipped_sales": "1304380.60"
+          },
+          "EUR": {
+            "count": 4979,
+            "shipped_sales": "1328913.98"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41849315
+    },
+    {
+      "database": "v2bench_78b1ee4a_6e556ce074aa53778ab69d74166199c5",
+      "seconds": 18.950727099998403,
+      "snapshot": {
+        "tenant_id": "6e556ce0-74aa-5377-8ab6-9d74166199c5",
+        "orders": 10000,
+        "outbox_events": 17425,
+        "last_order_id": "19f55e70-6eb8-87a4-2593-6750632137ee",
+        "orders_sha256": "718f55df8b8a7c773bbdeec4c1206cd5b96342ea06dd975df333c13f8740b126",
+        "outbox_sha256": "56ef23ffceab06c52f69022ba3f5ce97007f6c30b23e907af57454c3ed74c7b7",
+        "statuses": {
+          "shipped": 5403,
+          "cancelled": 2022,
+          "placed": 2575
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5019,
+            "shipped_sales": "1378303.78"
+          },
+          "USD": {
+            "count": 4981,
+            "shipped_sales": "1322003.25"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 42086883
+    },
+    {
+      "database": "v2bench_78b1ee4a_6e5ab0be732e52e8a7fc4bdcf0b64a2b",
+      "seconds": 14.12248819999877,
+      "snapshot": {
+        "tenant_id": "6e5ab0be-732e-52e8-a7fc-4bdcf0b64a2b",
+        "orders": 10000,
+        "outbox_events": 17269,
+        "last_order_id": "19ab4caa-0b99-da52-b4e1-7f98bdd3ba94",
+        "orders_sha256": "aef6f47de48b65823c11bbe6966f15d8d6706e4a5953ead6d831224811670e19",
+        "outbox_sha256": "ad2bbaf612cbc7b8d2126f0b775c816734adbf5d9f3d4d66b621e4a05a2875fc",
+        "statuses": {
+          "shipped": 5244,
+          "placed": 2731,
+          "cancelled": 2025
+        },
+        "currencies": {
+          "USD": {
+            "count": 4988,
+            "shipped_sales": "1311238.11"
+          },
+          "EUR": {
+            "count": 5012,
+            "shipped_sales": "1321318.22"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41775587
+    },
+    {
+      "database": "v2bench_78b1ee4a_6fe744da93c15e09bcddb2132d0c7f4c",
+      "seconds": 12.618373999999676,
+      "snapshot": {
+        "tenant_id": "6fe744da-93c1-5e09-bcdd-b2132d0c7f4c",
+        "orders": 10000,
+        "outbox_events": 17312,
+        "last_order_id": "196b478a-29fd-43eb-77e3-9d1b55bf2949",
+        "orders_sha256": "d9358d13c3d513639c44418cb777ada76bda3778b1feaec0da4bc303b8237c98",
+        "outbox_sha256": "2751529a05ae40537e4f2b3f1ae042f833d56d92627773bf3919b34c7a47ad61",
+        "statuses": {
+          "cancelled": 1952,
+          "shipped": 5360,
+          "placed": 2688
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5030,
+            "shipped_sales": "1355978.70"
+          },
+          "USD": {
+            "count": 4970,
+            "shipped_sales": "1317874.14"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41935375
+    },
+    {
+      "database": "v2bench_78b1ee4a_7353644ad49c5d3093debeb26f86e1dc",
+      "seconds": 12.209309600000779,
+      "snapshot": {
+        "tenant_id": "7353644a-d49c-5d30-93de-beb26f86e1dc",
+        "orders": 10000,
+        "outbox_events": 17435,
+        "last_order_id": "19ed2ec6-5e09-ac8d-bb09-77abea886a80",
+        "orders_sha256": "38f507650b88c888e9bc768514a85883debac36bc38e912e579b67f099ba10f2",
+        "outbox_sha256": "ee06cd06f5cc7dfe6335567c998a3c5d871410ab4be8b59d31df76d637129d54",
+        "statuses": {
+          "placed": 2565,
+          "shipped": 5429,
+          "cancelled": 2006
+        },
+        "currencies": {
+          "USD": {
+            "count": 4982,
+            "shipped_sales": "1347708.22"
+          },
+          "EUR": {
+            "count": 5018,
+            "shipped_sales": "1354815.58"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 42070499
+    },
+    {
+      "database": "v2bench_78b1ee4a_743272c3b5195405be3e9bcb65a6280e",
+      "seconds": 13.085512600000584,
+      "snapshot": {
+        "tenant_id": "743272c3-b519-5405-be3e-9bcb65a6280e",
+        "orders": 10000,
+        "outbox_events": 17318,
+        "last_order_id": "19b20e27-32e9-aa85-d828-b7e0a20762cc",
+        "orders_sha256": "eb7a4bd9b1f34e160bf783a23671949fe6935cd3386ade8984f6883d492d9607",
+        "outbox_sha256": "978f90e11d407984589c775ea1d3204b946cb14289f89a177d2534b6d0cd5c5d",
+        "statuses": {
+          "placed": 2682,
+          "cancelled": 2030,
+          "shipped": 5288
+        },
+        "currencies": {
+          "USD": {
+            "count": 5009,
+            "shipped_sales": "1298117.91"
+          },
+          "EUR": {
+            "count": 4991,
+            "shipped_sales": "1303908.90"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41898467
+    },
+    {
+      "database": "v2bench_78b1ee4a_78473cbb5c5d57e5bcc51698e68e542f",
+      "seconds": 13.51300479999918,
+      "snapshot": {
+        "tenant_id": "78473cbb-5c5d-57e5-bcc5-1698e68e542f",
+        "orders": 10000,
+        "outbox_events": 17428,
+        "last_order_id": "19a0113d-95f4-559b-6ad7-2a1ea40499f4",
+        "orders_sha256": "994777ee309920353f6a7af756b7200ace2566077c2267aac8366580b6eb54b0",
+        "outbox_sha256": "7bc8f4ea41d6e6e502b9bde0ea51404206f422a2876dd942931bffa38fe6e05d",
+        "statuses": {
+          "shipped": 5420,
+          "placed": 2572,
+          "cancelled": 2008
+        },
+        "currencies": {
+          "USD": {
+            "count": 5004,
+            "shipped_sales": "1367477.33"
+          },
+          "EUR": {
+            "count": 4996,
+            "shipped_sales": "1354328.74"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 42062307
+    },
+    {
+      "database": "v2bench_78b1ee4a_7afbdc6f79a15f8ab0fc7dcbf395cd2c",
+      "seconds": 12.19797060000019,
+      "snapshot": {
+        "tenant_id": "7afbdc6f-79a1-5f8a-b0fc-7dcbf395cd2c",
+        "orders": 10000,
+        "outbox_events": 17351,
+        "last_order_id": "1978553b-b5b4-3460-8e9c-d00525256705",
+        "orders_sha256": "6c66a965c8bf94973b1f1545e17b0579b2122b8d16a320c611ca171e56b7662b",
+        "outbox_sha256": "fae014db4622a6ef086ba8abdd5fcab247e3cf67eb6ffeb0459cff559774f8ca",
+        "statuses": {
+          "shipped": 5233,
+          "placed": 2649,
+          "cancelled": 2118
+        },
+        "currencies": {
+          "USD": {
+            "count": 5017,
+            "shipped_sales": "1328169.77"
+          },
+          "EUR": {
+            "count": 4983,
+            "shipped_sales": "1293829.46"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41972195
+    },
+    {
+      "database": "v2bench_78b1ee4a_7cbd41511a825ef89ed34b267911c78d",
+      "seconds": 12.77563790000022,
+      "snapshot": {
+        "tenant_id": "7cbd4151-1a82-5ef8-9ed3-4b267911c78d",
+        "orders": 10000,
+        "outbox_events": 17309,
+        "last_order_id": "19be3487-5a4e-bc00-184a-c4fac542de99",
+        "orders_sha256": "440e4ff7aeedf264c9abfdc9154754d10f2f8cd75ef8cb58016e4c26d0b84687",
+        "outbox_sha256": "298e0e658dfde2078e450971507d0feb06638955be5d64f61e65f4f035d0ee75",
+        "statuses": {
+          "placed": 2691,
+          "shipped": 5332,
+          "cancelled": 1977
+        },
+        "currencies": {
+          "USD": {
+            "count": 5033,
+            "shipped_sales": "1378897.15"
+          },
+          "EUR": {
+            "count": 4967,
+            "shipped_sales": "1308387.50"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41824739
+    },
+    {
+      "database": "v2bench_78b1ee4a_7e2fcc9dcd8a5c5185859dbee43e177f",
+      "seconds": 12.09789819999969,
+      "snapshot": {
+        "tenant_id": "7e2fcc9d-cd8a-5c51-8585-9dbee43e177f",
+        "orders": 10000,
+        "outbox_events": 17335,
+        "last_order_id": "19fb521f-950b-608f-1695-41bc459b6c1a",
+        "orders_sha256": "ede5e1df041580481fe639e1e40766a088063223adf4f7b34b7054ba977ff128",
+        "outbox_sha256": "9071864bddbe0626ff76a556fe13fb722be2a84b02643a729a9ab66448b18fac",
+        "statuses": {
+          "shipped": 5307,
+          "placed": 2665,
+          "cancelled": 2028
+        },
+        "currencies": {
+          "USD": {
+            "count": 4916,
+            "shipped_sales": "1359463.92"
+          },
+          "EUR": {
+            "count": 5084,
+            "shipped_sales": "1350833.50"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41898467
+    },
+    {
+      "database": "v2bench_78b1ee4a_7f27c8acbd2755568e0b08631ca63599",
+      "seconds": 12.407283200000165,
+      "snapshot": {
+        "tenant_id": "7f27c8ac-bd27-5556-8e0b-08631ca63599",
+        "orders": 10000,
+        "outbox_events": 17294,
+        "last_order_id": "19cba6c7-2283-de11-b0b8-182af13ddb85",
+        "orders_sha256": "0c115b2f93333d715fccf66612c749a96c171cd7eceedd0ee2429d7af7fef899",
+        "outbox_sha256": "aad696b68ae67a5db4122be442f8de35455dfa8a0b87eb8c4654cb4296053d9b",
+        "statuses": {
+          "shipped": 5311,
+          "placed": 2706,
+          "cancelled": 1983
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5064,
+            "shipped_sales": "1358737.40"
+          },
+          "USD": {
+            "count": 4936,
+            "shipped_sales": "1304242.78"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41824739
+    },
+    {
+      "database": "v2bench_78b1ee4a_7ffd96dc871e5ef1805bf79108372a88",
+      "seconds": 12.246641300000192,
+      "snapshot": {
+        "tenant_id": "7ffd96dc-871e-5ef1-805b-f79108372a88",
+        "orders": 10000,
+        "outbox_events": 17342,
+        "last_order_id": "19d3806a-1b47-97c4-f158-bbe2b48f286f",
+        "orders_sha256": "31b5e439e0191898cff80d12aeda497506a9b0fb98c7a294f9d781e65c06fcdc",
+        "outbox_sha256": "b4576a5921673cf969206d9df7daa648df8c773211848caf78072b1ce720ca47",
+        "statuses": {
+          "shipped": 5347,
+          "cancelled": 1995,
+          "placed": 2658
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5011,
+            "shipped_sales": "1345417.04"
+          },
+          "USD": {
+            "count": 4989,
+            "shipped_sales": "1322726.47"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41882083
+    },
+    {
+      "database": "v2bench_78b1ee4a_8c7937a11a2e56899739d897c2f688f6",
+      "seconds": 12.499643900000592,
+      "snapshot": {
+        "tenant_id": "8c7937a1-1a2e-5689-9739-d897c2f688f6",
+        "orders": 10000,
+        "outbox_events": 17302,
+        "last_order_id": "1999f639-8888-f147-cd90-123d9b86950f",
+        "orders_sha256": "bacdcb6ac8f8c4711fabc808642eab7e23614b7ace53c4945d2f67444e39092e",
+        "outbox_sha256": "25ed627144bd0379d2cb647981a8390604aa5bbfb31d7bf722526a33f5f25d70",
+        "statuses": {
+          "placed": 2698,
+          "shipped": 5236,
+          "cancelled": 2066
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5109,
+            "shipped_sales": "1336066.42"
+          },
+          "USD": {
+            "count": 4891,
+            "shipped_sales": "1296312.60"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41898467
+    },
+    {
+      "database": "v2bench_78b1ee4a_8f2170159a6d5ff1b2a93b595e435278",
+      "seconds": 11.420892899999671,
+      "snapshot": {
+        "tenant_id": "8f217015-9a6d-5ff1-b2a9-3b595e435278",
+        "orders": 10000,
+        "outbox_events": 17350,
+        "last_order_id": "193552cc-f5d8-68fe-f7b6-b82f34bb5eec",
+        "orders_sha256": "a7e936b3f6b423f4a1d9a858165a192d1d46bd2e747ca86187d340e071e215c6",
+        "outbox_sha256": "a638d9dca8ad07ca29f684a1e2c8dd44cd400c1ececcbae132e728bac128158f",
+        "statuses": {
+          "shipped": 5407,
+          "cancelled": 1943,
+          "placed": 2650
+        },
+        "currencies": {
+          "EUR": {
+            "count": 4951,
+            "shipped_sales": "1311980.08"
+          },
+          "USD": {
+            "count": 5049,
+            "shipped_sales": "1377775.16"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41939427
+    },
+    {
+      "database": "v2bench_78b1ee4a_8f9e369c58af5f15a2932bae65df502c",
+      "seconds": 12.487507700001515,
+      "snapshot": {
+        "tenant_id": "8f9e369c-58af-5f15-a293-2bae65df502c",
+        "orders": 10000,
+        "outbox_events": 17359,
+        "last_order_id": "19b651be-629c-f373-a179-0f86eb8faf7d",
+        "orders_sha256": "dd0de66c703b0c16810b3bf88a2afd1f11f3cc6c18a97fe95d40b6fb71194dd1",
+        "outbox_sha256": "68539d6b546645b733c4db356de0c2cf0cb0282f9245a02531681000c64c9c63",
+        "statuses": {
+          "cancelled": 1982,
+          "placed": 2641,
+          "shipped": 5377
+        },
+        "currencies": {
+          "USD": {
+            "count": 4989,
+            "shipped_sales": "1327809.14"
+          },
+          "EUR": {
+            "count": 5011,
+            "shipped_sales": "1332003.48"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41931235
+    },
+    {
+      "database": "v2bench_78b1ee4a_910491face8e57a987f4a7fcaf3868f8",
+      "seconds": 10.9114411999999,
+      "snapshot": {
+        "tenant_id": "910491fa-ce8e-57a9-87f4-a7fcaf3868f8",
+        "orders": 10000,
+        "outbox_events": 17393,
+        "last_order_id": "19bff951-b92d-2f91-f20b-e735d5cc06cd",
+        "orders_sha256": "d07b19acc00bfcd44dc991d6d922b5222d9643d4fe582e88215ce52712ee8568",
+        "outbox_sha256": "2c0b08b50f6361bf3299ecbe6b5b2b059e9018b901269670c018939713f45b4f",
+        "statuses": {
+          "shipped": 5415,
+          "placed": 2607,
+          "cancelled": 1978
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5051,
+            "shipped_sales": "1378624.48"
+          },
+          "USD": {
+            "count": 4949,
+            "shipped_sales": "1363978.14"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41939427
+    },
+    {
+      "database": "v2bench_78b1ee4a_9137e93ca5215c9e8f7af3b117c7c259",
+      "seconds": 12.75635820000025,
+      "snapshot": {
+        "tenant_id": "9137e93c-a521-5c9e-8f7a-f3b117c7c259",
+        "orders": 10000,
+        "outbox_events": 17389,
+        "last_order_id": "19845dda-1b6f-e3b9-3d68-d323ff289e23",
+        "orders_sha256": "df70e1c9448a217c66a96972f0fa2c039a2be1389496e49629a6a98422612c27",
+        "outbox_sha256": "f41fb4cd89d5caeea2eb1f16a08dc0676b172f41c6643a918ff9a82a33a7a42a",
+        "statuses": {
+          "shipped": 5387,
+          "placed": 2611,
+          "cancelled": 2002
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5036,
+            "shipped_sales": "1372532.22"
+          },
+          "USD": {
+            "count": 4964,
+            "shipped_sales": "1304810.33"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41931235
+    },
+    {
+      "database": "v2bench_78b1ee4a_9722f10f77dc5b398776a4859d8c29d8",
+      "seconds": 12.434921600000962,
+      "snapshot": {
+        "tenant_id": "9722f10f-77dc-5b39-8776-a4859d8c29d8",
+        "orders": 10000,
+        "outbox_events": 17252,
+        "last_order_id": "19993177-f23b-e988-d5d0-01b174269662",
+        "orders_sha256": "73a39a659ae0f50e2c375797d214da78ba76416d37912e109d565263d74f961e",
+        "outbox_sha256": "9b6bdadf67823c5238da9721327c2508de86aa0cf886aa2088d800ead08d4af6",
+        "statuses": {
+          "cancelled": 2006,
+          "placed": 2748,
+          "shipped": 5246
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5008,
+            "shipped_sales": "1334425.10"
+          },
+          "USD": {
+            "count": 4992,
+            "shipped_sales": "1299908.54"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41873891
+    },
+    {
+      "database": "v2bench_78b1ee4a_a175b4651f3b592cbc24f362816e2418",
+      "seconds": 12.28345629999967,
+      "snapshot": {
+        "tenant_id": "a175b465-1f3b-592c-bc24-f362816e2418",
+        "orders": 10000,
+        "outbox_events": 17271,
+        "last_order_id": "1952ff14-0022-3cc4-ed68-55e02dda091b",
+        "orders_sha256": "edd9b84f76b838a651934fea449e585f24d1851ac30b0c6399c596c911a9e310",
+        "outbox_sha256": "1570e39ab254ca664b4ce64cfab22da29de08860991cf03300c3ab1b362a0a70",
+        "statuses": {
+          "cancelled": 1974,
+          "shipped": 5297,
+          "placed": 2729
+        },
+        "currencies": {
+          "USD": {
+            "count": 4899,
+            "shipped_sales": "1269327.14"
+          },
+          "EUR": {
+            "count": 5101,
+            "shipped_sales": "1339170.76"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41775587
+    },
+    {
+      "database": "v2bench_78b1ee4a_a23a0385a7f75687b534bfcb73463657",
+      "seconds": 12.512738700001137,
+      "snapshot": {
+        "tenant_id": "a23a0385-a7f7-5687-b534-bfcb73463657",
+        "orders": 10000,
+        "outbox_events": 17346,
+        "last_order_id": "19ac23b3-b8a8-9381-3d49-1ba8a298c32f",
+        "orders_sha256": "6771776486fac7ae4837c1a327453dc6eb84c3987b6a4ec45398bf7e417b6c41",
+        "outbox_sha256": "36a2116f27a0a64ca1df26a2e74a46c54538a760daa05c4f3d64018a68ffc298",
+        "statuses": {
+          "shipped": 5344,
+          "cancelled": 2002,
+          "placed": 2654
+        },
+        "currencies": {
+          "USD": {
+            "count": 5021,
+            "shipped_sales": "1358335.94"
+          },
+          "EUR": {
+            "count": 4979,
+            "shipped_sales": "1336094.92"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41865699
+    },
+    {
+      "database": "v2bench_78b1ee4a_a277fd9bf2f55024884faa8a0d1e6ffa",
+      "seconds": 12.802207500000804,
+      "snapshot": {
+        "tenant_id": "a277fd9b-f2f5-5024-884f-aa8a0d1e6ffa",
+        "orders": 10000,
+        "outbox_events": 17396,
+        "last_order_id": "19b99756-5905-5a02-539f-fde0643232c9",
+        "orders_sha256": "7399cf7cc294e60334d0e5c8a73c7d869b41eccf0890ed7ea72dd7632acee2a0",
+        "outbox_sha256": "b86a81f6cef32019f1cb2a8cdeff26b423b2337c4bb280abceb66ea135086464",
+        "statuses": {
+          "shipped": 5374,
+          "cancelled": 2022,
+          "placed": 2604
+        },
+        "currencies": {
+          "USD": {
+            "count": 5086,
+            "shipped_sales": "1381827.99"
+          },
+          "EUR": {
+            "count": 4914,
+            "shipped_sales": "1287018.82"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41955811
+    },
+    {
+      "database": "v2bench_78b1ee4a_a339645209c05f258de8a4dcf8883a86",
+      "seconds": 13.104019899999912,
+      "snapshot": {
+        "tenant_id": "a3396452-09c0-5f25-8de8-a4dcf8883a86",
+        "orders": 10000,
+        "outbox_events": 17318,
+        "last_order_id": "19a69dec-1c48-6a12-e225-d75c6dad47a1",
+        "orders_sha256": "57843f194a1da27f61ba5e1637ba363a2fa7b2abd44e5766b01a62ec30a53d6d",
+        "outbox_sha256": "7a42a610cf8f2b4a719d9e38276a04ece1b1b95c545e3d0961f96975b3a296ce",
+        "statuses": {
+          "shipped": 5388,
+          "cancelled": 1930,
+          "placed": 2682
+        },
+        "currencies": {
+          "USD": {
+            "count": 4953,
+            "shipped_sales": "1334174.09"
+          },
+          "EUR": {
+            "count": 5047,
+            "shipped_sales": "1378718.56"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41865699
+    },
+    {
+      "database": "v2bench_78b1ee4a_a340bccb47165b53a6636b270f33de30",
+      "seconds": 13.846311600000263,
+      "snapshot": {
+        "tenant_id": "a340bccb-4716-5b53-a663-6b270f33de30",
+        "orders": 10000,
+        "outbox_events": 17336,
+        "last_order_id": "199f39dd-0015-a1cc-b9f4-78e140b963de",
+        "orders_sha256": "57b59a2fce165173632e1b69eb0e473f1cf26295d04adf0bf43781be9090436b",
+        "outbox_sha256": "c7a7a17d42cd847e850df5989bc0dee5bb89f4545c7cf611b8c52f92a36c7156",
+        "statuses": {
+          "cancelled": 1998,
+          "placed": 2664,
+          "shipped": 5338
+        },
+        "currencies": {
+          "USD": {
+            "count": 5101,
+            "shipped_sales": "1367128.41"
+          },
+          "EUR": {
+            "count": 4899,
+            "shipped_sales": "1310244.64"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41980387
+    },
+    {
+      "database": "v2bench_78b1ee4a_a3c7841edee653f0b13cfd7745b6245d",
+      "seconds": 15.600120699999025,
+      "snapshot": {
+        "tenant_id": "a3c7841e-dee6-53f0-b13c-fd7745b6245d",
+        "orders": 10000,
+        "outbox_events": 17329,
+        "last_order_id": "199b99b7-2c17-ce37-00d8-798a1a3fdf72",
+        "orders_sha256": "c0f0cb0340149a9255126cd46ccafd156584da6b697b10bf8b4f0a4bf6eb7855",
+        "outbox_sha256": "ae43bb4d161a63503242bb3c15b4000e361017804171b63fe6fe4fe7c67393b6",
+        "statuses": {
+          "cancelled": 2013,
+          "placed": 2671,
+          "shipped": 5316
+        },
+        "currencies": {
+          "EUR": {
+            "count": 4994,
+            "shipped_sales": "1337047.02"
+          },
+          "USD": {
+            "count": 5006,
+            "shipped_sales": "1341447.41"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41873891
+    },
+    {
+      "database": "v2bench_78b1ee4a_a76c0923ce465deea72edffeb5d72231",
+      "seconds": 13.92545280000013,
+      "snapshot": {
+        "tenant_id": "a76c0923-ce46-5dee-a72e-dffeb5d72231",
+        "orders": 10000,
+        "outbox_events": 17329,
+        "last_order_id": "199c37f3-617b-0204-a412-047cc0234a79",
+        "orders_sha256": "33865e7a1492a243011c5c96eb2c217de72f9649fcc2bb3703e1ee5d2d6e027b",
+        "outbox_sha256": "38b6686be9316d4aa162695623ca05ec2f4e286fbd62ebd828429dedcdf4e3a2",
+        "statuses": {
+          "shipped": 5271,
+          "cancelled": 2058,
+          "placed": 2671
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5048,
+            "shipped_sales": "1331185.44"
+          },
+          "USD": {
+            "count": 4952,
+            "shipped_sales": "1306110.71"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41972195
+    },
+    {
+      "database": "v2bench_78b1ee4a_a8de88ba10f65fb4ac5360bdb48b78f2",
+      "seconds": 13.42568140000003,
+      "snapshot": {
+        "tenant_id": "a8de88ba-10f6-5fb4-ac53-60bdb48b78f2",
+        "orders": 10000,
+        "outbox_events": 17356,
+        "last_order_id": "194c07a9-0a59-9320-87d3-658c469ad95c",
+        "orders_sha256": "5e5bf605a2c2ca8e4913f86eae35f1255588f16f9ff8b78a74626a7f89fba047",
+        "outbox_sha256": "83f67db42b5e3173a415292dcdeeb480e77bb9d35fe0c01e1806fdc70c1fab22",
+        "statuses": {
+          "cancelled": 1958,
+          "shipped": 5398,
+          "placed": 2644
+        },
+        "currencies": {
+          "EUR": {
+            "count": 4935,
+            "shipped_sales": "1342707.36"
+          },
+          "USD": {
+            "count": 5065,
+            "shipped_sales": "1379793.28"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 42021347
+    },
+    {
+      "database": "v2bench_78b1ee4a_ac7fd980fcee524e9f89591913799e87",
+      "seconds": 14.610268300000826,
+      "snapshot": {
+        "tenant_id": "ac7fd980-fcee-524e-9f89-591913799e87",
+        "orders": 10000,
+        "outbox_events": 17313,
+        "last_order_id": "19e38684-ad80-17a7-a53c-cee27ca06093",
+        "orders_sha256": "8bbf6ab017a8ed174ede8a2adbfed695add4d8785693091d81960870552b38b3",
+        "outbox_sha256": "ec92780ec2b199d2c4d1d8c8bafbb2be074c9c7e5546c5d837e84bd6fb9f4d53",
+        "statuses": {
+          "shipped": 5292,
+          "cancelled": 2021,
+          "placed": 2687
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5020,
+            "shipped_sales": "1359148.32"
+          },
+          "USD": {
+            "count": 4980,
+            "shipped_sales": "1289468.65"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41873891
+    },
+    {
+      "database": "v2bench_78b1ee4a_aef3c77c5e395f8d9788d1aea0ee2f2d",
+      "seconds": 37.46929430000091,
+      "snapshot": {
+        "tenant_id": "aef3c77c-5e39-5f8d-9788-d1aea0ee2f2d",
+        "orders": 10000,
+        "outbox_events": 17411,
+        "last_order_id": "199dd9d5-2f96-2400-9a4a-f7ca06f423f5",
+        "orders_sha256": "b0194bb80d095983de52e776f9615a7b7d37f81901011bf9e0a31ca03a335ab4",
+        "outbox_sha256": "a248050c9ebe17c334265a09b9d3205b07f6d3248208e50b2e8ca0c64fa187d9",
+        "statuses": {
+          "shipped": 5336,
+          "cancelled": 2075,
+          "placed": 2589
+        },
+        "currencies": {
+          "EUR": {
+            "count": 4954,
+            "shipped_sales": "1337111.62"
+          },
+          "USD": {
+            "count": 5046,
+            "shipped_sales": "1370772.73"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 42004963
+    },
+    {
+      "database": "v2bench_78b1ee4a_af8c972bac9e5877807204e6f30df7ce",
+      "seconds": 13.40348030000132,
+      "snapshot": {
+        "tenant_id": "af8c972b-ac9e-5877-8072-04e6f30df7ce",
+        "orders": 10000,
+        "outbox_events": 17318,
+        "last_order_id": "196d3898-3351-dd9e-d9ef-ed53121bd98f",
+        "orders_sha256": "986fdcea52f937069305fd7225e5955e6ebcec815fe424104835eb3b17782223",
+        "outbox_sha256": "ac22aac326c77c3a008c3047bb1bfbea9e6eb16945c85ce4e7c3d54f7e947977",
+        "statuses": {
+          "shipped": 5348,
+          "cancelled": 1970,
+          "placed": 2682
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5022,
+            "shipped_sales": "1338224.44"
+          },
+          "USD": {
+            "count": 4978,
+            "shipped_sales": "1319435.89"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41890275
+    },
+    {
+      "database": "v2bench_78b1ee4a_b0655ca71ed05b53ab1d671ac5159f7c",
+      "seconds": 13.534278500001165,
+      "snapshot": {
+        "tenant_id": "b0655ca7-1ed0-5b53-ab1d-671ac5159f7c",
+        "orders": 10000,
+        "outbox_events": 17355,
+        "last_order_id": "19920d07-9ada-7596-8140-de45af2d37d9",
+        "orders_sha256": "90fb5b953f3baf15c79392cb09949bcffe2805d815af3d6346855d489f2fbb57",
+        "outbox_sha256": "4789fb34c7c85913ffe2ef21095d0f52dc6d5e1b3e901bdeefb73e7c01b68773",
+        "statuses": {
+          "shipped": 5377,
+          "placed": 2645,
+          "cancelled": 1978
+        },
+        "currencies": {
+          "EUR": {
+            "count": 4969,
+            "shipped_sales": "1343667.38"
+          },
+          "USD": {
+            "count": 5031,
+            "shipped_sales": "1347692.26"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41857507
+    },
+    {
+      "database": "v2bench_78b1ee4a_bd324714e3595e278f8b3fd1839b91f5",
+      "seconds": 13.645896199999697,
+      "snapshot": {
+        "tenant_id": "bd324714-e359-5e27-8f8b-3fd1839b91f5",
+        "orders": 10000,
+        "outbox_events": 17290,
+        "last_order_id": "19a6a94b-9fb8-beca-05c8-43c96907105b",
+        "orders_sha256": "3e1928428918c52a2219121e1fe200daddb850332197d15b681456f3249e3026",
+        "outbox_sha256": "8e07544aee0b094721e1d2be380b944f363abf1514e2b0e3916b6876e0eb9315",
+        "statuses": {
+          "cancelled": 2000,
+          "placed": 2710,
+          "shipped": 5290
+        },
+        "currencies": {
+          "USD": {
+            "count": 5083,
+            "shipped_sales": "1341148.75"
+          },
+          "EUR": {
+            "count": 4917,
+            "shipped_sales": "1298678.88"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41873891
+    },
+    {
+      "database": "v2bench_78b1ee4a_be2ab0abb6b450e68550b2363b12b79f",
+      "seconds": 15.430454000001191,
+      "snapshot": {
+        "tenant_id": "be2ab0ab-b6b4-50e6-8550-b2363b12b79f",
+        "orders": 10000,
+        "outbox_events": 17408,
+        "last_order_id": "198dd3e4-2df2-b93b-0705-160f4ae89ccd",
+        "orders_sha256": "cf18823bc5d15143286f16b5cf4830520b310443b64b13fbf17a575b012db930",
+        "outbox_sha256": "21e129ea67b2b43b25c80dc19473b14b94a50df86ed1367bb742baa808e62735",
+        "statuses": {
+          "shipped": 5347,
+          "cancelled": 2061,
+          "placed": 2592
+        },
+        "currencies": {
+          "USD": {
+            "count": 5061,
+            "shipped_sales": "1346717.94"
+          },
+          "EUR": {
+            "count": 4939,
+            "shipped_sales": "1337777.68"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41898467
+    },
+    {
+      "database": "v2bench_78b1ee4a_c13b449ce4ea52619a1e4c175f1e842d",
+      "seconds": 14.153979400000026,
+      "snapshot": {
+        "tenant_id": "c13b449c-e4ea-5261-9a1e-4c175f1e842d",
+        "orders": 10000,
+        "outbox_events": 17380,
+        "last_order_id": "19bcb7fa-626c-28af-463b-5b0d5ad71416",
+        "orders_sha256": "4cfa1f9adada6c3e1776eadc9757176e5b93670f4a8b78a9f17d4f69aa0331e7",
+        "outbox_sha256": "5ce0fa153e9f1b6bc89377c4357e29b1c6de074b8ec8ef4661e512f8672c42c5",
+        "statuses": {
+          "shipped": 5421,
+          "placed": 2620,
+          "cancelled": 1959
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5012,
+            "shipped_sales": "1366540.54"
+          },
+          "USD": {
+            "count": 4988,
+            "shipped_sales": "1362274.37"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41898467
+    },
+    {
+      "database": "v2bench_78b1ee4a_c1e27c27fa9c5ff480d94a5a130fb45f",
+      "seconds": 32.34182399999918,
+      "snapshot": {
+        "tenant_id": "c1e27c27-fa9c-5ff4-80d9-4a5a130fb45f",
+        "orders": 10000,
+        "outbox_events": 17313,
+        "last_order_id": "19340f7b-7192-cf46-1e09-3c7ae275cb14",
+        "orders_sha256": "9cc6dba69276784aff7c3c5eabdc6ca5c41981a8ff4fda55341b1b9c5428eea2",
+        "outbox_sha256": "f38b6f9f7d3cf316f01efc66ca49eced3e0d67417c171d9b1173d55c666552df",
+        "statuses": {
+          "shipped": 5352,
+          "cancelled": 1961,
+          "placed": 2687
+        },
+        "currencies": {
+          "USD": {
+            "count": 5041,
+            "shipped_sales": "1365212.26"
+          },
+          "EUR": {
+            "count": 4959,
+            "shipped_sales": "1310948.38"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41816547
+    },
+    {
+      "database": "v2bench_78b1ee4a_c20602c7978f50759d3260022237ffb5",
+      "seconds": 13.531025300000692,
+      "snapshot": {
+        "tenant_id": "c20602c7-978f-5075-9d32-60022237ffb5",
+        "orders": 10000,
+        "outbox_events": 17269,
+        "last_order_id": "19a14102-3c44-5484-9890-f3faed427376",
+        "orders_sha256": "2e46e42615f9e61cd37e8ad8bdf18d8151137ce0db7ce61e045e2deacbc49014",
+        "outbox_sha256": "3e5ea95cdcd4bbd263dbaa64edb3833ec4e8839dd7e58fff5aace5b1c0751787",
+        "statuses": {
+          "shipped": 5269,
+          "cancelled": 2000,
+          "placed": 2731
+        },
+        "currencies": {
+          "USD": {
+            "count": 4966,
+            "shipped_sales": "1309236.98"
+          },
+          "EUR": {
+            "count": 5034,
+            "shipped_sales": "1327963.46"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41783779
+    },
+    {
+      "database": "v2bench_78b1ee4a_c2a15d63322c5bb08cf95d17632ca6f4",
+      "seconds": 13.854225699999006,
+      "snapshot": {
+        "tenant_id": "c2a15d63-322c-5bb0-8cf9-5d17632ca6f4",
+        "orders": 10000,
+        "outbox_events": 17311,
+        "last_order_id": "195ba993-f95a-c2f7-a929-653826ceff7a",
+        "orders_sha256": "95fb8db3b275df2e0da42026610939132e23e167ad3b25a8a23b5c6362804ce1",
+        "outbox_sha256": "6fb6f98fe821a81ef3c0764b9e9467837a2e88aa9d7947b2be99395e379f734e",
+        "statuses": {
+          "shipped": 5273,
+          "placed": 2689,
+          "cancelled": 2038
+        },
+        "currencies": {
+          "EUR": {
+            "count": 4974,
+            "shipped_sales": "1294887.84"
+          },
+          "USD": {
+            "count": 5026,
+            "shipped_sales": "1309312.28"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41816547
+    },
+    {
+      "database": "v2bench_78b1ee4a_c2ec24801cd855b4bf42f6f8b4bf931b",
+      "seconds": 13.434066300000268,
+      "snapshot": {
+        "tenant_id": "c2ec2480-1cd8-55b4-bf42-f6f8b4bf931b",
+        "orders": 10000,
+        "outbox_events": 17354,
+        "last_order_id": "195182c2-1d52-5c5d-4db3-6fa7cace53d1",
+        "orders_sha256": "897a61559e7607782457667a81d71a9a1f170d561508665770a88aa08307b850",
+        "outbox_sha256": "d38d243a9956aa49f1c92b6c495e4693aefa7913f97099516d72858e079424b1",
+        "statuses": {
+          "shipped": 5400,
+          "placed": 2646,
+          "cancelled": 1954
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5013,
+            "shipped_sales": "1372494.00"
+          },
+          "USD": {
+            "count": 4987,
+            "shipped_sales": "1326599.48"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41939427
+    },
+    {
+      "database": "v2bench_78b1ee4a_c53352cb682855b391b003c679051bcb",
+      "seconds": 13.546319799999765,
+      "snapshot": {
+        "tenant_id": "c53352cb-6828-55b3-91b0-03c679051bcb",
+        "orders": 10000,
+        "outbox_events": 17334,
+        "last_order_id": "197bd6e2-6995-885e-c431-1c3ceb56d50a",
+        "orders_sha256": "716ccf42fff7c39e9f7db8502b21018a461c3dd649f95865816ca743707d9dd6",
+        "outbox_sha256": "37c51673d561c574014ee05891be3600a6021074f41de1c740b6ffde5be661cb",
+        "statuses": {
+          "cancelled": 2058,
+          "shipped": 5276,
+          "placed": 2666
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5003,
+            "shipped_sales": "1338198.26"
+          },
+          "USD": {
+            "count": 4997,
+            "shipped_sales": "1313329.97"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41947619
+    },
+    {
+      "database": "v2bench_78b1ee4a_c9a96cd00efe5cca88708f3c025b214a",
+      "seconds": 13.71877940000013,
+      "snapshot": {
+        "tenant_id": "c9a96cd0-0efe-5cca-8870-8f3c025b214a",
+        "orders": 10000,
+        "outbox_events": 17310,
+        "last_order_id": "19d95e4a-7c4a-dfa7-cfda-d7749c02e97d",
+        "orders_sha256": "3dc46570a428db8a5ceafe866b298c4ff7b5591926f04acf9545470e7e812f61",
+        "outbox_sha256": "da73d03abd9d6789d6bb4ed2cfe95109e532726e8b7f360149890416a2a57364",
+        "statuses": {
+          "shipped": 5264,
+          "placed": 2690,
+          "cancelled": 2046
+        },
+        "currencies": {
+          "USD": {
+            "count": 5046,
+            "shipped_sales": "1307463.68"
+          },
+          "EUR": {
+            "count": 4954,
+            "shipped_sales": "1311926.52"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41923043
+    },
+    {
+      "database": "v2bench_78b1ee4a_cadfd2837a1d592fbe463694420be1a4",
+      "seconds": 13.553084599998328,
+      "snapshot": {
+        "tenant_id": "cadfd283-7a1d-592f-be46-3694420be1a4",
+        "orders": 10000,
+        "outbox_events": 17270,
+        "last_order_id": "198b4c30-4e2d-a59f-7bde-299700ab0885",
+        "orders_sha256": "c19b1b891c37e6fe875965998cef693b612346f4af5a50e57ea7e8d4dcf7fd60",
+        "outbox_sha256": "bead9249db68065830c4eb810cd6ef3c41c944e8c1e1223f4f51c510830e09d8",
+        "statuses": {
+          "cancelled": 2020,
+          "shipped": 5250,
+          "placed": 2730
+        },
+        "currencies": {
+          "EUR": {
+            "count": 4966,
+            "shipped_sales": "1268721.46"
+          },
+          "USD": {
+            "count": 5034,
+            "shipped_sales": "1326657.54"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41849315
+    },
+    {
+      "database": "v2bench_78b1ee4a_ccd9dd9cf1665e71b1629fd30b0e1164",
+      "seconds": 13.28368380000029,
+      "snapshot": {
+        "tenant_id": "ccd9dd9c-f166-5e71-b162-9fd30b0e1164",
+        "orders": 10000,
+        "outbox_events": 17389,
+        "last_order_id": "19b3c402-8884-1f82-42c5-c069c4ee122d",
+        "orders_sha256": "97e2f412ff996cf8cf70ab6ed8c1862ba6b58b1e8e7d4e9f8c82a7026555e955",
+        "outbox_sha256": "7c5a32914aa10e62ac0bf1142c42f533ad925883a57ccef5a893653c7a483fdf",
+        "statuses": {
+          "shipped": 5350,
+          "cancelled": 2039,
+          "placed": 2611
+        },
+        "currencies": {
+          "USD": {
+            "count": 4979,
+            "shipped_sales": "1327315.94"
+          },
+          "EUR": {
+            "count": 5021,
+            "shipped_sales": "1340887.50"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 42021347
+    },
+    {
+      "database": "v2bench_78b1ee4a_ce515b09822952318f447845afef819d",
+      "seconds": 31.77809890000026,
+      "snapshot": {
+        "tenant_id": "ce515b09-8229-5231-8f44-7845afef819d",
+        "orders": 10000,
+        "outbox_events": 17286,
+        "last_order_id": "198ab5eb-db83-036c-7b6f-f49482ec8406",
+        "orders_sha256": "90279f62a4faf19d81548fad3be8d3091ec03858dafdc4482e437fd612b017e4",
+        "outbox_sha256": "fdccc63e2ce77bf9d60fbde756a4f4eb4a701ec23675470ecffe0143b5213bb4",
+        "statuses": {
+          "shipped": 5347,
+          "cancelled": 1939,
+          "placed": 2714
+        },
+        "currencies": {
+          "USD": {
+            "count": 5101,
+            "shipped_sales": "1364816.60"
+          },
+          "EUR": {
+            "count": 4899,
+            "shipped_sales": "1307896.88"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41832931
+    },
+    {
+      "database": "v2bench_78b1ee4a_d5089a839dbe518eb8899a41c7fcb765",
+      "seconds": 12.988022999999885,
+      "snapshot": {
+        "tenant_id": "d5089a83-9dbe-518e-b889-9a41c7fcb765",
+        "orders": 10000,
+        "outbox_events": 17312,
+        "last_order_id": "1999fffa-51f8-fcb8-9c22-ab78fd0ab053",
+        "orders_sha256": "1571d86f52d72a2f346b1d86cbf85cac2f898746e61c7273cdd45f5bd80db37a",
+        "outbox_sha256": "7848d9b90ce1ca8fc11ceae74c4209fc79611e078ab2dd3861d9a3cc45a92258",
+        "statuses": {
+          "shipped": 5311,
+          "placed": 2688,
+          "cancelled": 2001
+        },
+        "currencies": {
+          "USD": {
+            "count": 5006,
+            "shipped_sales": "1345271.93"
+          },
+          "EUR": {
+            "count": 4994,
+            "shipped_sales": "1351361.60"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41939427
+    },
+    {
+      "database": "v2bench_78b1ee4a_d5e3d790f1b65bdabecb1ce3372c304d",
+      "seconds": 13.626953799999683,
+      "snapshot": {
+        "tenant_id": "d5e3d790-f1b6-5bda-becb-1ce3372c304d",
+        "orders": 10000,
+        "outbox_events": 17397,
+        "last_order_id": "195cba26-1e95-870a-b256-a691cdab5415",
+        "orders_sha256": "b3bb72f59a3649209d04b20b3313e825f0c5ec7cee14dd1797ebbae0f21a1dda",
+        "outbox_sha256": "afee88682c49209450a664f8899172eefd503d83ff885c087bffbba500ad1d7c",
+        "statuses": {
+          "shipped": 5352,
+          "placed": 2603,
+          "cancelled": 2045
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5059,
+            "shipped_sales": "1367779.26"
+          },
+          "USD": {
+            "count": 4941,
+            "shipped_sales": "1290402.10"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41972195
+    },
+    {
+      "database": "v2bench_78b1ee4a_da6796f9d2ea5b3fb448eddd173a4e26",
+      "seconds": 17.07369700000163,
+      "snapshot": {
+        "tenant_id": "da6796f9-d2ea-5b3f-b448-eddd173a4e26",
+        "orders": 10000,
+        "outbox_events": 17344,
+        "last_order_id": "19e38451-3265-00ba-905b-2b9a1ff9f602",
+        "orders_sha256": "aaadab5a099c2be5693b95025988f303c1351819948eaee679cb919561e55fb2",
+        "outbox_sha256": "c6695c0a8b065def755f2acbaa9580040a9f3fb035106624ec41040e60e9e148",
+        "statuses": {
+          "shipped": 5291,
+          "placed": 2656,
+          "cancelled": 2053
+        },
+        "currencies": {
+          "USD": {
+            "count": 4962,
+            "shipped_sales": "1323327.46"
+          },
+          "EUR": {
+            "count": 5038,
+            "shipped_sales": "1370877.64"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41923043
+    },
+    {
+      "database": "v2bench_78b1ee4a_e0a9a8c086195bfeba5dcbdc8da7889d",
+      "seconds": 17.445513500000743,
+      "snapshot": {
+        "tenant_id": "e0a9a8c0-8619-5bfe-ba5d-cbdc8da7889d",
+        "orders": 10000,
+        "outbox_events": 17368,
+        "last_order_id": "1983c087-5e72-c99a-253d-4f3054021a63",
+        "orders_sha256": "37dc8ab6d595aa06eaef9251a7bf7514b89f298f210cd373e89db8d4b781a3e6",
+        "outbox_sha256": "2ece79181de4a5bebf08526e7b4777dd93928da4677ce5e4c502a6ac33cd4dcb",
+        "statuses": {
+          "cancelled": 2062,
+          "shipped": 5306,
+          "placed": 2632
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5064,
+            "shipped_sales": "1326040.52"
+          },
+          "USD": {
+            "count": 4936,
+            "shipped_sales": "1325296.23"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41914851
+    },
+    {
+      "database": "v2bench_78b1ee4a_e1c747459ac3578b8eeeb5e16ec48ac5",
+      "seconds": 14.346736299999975,
+      "snapshot": {
+        "tenant_id": "e1c74745-9ac3-578b-8eee-b5e16ec48ac5",
+        "orders": 10000,
+        "outbox_events": 17396,
+        "last_order_id": "19b4895a-4035-d539-3de9-020a4405272a",
+        "orders_sha256": "737946a027a0b0bff2949eece4279a55c56096bf52f1f2eb2e1df311c31886f9",
+        "outbox_sha256": "aa645ea7e37c16dffc5927fbb66ecb669bbe346cd4eca1e4764aa4c7a7658632",
+        "statuses": {
+          "shipped": 5394,
+          "placed": 2604,
+          "cancelled": 2002
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5084,
+            "shipped_sales": "1362126.74"
+          },
+          "USD": {
+            "count": 4916,
+            "shipped_sales": "1340094.32"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41955811
+    },
+    {
+      "database": "v2bench_78b1ee4a_e6b2806bff61571794d41fda46d31e4e",
+      "seconds": 13.219084500000463,
+      "snapshot": {
+        "tenant_id": "e6b2806b-ff61-5717-94d4-1fda46d31e4e",
+        "orders": 10000,
+        "outbox_events": 17285,
+        "last_order_id": "19931f55-7df4-8331-4c10-ced334413fa9",
+        "orders_sha256": "cb1ba8d53180b179697d4eac52f4d3fe742ccccf02fbe8fb2fd7dd4e20627290",
+        "outbox_sha256": "08f137a4673598848524fb34120bcc899fb6594087ddbeed7689155020b5375a",
+        "statuses": {
+          "shipped": 5313,
+          "cancelled": 1972,
+          "placed": 2715
+        },
+        "currencies": {
+          "USD": {
+            "count": 4997,
+            "shipped_sales": "1305772.20"
+          },
+          "EUR": {
+            "count": 5003,
+            "shipped_sales": "1334659.08"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41857507
+    },
+    {
+      "database": "v2bench_78b1ee4a_ee4efcf565565e54852744efa824b3a0",
+      "seconds": 13.9819908999998,
+      "snapshot": {
+        "tenant_id": "ee4efcf5-6556-5e54-8527-44efa824b3a0",
+        "orders": 10000,
+        "outbox_events": 17328,
+        "last_order_id": "19849161-9933-7ee3-c756-831d03bd45a5",
+        "orders_sha256": "84eab38d852a85d9925e153bc28812d75d67944e62cf34b4dcf404d26294c655",
+        "outbox_sha256": "95965ccd46212630fadc1ba38e1810eaf5506c3b6763d5b839c166beeb62279a",
+        "statuses": {
+          "placed": 2672,
+          "shipped": 5308,
+          "cancelled": 2020
+        },
+        "currencies": {
+          "EUR": {
+            "count": 4997,
+            "shipped_sales": "1332904.56"
+          },
+          "USD": {
+            "count": 5003,
+            "shipped_sales": "1335135.01"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41923043
+    },
+    {
+      "database": "v2bench_78b1ee4a_f3a4fe7783415ff18b7995144f273c17",
+      "seconds": 14.12234239999998,
+      "snapshot": {
+        "tenant_id": "f3a4fe77-8341-5ff1-8b79-95144f273c17",
+        "orders": 10000,
+        "outbox_events": 17353,
+        "last_order_id": "19d63ba7-dedc-a88d-7b63-aa4326cb9b0c",
+        "orders_sha256": "95ea0ea359d9f015c06acefb463264fbbd4e98918ec44dcd845d5b170a03ca2b",
+        "outbox_sha256": "97e15971c6306db282da915db13d1233bbb8551182817a13cd4d4ec194ae4ca2",
+        "statuses": {
+          "shipped": 5371,
+          "placed": 2647,
+          "cancelled": 1982
+        },
+        "currencies": {
+          "EUR": {
+            "count": 5036,
+            "shipped_sales": "1352704.82"
+          },
+          "USD": {
+            "count": 4964,
+            "shipped_sales": "1328099.48"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41931235
+    },
+    {
+      "database": "v2bench_78b1ee4a_f3e18878b78c54f7ad44716c8b0ad397",
+      "seconds": 13.647435999999288,
+      "snapshot": {
+        "tenant_id": "f3e18878-b78c-54f7-ad44-716c8b0ad397",
+        "orders": 10000,
+        "outbox_events": 17319,
+        "last_order_id": "19fd0c59-ae04-db98-8448-9cf0c6fa76b4",
+        "orders_sha256": "5ab7c3246785946f25f04be1f1813047d3e772f708496dfef8a92affe3cc3628",
+        "outbox_sha256": "5a3ac4f9dc4cba764c853f55bc328b4c0a109a1ea3d268c520a193a91ff57138",
+        "statuses": {
+          "placed": 2681,
+          "shipped": 5363,
+          "cancelled": 1956
+        },
+        "currencies": {
+          "USD": {
+            "count": 4986,
+            "shipped_sales": "1338080.89"
+          },
+          "EUR": {
+            "count": 5014,
+            "shipped_sales": "1338393.34"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41857507
+    },
+    {
+      "database": "v2bench_78b1ee4a_f8a59c6cd4635a0a95dc9ef5fae75d52",
+      "seconds": 13.924925999999687,
+      "snapshot": {
+        "tenant_id": "f8a59c6c-d463-5a0a-95dc-9ef5fae75d52",
+        "orders": 10000,
+        "outbox_events": 17406,
+        "last_order_id": "19ac58fa-20da-0222-ae09-138379e5a69b",
+        "orders_sha256": "247e6f9ab8b8805fac260ad50eed539bb86912d53ab04f7b349796c1f1cb0b92",
+        "outbox_sha256": "24f915d4f3fec3619c8e61b1c16a6a6e27e0e780cf7c2d8ed7d0c5e76cb24a51",
+        "statuses": {
+          "cancelled": 2036,
+          "placed": 2594,
+          "shipped": 5370
+        },
+        "currencies": {
+          "USD": {
+            "count": 5017,
+            "shipped_sales": "1348290.39"
+          },
+          "EUR": {
+            "count": 4983,
+            "shipped_sales": "1361807.70"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 42029539
+    },
+    {
+      "database": "v2bench_78b1ee4a_fa3ae9fb54e95aa4a1fc4bd9304d7a4b",
+      "seconds": 31.46228019999944,
+      "snapshot": {
+        "tenant_id": "fa3ae9fb-54e9-5aa4-a1fc-4bd9304d7a4b",
+        "orders": 10000,
+        "outbox_events": 17400,
+        "last_order_id": "19ff7b99-d6b0-f916-5807-56713549f64d",
+        "orders_sha256": "4e3975392945896c1f0f07a90683d7a5f315a4b56668e3aa520fb8a06f23120f",
+        "outbox_sha256": "292476cdd1aa6aff6eac67bdada7e593311167194e4d74abee77dabe82547704",
+        "statuses": {
+          "shipped": 5315,
+          "placed": 2600,
+          "cancelled": 2085
+        },
+        "currencies": {
+          "USD": {
+            "count": 4957,
+            "shipped_sales": "1312415.09"
+          },
+          "EUR": {
+            "count": 5043,
+            "shipped_sales": "1355269.82"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41964003
+    },
+    {
+      "database": "v2bench_78b1ee4a_ff1d5d7108c456ada8482df83d9c0c51",
+      "seconds": 14.02210229999946,
+      "snapshot": {
+        "tenant_id": "ff1d5d71-08c4-56ad-a848-2df83d9c0c51",
+        "orders": 10000,
+        "outbox_events": 17387,
+        "last_order_id": "1959e5a1-b5bf-01e3-d238-011a04d50ab9",
+        "orders_sha256": "a4e91a4a2b8b158939ee33a8c9c58a4e804b3ba481fd12313df601da8870e695",
+        "outbox_sha256": "54d972cf5668dbad5473dd54a2370f8f9ac8f7f6513662d253933f1d69eb41cb",
+        "statuses": {
+          "placed": 2613,
+          "shipped": 5332,
+          "cancelled": 2055
+        },
+        "currencies": {
+          "USD": {
+            "count": 5001,
+            "shipped_sales": "1308101.92"
+          },
+          "EUR": {
+            "count": 4999,
+            "shipped_sales": "1340861.76"
+          }
+        }
+      },
+      "rollups": "six exact SQL matches",
+      "coverage": "ready",
+      "projections": "exact version/content matches",
+      "database_bytes": 41947619
+    }
+  ],
+  "resource_guard_pauses": 1,
+  "implementation_commit": "bb702ab",
+  "baseline_commit": "b452d31da56cc7942f6efcaf500f5d8eac7f41e5",
+  "evidence_scope": "pre-live verified copied cohort; final HTTP measurement pending",
+  "tests_passed": 316,
+  "new_historical_orders": 0
+}

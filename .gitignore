@@ -1,0 +1,71 @@
+# Environments and credentials
+.env
+.env.*
+!.env.example
+.venv/
+.runtime/
+artifacts/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Packaging and distribution
+.Python
+build/
+develop-eggs/
+dist/
+!web/dist/
+downloads/
+eggs/
+.eggs/
+/lib/
+!web/src/lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Test, coverage, and linting
+.pytest_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# Node / Frontend
+node_modules/
+.npm/
+
+# Data and logs
+data/
+datasets/
+*.csv
+!demo/*.csv
+*.jsonl
+pip-log.txt
+pip-delete-this-directory.txt
+
+# OS artifacts
+.DS_Store

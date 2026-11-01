@@ -1,0 +1,75 @@
+name: astraroll
+x-app: &app
+  build: .
+  environment: &app-env
+    DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-astraroll}:${POSTGRES_PASSWORD:-local-dev-only}@postgres:5432/${POSTGRES_DB:-astraroll}
+    REDIS_URL: redis://redis:6379/0
+    ORDER_STREAM: ${ORDER_STREAM:-astraroll:orders:v1}
+    RELAY_BATCH_SIZE: ${RELAY_BATCH_SIZE:-100}
+    RELAY_POLL_SECONDS: ${RELAY_POLL_SECONDS:-0.5}
+    ANALYTICS_BACKEND: ${ANALYTICS_BACKEND:-postgres}
+    ANALYTICS_COVERAGE_PROVIDER: ${ANALYTICS_COVERAGE_PROVIDER:-astraroll.aggregation.coverage:read_coverage}
+    COVERAGE_MAX_AGE_SECONDS: ${COVERAGE_MAX_AGE_SECONDS:-86400}
+    ANALYTICS_API_KEYS_JSON: ${ANALYTICS_API_KEYS_JSON:-[]}
+  depends_on:
+    postgres: {condition: service_healthy}
+    redis: {condition: service_healthy}
+services:
+  postgres:
+    image: postgres:16.6
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-astraroll}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-dev-only}
+      POSTGRES_DB: ${POSTGRES_DB:-astraroll}
+    ports: ["127.0.0.1:${POSTGRES_PORT:-5432}:5432"]
+    volumes: ["postgres-data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  redis:
+    image: redis:7.4.2
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "always", "--maxmemory-policy", "noeviction"]
+    ports: ["127.0.0.1:${REDIS_PORT:-6379}:6379"]
+    volumes: ["redis-data:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  migrate:
+    <<: *app
+    command: ["alembic", "upgrade", "head"]
+  api:
+    <<: *app
+    ports: ["127.0.0.1:8000:8000"]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+  relay:
+    <<: *app
+    command: ["astraroll-relay"]
+    restart: unless-stopped
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+  consumer:
+    <<: *app
+    command: ["astraroll-consumer"]
+    restart: unless-stopped
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+  test:
+    <<: *app
+    profiles: ["test"]
+    environment:
+      <<: *app-env
+      RUN_INTEGRATION: "1"
+    command: ["pytest", "-q"]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+volumes:
+  postgres-data:
+  redis-data:
