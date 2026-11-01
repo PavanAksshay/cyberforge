@@ -222,6 +222,15 @@ export const AssistantPage: React.FC = () => {
                     : "bg-slate-50 dark:bg-[#092c22] text-slate-800 dark:text-slate-200 border border-slate-200/80 dark:border-slate-800 rounded-tl-none"
                 }`}
               >
+                {m.providerError && (
+                  <p
+                    role="status"
+                    className="rounded-lg border border-amber-800 bg-amber-950/40 p-2 text-xs text-amber-200"
+                  >
+                    {m.providerError}
+                  </p>
+                )}
+
                 {/* Clean content with no markdown characters */}
                 <div className="space-y-2 text-xs leading-relaxed">
                   {cleanMarkdownText(m.content)
@@ -263,26 +272,23 @@ export const AssistantPage: React.FC = () => {
                     })}
                 </div>
 
-                {m.providerError && (
-                  <p
-                    role="status"
-                    className="mt-3 rounded-lg border border-amber-800 bg-amber-950/40 p-2 text-xs text-amber-200"
-                  >
-                    {m.providerError}
-                  </p>
-                )}
-
                 {/* Metadata & Citations */}
                 {!isUser && (
                   <div className="pt-2 mt-2 border-t border-slate-200/60 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-[10px] text-slate-400">
                     <div className="flex items-center space-x-2">
                       <span className="font-mono text-emerald-600 dark:text-emerald-400 font-medium">
-                        {m.provider === "groq"
-                          ? "Groq · "
-                          : m.provider
-                            ? "Verified fallback · "
-                            : ""}
-                        {m.model || "AstraRoll"}
+                        {m.provider === "local_help" ? (
+                          "AstraRoll"
+                        ) : (
+                          <>
+                            {m.provider === "groq"
+                              ? "Groq · "
+                              : m.provider
+                                ? "Verified fallback · "
+                                : ""}
+                            {m.model || "AstraRoll"}
+                          </>
+                        )}
                       </span>
                       <span>•</span>
                       <span>{m.timestamp}</span>

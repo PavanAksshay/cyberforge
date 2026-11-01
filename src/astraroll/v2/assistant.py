@@ -37,12 +37,49 @@ log = logging.getLogger(__name__)
 class AssistantResponse:
     reply: str
     intent: str
-    provider: str  # "groq" or "grounded_rule_engine"
+    provider: str  # "groq", "grounded_rule_engine" or "local_help"
     model: str
     endpoints_called: list[str]
     data: dict[str, Any]
     freshness: dict[str, Any] | None = None
     provider_error: str | None = None
+
+
+def conversational_response(query: str) -> AssistantResponse | None:
+    """Handle social/help turns without inventing analytics or calling the provider."""
+    text = re.sub(r"[^\w\s]", "", query.casefold()).strip()
+    text = " ".join(text.split())
+    if re.fullmatch(r"(?:hi+|hello+|hey+)(?: there| astra(?:roll)?)?", text) or text in {
+        "good morning",
+        "good afternoon",
+        "good evening",
+    }:
+        reply = (
+            "Hi! How can I help with your tenant's analytics? "
+            "You can ask about shipped sales, order volume, top products, trends or data freshness."
+        )
+        intent = "greeting"
+    elif text in {"thanks", "thank you", "thankyou", "thanks a lot", "ok", "okay", "great"}:
+        reply = "You're welcome! Let me know what you'd like to explore next."
+        intent = "acknowledgement"
+    elif text in {"help", "what can you do", "how can you help", "what do you do"}:
+        reply = (
+            "I can explain shipped sales and order volume, rank products, compare order statuses, "
+            "show hourly or daily trends, and describe recorded data freshness. "
+            "Analytics use your selected tenant, currency and UTC date window. "
+            "Try: 'What are our shipped sales and total orders?'"
+        )
+        intent = "help"
+    else:
+        return None
+    return AssistantResponse(
+        reply=reply,
+        intent=intent,
+        provider="local_help",
+        model="local-help",
+        endpoints_called=[],
+        data={},
+    )
 
 
 GROQ_ANALYTICS_TOOLS = [
@@ -249,6 +286,9 @@ def execute_grounded_intent(
     end: str | None = None,
 ) -> AssistantResponse:
     """Deterministic Rule-Based Analytics Assistant (Fallback Engine)."""
+    conversation = conversational_response(query_str)
+    if conversation:
+        return conversation
     clean_query = query_str.lower().strip()
     start_iso, end_iso = _default_window(start, end)
     q = AnalyticsQuery(tenant_id=tenant_id, currency=currency, start=start_iso, end=end_iso)
@@ -280,8 +320,25 @@ def execute_grounded_intent(
         for k in ["trend", "daily", "hourly", "over time", "growth", "history", "chart"]
     )
     is_freshness = any(
-        k in clean_query for k in ["freshness", "lag", "latency", "real-time", "sync", "coverage"]
+        k in clean_query for k in ["fresh", "lag", "latency", "real-time", "sync", "coverage"]
     )
+
+    is_summary = bool(
+        re.search(
+            r"\b(revenue|sales|orders?|volume|total|summary|overview|aov|amount|count)\b",
+            clean_query,
+        )
+    )
+    if not any((is_top_products, is_status_breakdown, is_trends, is_freshness, is_summary)):
+        return AssistantResponse(
+            reply="Could you clarify what you'd like to know about your analytics? "
+            "I can help with shipped sales, orders, products, trends or data freshness.",
+            intent="clarification",
+            provider="local_help",
+            model="local-help",
+            endpoints_called=[],
+            data={},
+        )
 
     lines: list[str] = []
     intent = "summary"
@@ -460,6 +517,9 @@ async def ask_assistant(
     end: str | None = None,
 ) -> AssistantResponse:
     """Orchestrate assistant query: Groq API when configured, or deterministic fallback."""
+    conversation = conversational_response(query_str)
+    if conversation:
+        return conversation
     settings = get_settings()
     groq_api_key = settings.groq_api_key.get_secret_value().strip() if settings.groq_api_key else ""
 

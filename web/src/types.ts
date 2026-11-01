@@ -148,7 +148,7 @@ export interface IngestionResult {
 export interface AssistantResponse {
   reply: string;
   intent: string;
-  provider: "groq" | "grounded_rule_engine";
+  provider: "groq" | "grounded_rule_engine" | "local_help";
   model: string;
   endpoints_called: string[];
   data: Record<string, any>;

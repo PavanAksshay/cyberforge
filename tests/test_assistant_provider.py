@@ -14,6 +14,54 @@ from tests.test_v2_product_features import MockGroundedReader
 pytestmark = pytest.mark.anyio
 
 
+@pytest.mark.parametrize(
+    "message",
+    [
+        "hi",
+        "Hi!",
+        "hii",
+        "hello",
+        "hey there",
+        "good morning",
+        "thanks",
+        "ok",
+        "help",
+        "what can you do?",
+    ],
+)
+async def test_conversation_never_fetches_metrics_or_calls_groq(monkeypatch, message):
+    class NoReads:
+        def __getattr__(self, name):
+            raise AssertionError("Conversational turn attempted analytics retrieval")
+
+    def no_provider(**kwargs):
+        raise AssertionError("Conversational turn attempted an LLM call")
+
+    monkeypatch.setattr(assistant.httpx, "AsyncClient", no_provider)
+    tid = uuid4()
+    response = await assistant.ask_assistant(message, tid, NoReads())
+    fallback = assistant.execute_grounded_intent(message, tid, NoReads())
+    for result in (response, fallback):
+        assert result.provider == "local_help" and result.reply
+        assert result.endpoints_called == [] and result.data == {}
+        assert result.provider_error is None and "Executive Summary" not in result.reply
+
+
+async def test_unclear_fallback_asks_for_clarification_without_dumping_metrics():
+    tid = uuid4()
+    result = assistant.execute_grounded_intent("something else please", tid, object())
+    assert result.intent == "clarification" and result.endpoints_called == []
+    assert "clarify" in result.reply
+
+
+async def test_greeting_prefix_does_not_hide_a_real_analytics_question():
+    tid = uuid4()
+    result = assistant.execute_grounded_intent(
+        "Hi, show me total revenue", tid, MockGroundedReader(tid)
+    )
+    assert result.intent == "summary" and result.data["summary"]["sales_amount"] == "15000.50"
+
+
 async def test_key_loaded_from_dotenv_and_redacted(tmp_path, monkeypatch):
     monkeypatch.delenv("GROQ_API_KEY")
     env = tmp_path / ".env"

@@ -60,8 +60,8 @@ events, canonical projection counts and verified UTC/currency coverage. Its refr
 button now says **Refresh selected tenant**; it never claims to synchronize all
 100 databases. The page explains that old source timestamps alone do not imply lag.
 
-Validation: **365 backend tests passed** on isolated PostgreSQL 55434 / Redis 56381
-in 115.72 seconds, with one existing Starlette/httpx deprecation warning. Provider
+Validation: **377 backend tests passed** on isolated PostgreSQL 55434 / Redis 56381
+in 111.02 seconds, with one existing Starlette/httpx deprecation warning. Provider
 tests mock external calls and explicitly suppress local secrets. **12 frontend
 tests**, TypeScript production build, ESLint, Ruff check/format and dependency
 audit passed. Visual browser checks cover the forest analytics page, the retrieval
@@ -85,3 +85,26 @@ npm audit --audit-level=low
 To configure an assistant in another environment, set server-only `GROQ_API_KEY`
 and `GROQ_MODEL` in its `.env` or process environment and restart the API process.
 Never restart or reset the protected PostgreSQL cluster for this change.
+
+## Greeting correction from the follow-up screenshot
+
+The screenshot showed `hi` falling through to a financial summary after a provider
+400. Social/help turns had been forced into analytics tool selection. Greetings,
+acknowledgements and help requests now return a clearly labeled local conversational
+reply, without an LLM call, analytics read, metric values or fabricated citations.
+Unclear fallback requests ask for clarification. A full-match greeting check leaves
+`Hi, show me total revenue` on the real analytics path. Provider failure notices now
+appear above a fallback reply rather than below a long summary.
+
+The exact screenshot context was checked in the browser and over authenticated HTTP:
+Tenant #99 (`0f3acb72-4566-5bfe-8568-0df70c33a4d0`), USD, UTC
+[2026-10-30, 2026-11-02). `hi` returned a greeting with no data/citations; `thanks`
+and `what can you do?` returned conversational responses. A subsequent revenue
+question returned a Groq answer whose retrieved metrics matched the summary API.
+Greeting requests still returned 401 without authentication and 403 outside tenant
+scope. Local evidence: `.runtime/conversation-live-proof.json`.
+
+Twelve added regressions cover greeting/help variants, no provider/database access,
+unknown intent clarification, and a greeting prefix followed by an actual metrics
+question. The final full suite passed 377 tests; frontend 12 tests, build and lint
+also passed. No tenant data, source PostgreSQL process or worker was reset.
