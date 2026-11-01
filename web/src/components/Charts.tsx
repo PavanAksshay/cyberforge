@@ -248,8 +248,20 @@ export const TopProductsBarChart: React.FC<TopProductsBarChartProps> = ({
                 >
                   #{idx + 1}
                 </span>
-                <span className="font-mono text-sm font-bold text-white tracking-wide">
+                <span className="text-sm font-bold text-white tracking-wide">
                   {prod.product_name || "Uncataloged product"}
+                  <span className="block text-xs font-mono text-slate-400">
+                    {prod.sku || "SKU unavailable"}
+                  </span>
+                  <button
+                    className="block text-[10px] font-mono text-emerald-400"
+                    title="Copy product UUID"
+                    onClick={() =>
+                      navigator.clipboard.writeText(prod.product_id)
+                    }
+                  >
+                    {prod.product_id}
+                  </button>
                 </span>
                 <span className="px-2.5 py-0.5 rounded-full text-[11px] font-mono font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-800/60">
                   {formatNumber(prod.total_order_count)} orders

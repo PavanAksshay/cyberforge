@@ -92,3 +92,15 @@ export function downloadCsv(filename: string, content: string): void {
   link.click();
   document.body.removeChild(link);
 }
+
+/** Exact positive-money division, rounded half up to a cent. */
+export function averageMoney(amount: string, count: number): string | null {
+  if (!Number.isSafeInteger(count) || count <= 0) return null;
+  const match = /^(\d+)(?:\.(\d{1,2}))?$/.exec(amount);
+  if (!match) return null;
+  const total =
+    BigInt(match[1]) * 100n + BigInt((match[2] || "").padEnd(2, "0"));
+  const divisor = BigInt(count);
+  const rounded = (2n * total + divisor) / (2n * divisor);
+  return `${rounded / 100n}.${(rounded % 100n).toString().padStart(2, "0")}`;
+}

@@ -45,7 +45,12 @@ import { usePolling } from "../lib/usePolling";
 
 import { FreshnessIndicator } from "../components/FreshnessIndicator";
 
-import { formatCurrency, formatNumber, formatDateTime } from "../lib/utils";
+import {
+  averageMoney,
+  formatCurrency,
+  formatNumber,
+  formatDateTime,
+} from "../lib/utils";
 
 export const OverviewPage: React.FC = () => {
   const {
@@ -150,10 +155,7 @@ export const OverviewPage: React.FC = () => {
 
   const totalOrders = summary?.total_order_count || 0;
 
-  const aov =
-    totalOrders > 0 && parseFloat(totalSales) > 0
-      ? parseFloat(totalSales) / (shippedCount || 1)
-      : 0;
+  const aov = averageMoney(totalSales, shippedCount);
 
   // Last materialized timestamp from summary freshness (distinct from HTTP fetch)
 

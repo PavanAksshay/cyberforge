@@ -3,7 +3,7 @@
 The isolated mentor demo is READY at http://127.0.0.1:8001. The preserved benchmark
 analytics are NOT READY and intentionally return 503. The owner explicitly chose
 not to repair benchmark derived data during this pass. No main/release merge occurred.
-Branch: `codex/astraroll-v2-final-product`; the commit containing this document is the
+Branch: `codex/astraroll-v2-final-product`; the checked-out commit is the
 release reference (`git rev-parse HEAD`). Evidence: [machine-readable proof](live-product-evidence.json).
 
 The before/after read-only audit found 100 preserved V2 databases and **10,000,034 orders**,
@@ -50,7 +50,8 @@ explicit order UUIDs if cross-file idempotency is required. Amount validation re
 NaN/infinity, fractional cents, nonpositive and NUMERIC overflow values. Five-column
 CSVs remain supported; optional product_name is backward-compatible. Currency totals
 are grouped; legacy scalar money fields are null for mixed-currency batches. The
-browser renders exact money strings, including values beyond JavaScript safe integers.
+browser renders exact money strings, including values beyond JavaScript safe integers. Shipped AOV uses exact integer
+cents with half-up rounding; $2534.85 / 30 displays $84.50.
 
 Each mounted analytics/operations view uses the same cancellable, completion-based
 polling hook. It groups real authenticated requests, avoids overlapping timers, aborts
@@ -123,7 +124,7 @@ are intentionally outside coverage, leaving 60 covered USD orders / $2534.85.
 
 Backend: **350 passed, zero failed/skipped**, one existing Starlette/httpx deprecation
 warning. Final focused live-product regressions: **15 passed** after small safety changes.
-Frontend: **6 tests passed**, TypeScript, ESLint and production build passed. Ruff and
+Frontend: **7 tests passed**, TypeScript, ESLint and production build passed. Ruff and
 format checks cover all tracked Python files and new harnesses. Alembic has one head,
 0005_tenant_access_paths; actual isolated tenant `alembic check` reports no upgrade
 operations. npm audit reports zero vulnerabilities. Git whitespace/credential review
