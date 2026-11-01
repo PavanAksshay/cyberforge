@@ -19,10 +19,10 @@ const AppContent: React.FC = () => {
     <div className="flex flex-col min-h-screen bg-transparent text-slate-100 transition-colors duration-200">
       <Header />
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-col lg:flex-row flex-1 min-w-0">
         <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
-        <main className="flex-1 overflow-y-auto p-6 lg:p-8">
+        <main className="flex-1 min-w-0 w-full overflow-y-auto p-4 lg:p-8">
           <div className="max-w-7xl mx-auto">
             {tenantLoadError && (
               <p

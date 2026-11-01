@@ -74,9 +74,9 @@ export const Header: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between px-8 py-4 border-b bg-[#051c15]/95 backdrop-blur-md border-[#0f4838] transition-colors">
+    <header className="sticky top-0 z-30 flex flex-wrap gap-3 items-center justify-between px-4 md:px-8 py-4 border-b bg-[#051c15]/95 backdrop-blur-md border-[#0f4838] transition-colors">
       {/* Brand & Mode */}
-      <div className="flex items-center space-x-3.5">
+      <div className="flex flex-wrap gap-3 items-center">
         <div className="flex items-center justify-center w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-600 to-emerald-500 text-white shadow-lg shadow-emerald-900/30">
           <Layers className="w-6 h-6" />
         </div>
@@ -96,7 +96,7 @@ export const Header: React.FC = () => {
       </div>
 
       {/* Center Controls (Tenant, Currency, Date Presets, Auto-Refresh) */}
-      <div className="flex items-center space-x-3.5">
+      <div className="flex flex-wrap gap-3 items-center">
         {/* Tenant Selector Dropdown */}
         <div className="relative">
           <button

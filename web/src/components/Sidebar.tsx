@@ -181,14 +181,14 @@ WHERE tenant_id = '${tenantUuid}'
   };
 
   return (
-    <aside className="w-84 sm:w-92 shrink-0 border-r bg-[#051c15]/95 backdrop-blur-md border-[#0f4838] flex flex-col justify-between p-4 overflow-y-auto transition-colors space-y-6">
+    <aside className="w-full lg:w-80 min-w-0 max-h-64 lg:max-h-none shrink-0 border-r bg-[#051c15]/95 backdrop-blur-md border-[#0f4838] flex flex-col justify-between p-4 overflow-y-auto transition-colors space-y-6">
       <div className="space-y-6">
         {/* Navigation Section */}
         <div>
           <div className="px-3 mb-3 text-xs font-bold uppercase tracking-wider text-emerald-400/80">
             Analytics Platform
           </div>
-          <nav className="space-y-1.5">
+          <nav className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-1 gap-1.5">
             {navItems.map((item) => {
               const isActive = activeTab === item.id;
               return (
