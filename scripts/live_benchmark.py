@@ -55,6 +55,7 @@ os.environ.update(
     DEPLOYMENT_MODE="database_per_tenant",
     DATABASE_URL=url,
     CONTROL_DATABASE_URL=url,
+    ASSISTANT_TIMEZONE="Asia/Kolkata",
     ANALYTICS_READ_BLOCK_REASON="" if ready else reason,
     BENCHMARK_WRITES_ENABLED="true" if ready else "false",
     LIVE_OUTBOX_HINTS_ENABLED="true" if ready else "false",

@@ -1,7 +1,8 @@
 from functools import lru_cache
 from typing import Literal
+from zoneinfo import ZoneInfo
 
-from pydantic import Field, SecretStr
+from pydantic import Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,7 +28,17 @@ class Settings(BaseSettings):
     analytics_api_keys_json: SecretStr | None = None
     groq_api_key: SecretStr | None = None
     groq_model: str = "openai/gpt-oss-120b"
+    assistant_timezone: str = "UTC"
     coverage_max_age_seconds: int = Field(default=86400, ge=1)
+
+    @field_validator("assistant_timezone")
+    @classmethod
+    def valid_assistant_timezone(cls, value):
+        try:
+            ZoneInfo(value)
+        except (KeyError, ValueError) as exc:
+            raise ValueError("Use a valid IANA time zone") from exc
+        return value
 
 
 @lru_cache

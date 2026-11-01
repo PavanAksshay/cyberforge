@@ -17,6 +17,7 @@ from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 import httpx
 from starlette.concurrency import run_in_threadpool
@@ -49,6 +50,49 @@ def conversational_response(query: str) -> AssistantResponse | None:
     """Handle social/help turns without inventing analytics or calling the provider."""
     text = re.sub(r"[^\w\s]", "", query.casefold()).strip()
     text = " ".join(text.split())
+    date_questions = {
+        "what day is it today",
+        "what day is it",
+        "what day is today",
+        "what date is it today",
+        "what date is it",
+        "what is the date today",
+        "what is todays date",
+        "whats todays date",
+        "todays date",
+        "current date",
+        "what is the current date",
+        "what is the date",
+        "whats the date",
+        "which day is it today",
+        "which day of the week is it",
+        "tell me todays date",
+    }
+    time_questions = {
+        "what time is it",
+        "what time is it now",
+        "what is the time",
+        "whats the time",
+        "current time",
+        "what is the current time",
+        "time now",
+    }
+    if text in date_questions or text in time_questions:
+        zone = get_settings().assistant_timezone
+        now = datetime.now(ZoneInfo(zone))
+        date = f"{now:%A}, {now.day} {now:%B %Y}"
+        return AssistantResponse(
+            reply=(
+                f"Today is {date} ({zone})."
+                if text in date_questions
+                else f"The current time is {now:%H:%M:%S} on {date} ({zone})."
+            ),
+            intent="current_date" if text in date_questions else "current_time",
+            provider="local_help",
+            model="server-clock",
+            endpoints_called=[],
+            data={},
+        )
     if re.fullmatch(r"(?:hi+|hello+|hey+)(?: there| astra(?:roll)?)?", text) or text in {
         "good morning",
         "good afternoon",
@@ -277,26 +321,9 @@ def parse_iso_or_default(dt_str: str | None, default: datetime) -> datetime:
         return default
 
 
-def execute_grounded_intent(
-    query_str: str,
-    tenant_id: UUID,
-    reader: AnalyticsReader,
-    currency: Currency = "USD",
-    start: str | None = None,
-    end: str | None = None,
-) -> AssistantResponse:
-    """Deterministic Rule-Based Analytics Assistant (Fallback Engine)."""
-    conversation = conversational_response(query_str)
-    if conversation:
-        return conversation
-    clean_query = query_str.lower().strip()
-    start_iso, end_iso = _default_window(start, end)
-    q = AnalyticsQuery(tenant_id=tenant_id, currency=currency, start=start_iso, end=end_iso)
-
-    endpoints_called: list[str] = []
-    data_payload: dict[str, Any] = {}
-    freshness_info: dict[str, Any] | None = None
-
+def analytics_intent(query: str) -> str | None:
+    """Share the supported analytics intent boundary across provider and fallback paths."""
+    clean_query = query.lower().strip()
     is_top_products = any(
         k in clean_query
         for k in [
@@ -325,26 +352,67 @@ def execute_grounded_intent(
 
     is_summary = bool(
         re.search(
-            r"\b(revenue|sales|orders?|volume|total|summary|overview|aov|amount|count)\b",
+            r"\b(revenue|sales?|orders?|volume|total|summary|overview|aov|amount|count|"
+            r"earn(?:ed|ings)?|income|turnover|profits?|products?|sku|purchases?|bought|"
+            r"selling|ship(?:ped|ment)?|fulfil(?:l)?ment|metrics?|analytics)\b",
             clean_query,
         )
     )
-    if not any((is_top_products, is_status_breakdown, is_trends, is_freshness, is_summary)):
-        return AssistantResponse(
-            reply="Could you clarify what you'd like to know about your analytics? "
-            "I can help with shipped sales, orders, products, trends or data freshness.",
-            intent="clarification",
-            provider="local_help",
-            model="local-help",
-            endpoints_called=[],
-            data={},
-        )
+    return next(
+        (
+            name
+            for name, matched in (
+                ("top_products", is_top_products),
+                ("status_breakdown", is_status_breakdown),
+                ("trends", is_trends),
+                ("freshness", is_freshness),
+                ("summary", is_summary),
+            )
+            if matched
+        ),
+        None,
+    )
+
+
+def clarification_response() -> AssistantResponse:
+    return AssistantResponse(
+        reply="Could you clarify what you'd like to know about your analytics? "
+        "I can help with shipped sales, orders, products, trends or data freshness.",
+        intent="clarification",
+        provider="local_help",
+        model="local-help",
+        endpoints_called=[],
+        data={},
+    )
+
+
+def execute_grounded_intent(
+    query_str: str,
+    tenant_id: UUID,
+    reader: AnalyticsReader,
+    currency: Currency = "USD",
+    start: str | None = None,
+    end: str | None = None,
+) -> AssistantResponse:
+    """Deterministic Rule-Based Analytics Assistant (Fallback Engine)."""
+    conversation = conversational_response(query_str)
+    if conversation:
+        return conversation
+    start_iso, end_iso = _default_window(start, end)
+    q = AnalyticsQuery(tenant_id=tenant_id, currency=currency, start=start_iso, end=end_iso)
+
+    endpoints_called: list[str] = []
+    data_payload: dict[str, Any] = {}
+    freshness_info: dict[str, Any] | None = None
+
+    intent = analytics_intent(query_str)
+    if intent is None:
+        return clarification_response()
 
     lines: list[str] = []
-    intent = "summary"
 
     try:
-        if is_top_products:
+        if intent == "top_products":
             intent = "top_products"
             top_q = TopProductsQuery(
                 tenant_id=tenant_id,
@@ -387,7 +455,7 @@ def execute_grounded_intent(
                         f"| #{rank} | {label} ({p.product_id}) | {amt} | {p.total_order_count:,} |"
                     )
 
-        elif is_status_breakdown:
+        elif intent == "status_breakdown":
             intent = "status_breakdown"
             res = reader.status_breakdown(q)
             endpoints_called.append("/analytics/status-breakdown")
@@ -411,7 +479,7 @@ def execute_grounded_intent(
                     f"| **{s.status.upper()}** | {s.total_order_count:,} | `{amt}` | *{sem}* |"
                 )
 
-        elif is_trends:
+        elif intent == "trends":
             intent = "trends"
             t_q = TrendsQuery(
                 tenant_id=tenant_id,
@@ -442,7 +510,6 @@ def execute_grounded_intent(
                 lines.append(f"| `{date_str}` | `{amt}` | {b.total_order_count:,} |")
 
         else:
-            intent = "summary" if not is_freshness else "freshness"
             res = reader.summary(q)
             endpoints_called.append("/analytics/summary")
             summary_metrics = res.value
@@ -475,7 +542,7 @@ def execute_grounded_intent(
             lines.append(f"- Total Orders (All Statuses): {summary_metrics.total_order_count:,}")
             lines.append(f"- Estimated AOV (per order): {aov_str}")
 
-            if is_freshness and freshness_info:
+            if intent == "freshness" and freshness_info:
                 rev = freshness_info.get("tenant_revision")
                 last_proc = freshness_info.get("last_processed_at")
                 lines.append("\nFreshness & Pipeline State:")
@@ -520,6 +587,8 @@ async def ask_assistant(
     conversation = conversational_response(query_str)
     if conversation:
         return conversation
+    if analytics_intent(query_str) is None:
+        return clarification_response()
     settings = get_settings()
     groq_api_key = settings.groq_api_key.get_secret_value().strip() if settings.groq_api_key else ""
 
@@ -574,8 +643,19 @@ async def ask_assistant(
                 )
 
                 if resp.status_code != 200:
+                    try:
+                        error_code = resp.json().get("error", {}).get("code", "unknown")
+                        if not isinstance(error_code, str) or not re.fullmatch(
+                            r"[a-zA-Z0-9_]{1,64}", error_code
+                        ):
+                            error_code = "unknown"
+                    except (ValueError, AttributeError):
+                        error_code = "unknown"
                     log.warning(
-                        "Groq API returned HTTP %s; using grounded fallback", resp.status_code
+                        "Groq API returned HTTP %s (code=%s, turn=%s); using grounded fallback",
+                        resp.status_code,
+                        error_code,
+                        turn + 1,
                     )
                     return await fallback(provider_failure(resp.status_code))
 

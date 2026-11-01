@@ -60,8 +60,8 @@ events, canonical projection counts and verified UTC/currency coverage. Its refr
 button now says **Refresh selected tenant**; it never claims to synchronize all
 100 databases. The page explains that old source timestamps alone do not imply lag.
 
-Validation: **377 backend tests passed** on isolated PostgreSQL 55434 / Redis 56381
-in 111.02 seconds, with one existing Starlette/httpx deprecation warning. Provider
+Validation: **386 backend tests passed** on isolated PostgreSQL 55434 / Redis 56381
+in 106.72 seconds, with one existing Starlette/httpx deprecation warning. Provider
 tests mock external calls and explicitly suppress local secrets. **12 frontend
 tests**, TypeScript production build, ESLint, Ruff check/format and dependency
 audit passed. Visual browser checks cover the forest analytics page, the retrieval
@@ -108,3 +108,34 @@ Twelve added regressions cover greeting/help variants, no provider/database acce
 unknown intent clarification, and a greeting prefix followed by an actual metrics
 question. The final full suite passed 377 tests; frontend 12 tests, build and lint
 also passed. No tenant data, source PostgreSQL process or worker was reset.
+
+## Current-day HTTP 400 correction
+
+The owner identified the exact failing question: `what day is it today?`. It was
+being sent to Groq with required financial tools, despite needing no financial
+data. Calendar questions now read the server clock in `ASSISTANT_TIMEZONE`, with
+explicit zone labeling, before any analytics/provider call. The local port-8000
+launcher sets `Asia/Kolkata`; the general deployment default is `UTC`. The setting
+validates an IANA zone. The existing locked tzdata package is now also an explicit
+project dependency for Windows and minimal runtime reproducibility. Analytics
+windows remain UTC and do not determine the current calendar day.
+
+The provider and fallback now share one analytics-intent boundary. Unrelated
+questions ask for clarification without forcing a financial tool. Provider failures
+continue to be honest; safe status/error-code/turn diagnostics are logged without
+provider bodies, prompts or credentials. This is not a claim that every possible
+provider outage has been eliminated.
+
+Authenticated HTTP checks against Tenant #99 and the original three-day window
+returned the actual current date, `Sunday, 1 November 2026 (Asia/Kolkata)`, and the
+current local time with no provider error and no analytics citations. A revenue
+question still returned a genuine Groq response matching the summary API. Calendar
+requests retained 401 unauthenticated / 403 cross-tenant denial. Detailed local
+evidence: `.runtime/clock-live-proof.json`.
+
+Nine additional regressions cover current date/time under UTC and Asia/Kolkata
+across a UTC-midnight boundary, independence from historical analytics filters,
+unrelated questions, real sales questions containing `today`, and invalid zones.
+The full backend run passed **386 tests** in 106.72 seconds; the final focused
+assistant/product run passed **41 tests**. Ruff check/format and pip dependency
+validation passed. Frontend assets are unchanged from the preceding verified build.

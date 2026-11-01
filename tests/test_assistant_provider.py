@@ -1,6 +1,7 @@
 """Provider configuration, grounding and honest failure handling without external calls."""
 
 import json
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import httpx
@@ -60,6 +61,61 @@ async def test_greeting_prefix_does_not_hide_a_real_analytics_question():
         "Hi, show me total revenue", tid, MockGroundedReader(tid)
     )
     assert result.intent == "summary" and result.data["summary"]["sales_amount"] == "15000.50"
+
+
+@pytest.mark.parametrize(
+    "zone, expected",
+    [
+        ("Asia/Kolkata", "Sunday, 1 November 2026"),
+        ("UTC", "Saturday, 31 October 2026"),
+    ],
+)
+@pytest.mark.parametrize(
+    "question", ["what day is it today?", "what is today's date?", "what time is it?"]
+)
+async def test_calendar_uses_current_clock_and_configured_zone_not_analytics_window(
+    monkeypatch, zone, expected, question
+):
+    class Clock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return datetime(2026, 10, 31, 20, 45, tzinfo=UTC).astimezone(tz or UTC)
+
+    def no_provider(**kwargs):
+        raise AssertionError("Calendar question must not call Groq")
+
+    monkeypatch.setattr(assistant, "datetime", Clock)
+    monkeypatch.setattr(assistant.httpx, "AsyncClient", no_provider)
+    monkeypatch.setattr(get_settings(), "assistant_timezone", zone)
+    result = await assistant.ask_assistant(
+        question, uuid4(), object(), "USD", "2020-01-01T00:00:00Z", "2020-01-02T00:00:00Z"
+    )
+    assert expected in result.reply and zone in result.reply
+    assert result.intent in {"current_date", "current_time"}
+    assert result.provider == "local_help" and not result.provider_error
+    assert result.endpoints_called == [] and result.data == {}
+
+
+async def test_unrelated_request_never_requires_financial_tools(monkeypatch):
+    def no_provider(**kwargs):
+        raise AssertionError("Unrelated question must not enter required-tool flow")
+
+    monkeypatch.setattr(assistant.httpx, "AsyncClient", no_provider)
+    result = await assistant.ask_assistant("What is your favourite color?", uuid4(), object())
+    assert result.intent == "clarification" and result.provider_error is None
+
+
+async def test_calendar_word_does_not_hide_a_real_analytics_question():
+    tid = uuid4()
+    result = assistant.execute_grounded_intent(
+        "What are our sales today?", tid, MockGroundedReader(tid)
+    )
+    assert result.intent == "summary" and result.endpoints_called == ["/analytics/summary"]
+
+
+async def test_invalid_clock_zone_fails_configuration_validation():
+    with pytest.raises(ValueError, match="IANA"):
+        Settings(assistant_timezone="invalid/no-zone")
 
 
 async def test_key_loaded_from_dotenv_and_redacted(tmp_path, monkeypatch):
